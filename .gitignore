@@ -2,3 +2,21 @@
 .Rhistory
 .RData
 .Ruserdata
+.DS_Store
+
+# files anywhere
+
+
+# folders
+analysis-justo/
+data/
+data-boekstegers_felix/
+data-carol/
+Expose/
+meetings/
+output/
+paper-backup/
+SchwedaMSc/
+Vorlagen/
+scripts/old/
+scripts/test/
