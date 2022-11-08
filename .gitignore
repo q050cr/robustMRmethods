@@ -1,11 +1,11 @@
+
+## https://linuxize.com/post/gitignore-ignoring-files-in-git/
+# files anywhere
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 .DS_Store
-
-# files anywhere
-
 
 # folders
 analysis-justo/
@@ -13,10 +13,19 @@ data/
 data-boekstegers_felix/
 data-carol/
 Expose/
+img/
 meetings/
 output/
 paper-backup/
+references/
 SchwedaMSc/
+templates/
 Vorlagen/
+
+# subdirectories
 scripts/old/
 scripts/test/
+presentation/robustMR_files/
+
+# files in subdirs
+presentation/robustMR.html

@@ -1,0 +1,481 @@
+---
+title: "Assessment of simulation procedures and robust methods for Mendelian randomization analysis"
+author: "Christoph Reich"
+date: "`r Sys.Date()`"
+title-slide-attributes: 
+  data-background-image: ../templates/bg1.png
+  data-background-size: cover  # default
+  data-background-opacity: "1"  # from 0-1
+format: 
+  revealjs:
+    slide-number: true
+    scrollable: true
+    navigation-mode: vertical
+    chalkboard:   # kreidetafel
+      theme: whiteboard
+      boardmarker-width: 5
+      buttons: false
+    incremental: false  # display bullet lists all at once
+    preview-links: auto
+    logo: ../templates/mederlab_logo.png
+    css: ../templates/main.css
+    footer: "robustMRmethods"
+    theme: [simple, ../templates/custom.scss]
+    #self-contained: true  # for distribution (slows rendering), not compatible with chulkboarddic
+# reference-doc: templates/20210129_mederslidemaster.pptx  # only for pptx rendering
+bibliography: ../references/references.bib
+---
+
+
+```{r}
+#| label: dependencies
+#| include: false
+#| warning: false
+
+rm(list=ls())
+
+knitr::opts_chunk$set(echo = FALSE)
+
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(tibble)
+library(ggplot2)
+library(scales)
+library(ggthemes)
+#library(biomaRt)  # different script
+library(kableExtra)
+library(MendelianRandomization)
+library(mr.raps)
+library(MRMix)
+library(MRPRESSO)
+library(penalized)
+library(conflicted)
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
+
+theme_set(ggthemes::theme_few()) 
+```
+
+```{r}
+#| label: load-data
+#| include: false
+#| warning: false
+
+my_data <- as_tibble(read.delim("../data-boekstegers_felix/GST_BMI_association_results.txt"))
+# GBC: new data 2022-11-04
+GBC_dat <- as_tibble(read.delim("../data-boekstegers_felix/C23C24_BMI_association_results.txt"))
+
+GBC_dat <- GBC_dat %>% 
+  rename(eaf_gbc=eaf_out,
+         beta_gbc=beta_out,
+         se_gbc=se_out,
+         p_value_gbc=p_value_out) %>% 
+  select(-c(chr, pos_hg19, pos_hg38, a1, a2, exposure, outcome))
+my_data <- my_data %>% left_join(GBC_dat, by =c("SNP", "dummyID"))
+```
+
+
+## Get gene names from rs-ids
+
+```{r}
+#| label: FTO-annotation
+#| tbl-cap: "SNP associated with FTO gene"
+#| tbl-colwidths: [60,40]
+
+# see script biomart_search.R
+rsIds_GeneNames <- as_tibble(readRDS("../data/biomartBMIsearch.rds"))
+
+filter_FTO <- rsIds_GeneNames %>% 
+  filter(str_detect(associated_gene, pattern = "FTO")) %>% 
+  distinct(refsnp_id, .keep_all = TRUE)
+
+t(filter_FTO) %>% kable() %>% 
+  kable_styling(font_size=18)
+```
+
+
+:::: {.columns}
+
+::: {.column width="50%"}
+* from the 284 SNPs only one was associated with the FTO gene
+:::
+
+::: {.column width="50%"}
+![](../img/ensembl_logo.png)
+
+:::
+
+::::
+
+
+
+## Simulating on empirical data
+
+### Calculate approximate SEs for decreasing sample sizes and corresponding p-vals
+
+* se, pval and study size depend on each other, within each study
+* selection of IVs based on exposure study (BMI in our case)
+* Summary statistics on genetic associations with BMI based on results of the GIANT + GERA studies [@Hoffmann_2018] with $N=100,418 + 234,069 =334487$  and $SNPs=289$
+
+
+## Steps
+
+1. Calculate more accurates SEs using the betas and Pvals
+2. Calculate the approximate SEs for decreasing samples sizes
+3. Calculate the probability values considering the estimated betas and the corresponding SEs
+4. Exclude the IV if Pval > genome-wide significance threshold  (5 × 10−8) **NEW 5x10^(-6))**
+5. Calculate cumulative explained variances
+6. Represent figure similar to Fig1 in Chatterjee’s paper @QiChatterjee_2021
+
+
+```{r}
+#| label: z-statistic
+
+### justo approach email 30-10-2022  ---------------------------------------
+## LOOP simulation ----------------------------------------------
+n.orig <- 334487
+n <- c(1000, 2000, 5000, seq(10000, 330000, by=10000), 334487)
+
+# create vectors to store pvals_n in
+colnames_pval <- c()
+for (i in 1:length(n)) {
+  colnames_pval[i] <- paste0("p_value_exp_sample_", format(n[i], scientific = FALSE))
+}
+## initialize
+se_update <- c()
+pvals_df <- data.frame(matrix(ncol = length(colnames_pval), nrow =  nrow(my_data)))
+colnames(pvals_df) <- colnames_pval
+for (i in 1:nrow(my_data)) {
+  # 1) Calculate more accurates SEs using the provided betas and Pvals 
+  se_update[i] <- my_data[["beta_exp"]][i]/-qnorm(p=(my_data[["p_value_exp"]][i]/2),mean=0)
+  
+  # 2) Calculate the approximate SEs for decreasing samples sizes
+  ### approximation of sd (single value)
+  sd <- se_update[i] * sqrt(n.orig)
+  #### approximation of standard error simulating different sample size
+  se_n <- sd/(sqrt(n))
+  
+  # 3) Calculate the probability values considering the estimated betas and the corresponding SEs
+  for (j in 1:length(n)) {
+    pvals_n <- 2*(1-pnorm(abs(my_data[["beta_exp"]][i])/abs(se_n[j]), mean=0, 
+                          lower.tail = TRUE))
+    pvals_df[i, j] <- pvals_n
+  }
+}
+
+# 4. Exclude the IV if Pval > genome-wide significance threshold  (5 × 10−8)
+my_data <- as_tibble(cbind(my_data, pvals_df))
+
+pvals_df %>% 
+  summarize(across(.cols = everything(), function(x) sum(x < 5*10^(-6)))) %>% 
+  t() %>% 
+  kable(caption = "Count of significant SNPs depending on sample size") %>% 
+  kable_styling(font_size=18)
+```
+
+## Explained variance
+
+* The variance in BMI explained by the IVs is calculated with the following formula: $explained\ variance = 2f(1-f)\beta^2$, where $f$ denotes the allele frequency and $\beta$ is the additive genetic effect. 
+* The explained variance in liability to GSD and GBC is calculated as described by @So_2011.
+
+
+```{r}
+#| label: calculate-explained-variance
+
+explained_variance_numeric <- function(eaf, beta) {
+  # eaf = allele frequency
+  # beta = additive genetic effect
+  explained_variance_numeric <- 2*eaf *(1-eaf) * beta^2
+  return(explained_variance_numeric)
+}
+
+explained_variance_binary <- function(PA,RR1,RR2,K) {
+  # from So et al 2011
+  # Calculates the variance in liability explained by a single biallelic loci.
+  # PA: allele frequency of the risk allele (denoted A)
+  # RR1: relative risk of Aa (one risk allele) compared to aa (no risk allele)
+  # RR2: relative risk of AA (two risk alleles) compared to aa (no risk allele)
+  # K:  overall probability of disease in population
+  # Returns the variance explained (Vg) and the mean liability for each genotype (the overall liability is normalized to mean 0 and variance 1)
+  Paa = (1-PA)^2
+  PAa = 2*PA*(1-PA)
+  PAA = PA^2
+  muaa=0
+  faa= K/(Paa + PAa*RR1 + PAA*RR2)
+  fAa= RR1*faa
+  fAA= RR2*faa 
+  T = qnorm(1-faa) 
+  muAa = T-qnorm(1-fAa)
+  muAA = T-qnorm(1-fAA)
+  mean.all= PAa*muAa+ PAA*muAA
+  Vg= Paa*(muaa-mean.all)^2 + PAa*(muAa-mean.all)^2+ PAA*(muAA-mean.all)^2
+  actual.Vg =  Vg/(1+Vg) 
+  VR = 1-actual.Vg 
+  actual.T = Paa*sqrt(VR)*qnorm(1-faa) + PAa*sqrt(VR)*qnorm(1-fAa) + PAA*sqrt(VR)*qnorm(1-fAA)
+  actual.muaa = actual.T - sqrt(VR) * qnorm(1-faa)
+  actual.muAa = actual.T - sqrt(VR) * qnorm(1-fAa)
+  actual.muAA = actual.T - sqrt(VR) * qnorm(1-fAA)
+  
+  res <- list(Vg=actual.Vg,muaa=actual.muaa, muAa = actual.muAa, muAA=actual.muAA)
+  res
+} 
+
+## calculate explained variance
+my_data <- my_data %>% 
+  mutate(explained_variance_BMI = explained_variance_numeric(eaf = eaf_exp, beta = beta_exp), 
+         explained_variance_GSD = explained_variance_binary(PA = eaf_out, 
+                                                            RR1 = exp(beta_out), 
+                                                            RR2 = exp(beta_out)^2, 
+                                                            K = 0.1  # assumed prevalence in population
+                                                            )$Vg,
+         explained_variance_GBC = explained_variance_binary(PA = eaf_gbc, 
+                                                            RR1 = exp(beta_gbc), 
+                                                            RR2 = exp(beta_gbc)^2, 
+                                                            K = 1.2/100000  # assumed prevalence in population
+                                                            )$Vg
+         )
+
+## paper backing prevalence GSD
+# https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3343155/#:~:text=Gallstones%20are%20common.,develop%20stones%20at%20some%20time.&text=The%20majority%20will%20not%20develop,cholecystitis%2C%20cholangitis%2C%20or%20pancreatitis
+## paper backing prevalence GSD (ASR/100.000 = 1.2 worldwide)
+# https://www.wcrf.org/cancer-trends/gallbladder-cancer-statistics/
+
+#explained_variance_binary(PA=0.3,RR1=1.3,RR2=1.3^2,K=0.01)
+```
+
+
+## Plot explained variance in BMI vs -log10 P-value from Hoffmann et al.
+
+```{r}
+#| label: explainedBMIvarianceVSpval
+#| 
+
+my_data$gene_label <- NA
+my_data$gene_label[my_data$SNP %in% filter_FTO$refsnp_id] <- "FTO"
+
+# color labeling
+my_data$fto_col_annot <- "No FTO variant"
+my_data$fto_col_annot[my_data$SNP %in% filter_FTO$refsnp_id] <- "FTO variant"
+
+ggplot(data = my_data, 
+       mapping = aes(x=explained_variance_BMI*100, y= -log10(p_value_exp),  
+                    col=fto_col_annot, label=gene_label)
+       )+
+  geom_point(alpha=0.6)+
+  ggrepel::geom_text_repel(show.legend = FALSE)+
+  xlab("Explained variance in BMI in %")+
+  ylab("-log10 P-val")+
+  labs(title = "Explained variance exposure",
+       col='SNP'
+       ) +
+  theme_few()+
+  scale_colour_few() -> fig00
+fig00
+
+ggsave(filename = "../output/plots/figure00.png", plot = fig00, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
+```
+
+## Plot Figure 1 from Qi&Chatterjee 2021
+
+Here we show a plot similar to Figure 1 in [@QiChatterjee_2021]:
+
+```{r get-data-for-fig1}
+# 4.       Exclude the IV if Pval > genome-wide significance threshold  (5 × 10−8) **NEW 5x10^(-6))**
+# 5.       Calculate cumulative explained variances
+# initialize df
+df_cum_expl_var <- tibble(n=n, 
+                          cum_expl_varX = rep(NA, length(n)), 
+                          cum_expl_varU = rep(NA, length(n)), 
+                          cum_expl_varY = rep(NA, length(n)),
+                          count_IVs = rep(NA, length(n))
+)
+
+for (i in 1:length(colnames_pval) ) {
+  threshold <- 5*10^(-6)
+  select_col <- colnames_pval[i]
+  # calculate cum explained variance and count of IVs
+  summarydat <- my_data %>% 
+    filter(!!sym(select_col) < threshold) %>% 
+    select(explained_variance_BMI, explained_variance_GSD, explained_variance_GBC) %>% 
+    summarise(expl_variances =across(.cols = everything(), function(x) sum(x)),
+              count_IVs = n())
+  # fill up df
+  df_cum_expl_var[i, 2] <- summarydat$expl_variances[1]
+  df_cum_expl_var[i, 3] <- summarydat$expl_variances[2]
+  df_cum_expl_var[i, 4] <- summarydat$expl_variances[3]
+  df_cum_expl_var[i, 5] <- summarydat$count_IVs
+}
+```
+
+
+```{r}
+#| label: figure1QiChatterjee
+# 6.       Represent figure similar to Fig1 in Chatterjee’s paper
+
+# Dual Y axis: we have 284 IVs, scale them to 5% (y-axis [0;5%]): 3/284 
+## https://r-graph-gallery.com/line-chart-dual-Y-axis-ggplot2.html
+scale_factor <- 4.5/284
+df_cum_expl_var <- df_cum_expl_var %>% 
+  mutate(
+    cum_expl_varX = cum_expl_varX *100, # in percent 
+    cum_expl_varU = cum_expl_varU *100,
+    cum_expl_varY = cum_expl_varY *100,
+    count_IVs_scaled = count_IVs*scale_factor)
+
+plot_data <- df_cum_expl_var %>% 
+  pivot_longer(cols = c(cum_expl_varX, cum_expl_varU, count_IVs_scaled)) %>% 
+  mutate(name = factor(name, labels = c("Number of IVs", "% var(U)", "% var(X)")))
+
+ggplot(plot_data, aes(x=log10(n), y=value, col=name))+
+  geom_point(alpha=0.6)+
+  geom_line(alpha=0.6)+
+  xlab("log10(N)")+
+  #ylab("% variance explained by IVs")+
+  labs(title = "Figure 1",
+       col='', 
+       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+       ) +
+  scale_y_continuous(
+    # Features of the first axis
+    name = "% variance explained by IVs",
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./scale_factor, name="Number of IVs")
+  ) + 
+  theme_few()+
+  scale_colour_few() ->fig01
+
+ggsave(filename = "../output/plots/figure01.png", plot = fig01, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
+```
+
+```{r updated-fig01}
+plot_data1 <- df_cum_expl_var %>% 
+  pivot_longer(cols = c(cum_expl_varX, cum_expl_varU, cum_expl_varY)) %>% 
+  mutate(name = factor(name, labels = c("% var(U)", "% var(X)", "% var(Y)")))
+
+N_annotation <- c(10000, 100000, 200000, 300000)
+## plot
+ggplot(plot_data1, aes(x=n, y=value, col=name))+
+  geom_point(alpha=0.6)+
+  geom_line(alpha=0.6)+
+  geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
+  scale_x_continuous(name = "Sample Size",
+                     labels = comma, 
+                     breaks = N_annotation, #c( 10000, n[7:length(n)]),
+                     limits = c(10000, 350000))+
+  #ylab("% variance explained by IVs")+
+  labs(title = "Figure 1",
+       col='', 
+       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+       ) +
+  scale_y_continuous(
+    # Features of the first axis
+    name = "% variance explained by IVs",
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./scale_factor, name="Number of IVs")
+  ) + 
+  theme_few()+
+  #scale_colour_few() +
+  #scale_color_manual(name = "", values = c("% var(U)" = "red", 
+  #                                         "% var(X)" = "blue", 
+  #                                         "% var(Y)" = "darkblue", 
+  #                                         "Number of IVs" = "black"
+  #                                         ))
+  #
+  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
+                                           "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
+                                           "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
+                                           "Number of IVs" = "black"
+                                           )) -> fig01.update
+fig01.update
+# scale_color_manual(name = "Y series", values = c("Y1" = "darkblue", "Y2" = "red"))
+ggsave(filename = "../output/plots/figure01update.png", plot = fig01.update, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
+```
+
+## Different genetic architectures of the exposure
+
+```{r MAF-Pval}
+ggplot(data = my_data, aes(x=eaf_exp, y=-log10(p_value_exp)))+
+  geom_point(alpha=0.6)+
+  geom_hline(yintercept=-log10(median(my_data$p_value_exp)), col="red", alpha=0.6)+
+  geom_vline(xintercept=median(my_data$eaf_exp), col="red", alpha=0.6)+
+  xlab("Effect allele frequency for exposure")+
+  ylab("-log10(P-value) ")+
+  labs(title = "Figure 2",
+       subtitle = "Define different genetic architectures",
+       #col='', 
+       #caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+       ) +
+  theme_few()+
+  scale_colour_few() ->fig02
+#fig02
+
+ggsave(filename = "../output/plots/figure02.png", plot = fig02)
+```
+
+### MAF vs betas
+
+```{r mafVSbetas}
+plot_data_2 <- my_data %>% 
+  mutate(maf_exp = ifelse(eaf_exp >0.5, 1-eaf_exp, eaf_exp)) %>% 
+  select(maf_exp, beta_exp)
+
+ggplot(data = plot_data_2, aes(x=maf_exp, y=abs(beta_exp)))+
+  geom_point(alpha=0.6)+
+  geom_hline(yintercept=median(abs(plot_data_2$beta_exp)), col="red", alpha=0.6)+
+  geom_vline(xintercept=median(plot_data_2$maf_exp), col="red", alpha=0.6)+
+  xlab("Minor allele frequency for exposure")+
+  ylab("abs(beta_BMI)")+
+  labs(title = "Figure 2-update",
+       subtitle = "Define different genetic architectures",
+       #col='', 
+       #caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+       ) +
+  theme_few()+
+  scale_colour_few() ->fig02.update
+fig02.update
+ggsave(filename = "../output/plots/figure02update.png", plot = fig02.update)
+```
+
+
+
+## Simulation Framework
+
+* Estimate parameters for the simulation (pi1, varx, pi2, varu, muy, vary, pi3, pi4, delta0) based on real data
+* Start with $N=10.000$ and $N=300.000$
+
+![](../img/m4qi2021.png)
+
+## 
+
+**References**
+
+::: {#refs}
+:::
+
+
+**Software**
+
+This analysis was carried out using the statistical software `r base::version$version.string` along with [RStudio](https://www.rstudio.com).
+Apart from R's base functionality, the following packages were used: <br/>
+
+```{r software, echo=FALSE}
+# or faster with function...
+installed.packages()[names(sessionInfo()$otherPkgs), "Version"]
+```
+
+##  {background-image="../templates/bg4.png"}
+
+::: footer
+
+:::
+
