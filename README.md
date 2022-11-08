@@ -3,7 +3,7 @@ Assessment of simulation procedures and robust methods for Mendelian randomizati
 
 Mendelian Randomization (MR) is an analytical method of statistical genetics that uses genetic variants 
 as instrumental variables (IVs) to infer whether an observational association between a particular exposure
-and an outcome of interest is consistent with a causal effect (1,2). A genetic variant is a valid IV if (a) it 
+and an outcome of interest is consistent with a causal effect. A genetic variant is a valid IV if (a) it 
 is associated with the exposure (relevance condition), (b) there are no associations between the IV and any 
 confounders (independence condition), and (c) the IV has no direct effect on the outcome (exclusion-restriction 
 condition). Violation of the IV assumptions may lead to invalid conclusions from MR results (3). Robust methods 
