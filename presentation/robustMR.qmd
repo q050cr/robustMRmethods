@@ -26,7 +26,6 @@ format:
 bibliography: ../references/references.bib
 ---
 
-
 ```{r}
 #| label: dependencies
 #| include: false
@@ -75,7 +74,6 @@ GBC_dat <- GBC_dat %>%
 my_data <- my_data %>% left_join(GBC_dat, by =c("SNP", "dummyID"))
 ```
 
-
 ## Get gene names from rs-ids
 
 ```{r}
@@ -94,40 +92,32 @@ t(filter_FTO) %>% kable() %>%
   kable_styling(font_size=18)
 ```
 
-
-:::: {.columns}
-
+::: columns
 ::: {.column width="50%"}
-* from the 284 SNPs only one was associated with the FTO gene
+-   from the 284 SNPs only one was associated with the FTO gene
 :::
 
 ::: {.column width="50%"}
 ![](../img/ensembl_logo.png)
-
 :::
-
-::::
-
-
+:::
 
 ## Simulating on empirical data
 
 ### Calculate approximate SEs for decreasing sample sizes and corresponding p-vals
 
-* se, pval and study size depend on each other, within each study
-* selection of IVs based on exposure study (BMI in our case)
-* Summary statistics on genetic associations with BMI based on results of the GIANT + GERA studies [@Hoffmann_2018] with $N=100,418 + 234,069 =334487$  and $SNPs=289$
-
+-   se, pval and study size depend on each other, within each study
+-   selection of IVs based on exposure study (BMI in our case)
+-   Summary statistics on genetic associations with BMI based on results of the GIANT + GERA studies [@Hoffmann_2018] with $N=100,418 + 234,069 =334487$ and $SNPs=289$
 
 ## Steps
 
-1. Calculate more accurates SEs using the betas and Pvals
-2. Calculate the approximate SEs for decreasing samples sizes
-3. Calculate the probability values considering the estimated betas and the corresponding SEs
-4. Exclude the IV if Pval > genome-wide significance threshold  (5 × 10−8) **NEW 5x10^(-6))**
-5. Calculate cumulative explained variances
-6. Represent figure similar to Fig1 in Chatterjee’s paper @QiChatterjee_2021
-
+1.  Calculate more accurates SEs using the betas and Pvals
+2.  Calculate the approximate SEs for decreasing samples sizes
+3.  Calculate the probability values considering the estimated betas and the corresponding SEs
+4.  Exclude the IV if Pval \> genome-wide significance threshold (5 × 10−8) **NEW 5x10\^(-6))**
+5.  Calculate cumulative explained variances
+6.  Represent figure similar to Fig1 in Chatterjee's paper @QiChatterjee_2021
 
 ```{r}
 #| label: z-statistic
@@ -176,12 +166,11 @@ pvals_df %>%
 
 ## Explained variance
 
-* The variance in BMI explained by the IVs is calculated with the following formula: $explained\ variance = 2f(1-f)\beta^2$, where $f$ denotes the allele frequency and $\beta$ is the additive genetic effect. 
-* The explained variance in liability to GSD and GBC is calculated as described by @So_2011
-  + Prevalence of disease $K$ must be set:
-      - [Prevalence GSD](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3343155/#:~:text=Gallstones%20are%20common.,develop%20stones%20at%20some%20time.&text=The%20majority%20will%20not%20develop,cholecystitis,%20cholangitis,%20or%20pancreatitis)
-      - [Prevalence GBC](https://www.wcrf.org/cancer-trends/gallbladder-cancer-statistics/)
-
+-   The variance in BMI explained by the IVs is calculated with the following formula: $explained\ variance = 2f(1-f)\beta^2$, where $f$ denotes the allele frequency and $\beta$ is the additive genetic effect.
+-   The explained variance in liability to GSD and GBC is calculated as described by @So_2011
+    -   Prevalence of disease $K$ must be set:
+        -   [Prevalence GSD](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3343155/#:~:text=Gallstones%20are%20common.,develop%20stones%20at%20some%20time.&text=The%20majority%20will%20not%20develop,cholecystitis,%20cholangitis,%20or%20pancreatitis)
+        -   [Prevalence GBC](https://www.wcrf.org/cancer-trends/gallbladder-cancer-statistics/)
 
 ```{r}
 #| label: calculate-explained-variance
@@ -246,7 +235,6 @@ my_data <- my_data %>%
 
 #explained_variance_binary(PA=0.3,RR1=1.3,RR2=1.3^2,K=0.01)
 ```
-
 
 ## Plot explained variance in BMI vs -log10 P-value from Hoffmann et al.
 
@@ -313,7 +301,6 @@ for (i in 1:length(colnames_pval) ) {
   df_cum_expl_var[i, 5] <- summarydat$count_IVs
 }
 ```
-
 
 ```{r}
 #| label: figure1QiChatterjee
@@ -449,14 +436,43 @@ fig02.update
 ggsave(filename = "../output/plots/figure02update.png", plot = fig02.update)
 ```
 
-
-
 ## Simulation Framework
 
-* Estimate parameters for the simulation (pi1, varx, pi2, varu, muy, vary, pi3, pi4, delta0) based on real data
-* Start with $N=10.000$ and $N=300.000$
+-   Estimate parameters for the simulation (pi1, varx, pi2, varu, muy, vary, pi3, pi4, delta0) based on real data
+-   Start with $N=10.000$ and $N=300.000$
 
 ![](../img/m4qi2021.png)
+
+## Meeting Summary I from 2022-11-09
+
+### Update previous work
+
+-   Harmonize 2-sample MR studies 
+-   Explained Variance calculation:
+    -   For BMI
+        -   Use updated formula that takes sample size into account
+    -   For GSD
+        -   Update prevalence $K$ in accordance to epidemiological data from Michael Leitzmann and Frank Lammert
+    -   For GBC
+        -   Update prevalence $K=0.05$ from [Cancer Today](https://gco.iarc.fr/today/home)
+-   Update Figure 01
+-   Highlight FTO variant and update Figure 02
+
+## Meeting Summary II from 2022-11-09
+
+### Outlook
+
+-   Calculate MR estimate of causal effect with different MR methods using:
+    -   all significant IVs [adapted $pval-threshold=5x10^{-6}$]
+    -   only FTO variant (get Wald estimate)
+    
+-   Simulation study: 
+    -   Start with sample size of 50,000 and ~9 IVs (depending on how many remain after harmonizing datasets)
+    -   Simulate for all significant IVs $\beta_{X_{sim}}$ from a normal distribution $\beta_{X_{sim}} \sim N(\beta_{\hat X_{IV}}, \hat se_{X_N})$ and $\beta_{X_{sim}}$ from a normal distribution $\beta_{Y_{sim}} \sim N(\beta_{\hat Y_{IV}}, \hat se_{Y_N})$; start with $n_{sim}=100$
+    -   Simulate $maf$ from a Binomial distribution with $maf_{X_{sim}} \sim Bin(maf, 2N)$ 
+        - This I did not fully understand: We do not want to count the successes, but simulate the $maf$. Should we draw it from a normal distribution too?
+        
+
 
 ## 
 
@@ -465,11 +481,9 @@ ggsave(filename = "../output/plots/figure02update.png", plot = fig02.update)
 ::: {#refs}
 :::
 
-
 **Software**
 
-This analysis was carried out using the statistical software `r base::version$version.string` along with [RStudio](https://www.rstudio.com).
-Apart from R's base functionality, the following packages were used: <br/>
+This analysis was carried out using the statistical software `r base::version$version.string` along with [RStudio](https://www.rstudio.com). Apart from R's base functionality, the following packages were used: <br/>
 
 ```{r software, echo=FALSE}
 # or faster with function...
