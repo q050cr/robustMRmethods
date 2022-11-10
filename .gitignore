@@ -17,7 +17,6 @@ img/
 meetings/
 output/
 paper-backup/
-references/
 SchwedaMSc/
 templates/
 Vorlagen/
@@ -26,6 +25,7 @@ Vorlagen/
 scripts/old/
 scripts/test/
 presentation/robustMR_files/
+presentation/old/
 
 # files in subdirs
 presentation/robustMR.html

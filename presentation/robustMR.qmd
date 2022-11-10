@@ -11,17 +11,17 @@ format:
     slide-number: true
     scrollable: true
     navigation-mode: vertical
-    chalkboard:   # kreidetafel
-      theme: whiteboard
-      boardmarker-width: 5
-      buttons: false
+    #chalkboard:   # kreidetafel
+    #  theme: whiteboard
+    #  boardmarker-width: 5
+    #  buttons: false
     incremental: false  # display bullet lists all at once
     preview-links: auto
     logo: ../templates/mederlab_logo.png
     css: ../templates/main.css
     footer: "robustMRmethods"
     theme: [simple, ../templates/custom.scss]
-    #self-contained: true  # for distribution (slows rendering), not compatible with chulkboarddic
+    self-contained: true  # for distribution (slows rendering), not compatible with chulkboarddic
 # reference-doc: templates/20210129_mederslidemaster.pptx  # only for pptx rendering
 bibliography: ../references/references.bib
 ---
@@ -177,7 +177,10 @@ pvals_df %>%
 ## Explained variance
 
 * The variance in BMI explained by the IVs is calculated with the following formula: $explained\ variance = 2f(1-f)\beta^2$, where $f$ denotes the allele frequency and $\beta$ is the additive genetic effect. 
-* The explained variance in liability to GSD and GBC is calculated as described by @So_2011.
+* The explained variance in liability to GSD and GBC is calculated as described by @So_2011
+  + Prevalence of disease $K$ must be set:
+      - [Prevalence GSD](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3343155/#:~:text=Gallstones%20are%20common.,develop%20stones%20at%20some%20time.&text=The%20majority%20will%20not%20develop,cholecystitis,%20cholangitis,%20or%20pancreatitis)
+      - [Prevalence GBC](https://www.wcrf.org/cancer-trends/gallbladder-cancer-statistics/)
 
 
 ```{r}
@@ -473,9 +476,10 @@ Apart from R's base functionality, the following packages were used: <br/>
 installed.packages()[names(sessionInfo()$otherPkgs), "Version"]
 ```
 
+---
 ##  {background-image="../templates/bg4.png"}
 
 ::: footer
 
 :::
-
+---
