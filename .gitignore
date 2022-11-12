@@ -1,4 +1,3 @@
-
 ## https://linuxize.com/post/gitignore-ignoring-files-in-git/
 # files anywhere
 .Rproj.user
@@ -6,7 +5,6 @@
 .RData
 .Ruserdata
 .DS_Store
-
 # folders
 analysis-justo/
 data/
@@ -17,15 +15,15 @@ img/
 meetings/
 output/
 paper-backup/
+reports/
 SchwedaMSc/
 templates/
 Vorlagen/
-
 # subdirectories
 scripts/old/
 scripts/test/
 presentation/robustMR_files/
 presentation/old/
-
 # files in subdirs
 presentation/robustMR.html
+.secret

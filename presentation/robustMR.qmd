@@ -89,7 +89,7 @@ filter_FTO <- rsIds_GeneNames %>%
   distinct(refsnp_id, .keep_all = TRUE)
 
 t(filter_FTO) %>% kable() %>% 
-  kable_styling(font_size=18)
+  kable_styling(font_size=14)
 ```
 
 ::: columns
@@ -468,10 +468,13 @@ ggsave(filename = "../output/plots/figure02update.png", plot = fig02.update)
     
 -   Simulation study: 
     -   Start with sample size of 50,000 and ~9 IVs (depending on how many remain after harmonizing datasets)
-    -   Simulate for all significant IVs $\beta_{X_{sim}}$ from a normal distribution $\beta_{X_{sim}} \sim N(\beta_{\hat X_{IV}}, \hat se_{X_N})$ and $\beta_{X_{sim}}$ from a normal distribution $\beta_{Y_{sim}} \sim N(\beta_{\hat Y_{IV}}, \hat se_{Y_N})$; start with $n_{sim}=100$
+    -   Simulate for all significant IVs $\beta_{X_{sim}}$ from a normal distribution $\beta_{X_{sim}} \sim N(\beta_{\hat X_{IV}}, \hat se_{X_N})$ and $\beta_{Y_{sim}}$ from a normal distribution $\beta_{Y_{sim}} \sim N(\beta_{\hat Y_{IV}}, \hat se_{Y_N})$; start with $n_{sim}=100$
     -   Simulate $maf$ from a Binomial distribution with $maf_{X_{sim}} \sim Bin(maf, 2N)$ 
-        - This I did not fully understand: We do not want to count the successes, but simulate the $maf$. Should we draw it from a normal distribution too?
-        
+        - This I did not fully understand: Should we draw the proportion $maf$ from a normal distribution (with $\mu=\hat {maf}$ and $sd=?$) too?
+    -   Choose simulated beta estimates (exposure/ outcome) and compare causal estimates of different MR methods with causal estimate from original study (n~300,000) and with biologic plausible estimate (Wald estimate from FTO gene as single IV)
+        - Calculate Bias, Variance and MSE
+    
+-   From figure 2: SNPs were divided into 4 grouls -> Repeat simulation for SNPs from each group
 
 
 ## 
