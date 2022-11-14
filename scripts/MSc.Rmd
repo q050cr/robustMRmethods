@@ -10,6 +10,7 @@ params:
   doc_title: "MSc Default Title"
 output: 
   html_document:
+    code_folding: hide
     theme: paper
     toc: true
     number_sections: true
@@ -22,15 +23,17 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+#knitr::opts_chunk$set(echo = FALSE)
 figurespath <- paste0("../reports/", format(Sys.time(), "%Y%m%d"), '_figures/')
 knitr::opts_chunk$set(fig.path = figurespath)  # reference is script! also creates new dirs
 
 library(dplyr)
+library(purrr)
 library(tidyr)
 library(stringr)
 library(tibble)
 library(ggplot2)
+library(ggthemes)
 library(scales)
 library(ggthemes)
 #library(biomaRt)  # different script
@@ -850,7 +853,7 @@ for (i in 1:nrow(all_quadrants)) {
 
 ### Using {TwoSampleMR} package
 
-```{r}
+```{r TwoSampleMR-analysis}
 harmonised_dat4TwoSampleMR <- harmonised_dat %>% 
   mutate(id.exposure = "BMI", id.outcome = "GBC")  # https://mrcieu.github.io/TwoSampleMR/articles/perform_mr.html
 
@@ -860,16 +863,51 @@ res <- res %>% mutate(OR = exp(b), CI.lower= exp(b-se), CI.upper=exp(b+se))
 res %>% 
   kable(digits = 3, 
         caption = "MR Results for GBC (outcome) using genetic variants as instrumental variables for BMI"
-        )
+        ) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
 
-#res.selected_methods <- TwoSampleMR::mr(harmonised_dat4TwoSampleMR, 
-#                                        method_list = c("mr_egger_regression", "mr_ivw"))
+
+```{r scatter-TwoSampleMR, warning=FALSE, message=FALSE}
+# mr_method_list()
+res.selected_methods <- TwoSampleMR::mr(harmonised_dat4TwoSampleMR, 
+                                        method_list = c("mr_egger_regression", "mr_ivw"))
+p1 <- mr_scatter_plot(res.selected_methods, harmonised_dat4TwoSampleMR)
+p1[[1]] #+
+  #ggthemes::theme_few()
+
+# SAVE
+filename.mr.scatter <- paste0("../output/plots/", Sys.Date(), "_figure_mrscatter.png")
+ggsave(filename = filename.mr.scatter, plot = p1[[1]], 
+         #width = 10, height = 6, 
+         #units = "in"  # default
+         )
+```
+
+```{r forestplot-TwoSampleMR, fig.width=5, fig.height=24, warning=FALSE}
+res_single <- TwoSampleMR::mr_singlesnp(harmonised_dat4TwoSampleMR, all_method = c("mr_egger_regression", "mr_ivw"))
+p2 <- mr_forest_plot(res_single,  exponentiate = FALSE)
+p2[[1]]
+
+#SAVE
+filename.mr.forest <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest.png")
+ggsave(filename = filename.mr.forest, plot = p2[[1]], 
+       width = 5, 
+       height = 24, 
+         #units = "in"  # default
+         )
+```
+
+```{r funnel-plot}
+p4 <- mr_funnel_plot(res_single)
+p4[[1]] +
+  ggthemes::theme_few()
 ```
 
 
 ### Using {MendelianRandomization} package
 
-```{r}
+```{r MendelianRandomization-analysis, warning=FALSE}
 mr_methods = c("IVW", "median", "mode", "PRESSO", "Robust", "Lasso", "egger", "conmix", "MRMix", "RAPS")
 est <- tibble(mr_methods=mr_methods, estimate=NA, se.estimate=NA, time=NA)
 numIV <- nrow(my_data_harm)
@@ -1010,11 +1048,89 @@ if (numIV>2){
 
 est %>% 
   mutate(OR=exp(estimate), CI.lower=exp(estimate-se.estimate),CI.upper=exp(estimate+se.estimate)) %>%  
-  kable(digits=3, caption = "MR Results for GBC (outcome) using genetic variants as instrumental variables for BMI")
+  kable(digits=3, caption = "MR Results for GBC (outcome) using genetic variants as instrumental variables for BMI") %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
 
 
 
+## Simulation
+
+
+```{r simulatesimulatesimulate}
+## try starting with n=50.000 -> selected 9 IVs
+set.seed(1234)
+
+## initialize
+nsim <- 100
+se_update_BMI <- c()
+se_update_GBC <- c()
+
+est <- tibble(no_sim = 1:nsim)
+#est <- matrix(NA, 
+#              nrow = nsim, 
+#              ncol = 2*length(n)  # theta_sim and theta_se_sim
+#              ) 
+#colnames(est) <- c(paste0("theta_sim_", n), paste0("theta_se_sim_", n))
+
+## START SIM
+T0 = proc.time()[3]
+for (i in 1:length(colnames_pval)) {
+  T0 = proc.time()[3]
+  threshold <- 5*10^-6
+  numIV <- sum(my_data_harm[[colnames_pval[i]]] < threshold)
+  if (numIV<5) { # start with 5 IVs only (sample size ~50,000)
+    next
+  }
+  
+  # FILTER DATA
+  sim_dat <- my_data_harm %>% 
+    filter(!!sym(colnames_pval[i]) < threshold) %>% 
+    select(SNP, eaf.bmi, beta.bmi, p.value.bmi, eaf.gbc, beta.gbc, p.value.gbc)
+  
+  # get simulated se_{sample size}
+  for (j in 1:nrow(sim_dat)) {
+    # as done before in section "simulating on empirical data"
+    se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+    se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+  }
+  
+  sim_dat <- sim_dat %>%
+      bind_cols(tibble(se_update_BMI=se_update_BMI, se_update_GBC=se_update_GBC))
+  
+  # simulate beta values from normal_distribution
+  for (k in 1:nsim) {
+    sim_dat <- sim_dat %>% 
+      mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se_update_BMI, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
+      mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se_update_GBC, .f = ~rnorm(n = 1, mean = .x, sd = .y)))
+    
+    # PERFORM MR_analysis
+    mr.obj = MendelianRandomization::mr_input(
+          bx = sim_dat$beta.bmi_sim_norm, 
+          bxse = sim_dat$se_update_BMI, 
+          # outcome
+          by = sim_dat$beta.gbc_sim_norm, 
+          byse = sim_dat$se_update_GBC, 
+          snps = sim_dat$SNP,
+          exposure = "Body mass index",
+          outcome = "Gallbladder Cancer"
+        ) 
+    # CONMIX (as reference)
+    res = MendelianRandomization::mr_conmix(mr.obj)
+    colname_theta <- paste0("theta_sim_", n[i])
+    colname_theta_se <- paste0("theta_se_sim_", n[i])
+    ## store results
+    est[k, colname_theta] <- res$Estimate
+    CIlength = res$CIUpper-res$CILower
+    if (length(CIlength)>1) print("conmix multimodal")
+    est[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
+    rm(res)
+  }
+  print(paste0("|||-----------------------Run finished for sample size: ", n[i], " -----------------------|||"))
+}
+T1 = proc.time()[3]
+timediff = T1-T0
+```
 
 
 

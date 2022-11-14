@@ -7,6 +7,7 @@ library(dplyr)
 library(gmailr)
 rm(list=ls())  # not in rmd doc, otherwise params deleted
 #gm_auth_configure(path = "/Users/christophreich/Library/CloudStorage/OneDrive-bwedu/credentials.json")
+#gm_auth()
 
 render_report = function(...) {
   ## disease: acs, cad, hfref, dcm | default: dcm
