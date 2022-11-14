@@ -1130,6 +1130,10 @@ for (i in 1:length(colnames_pval)) {
 }
 T1 = proc.time()[3]
 timediff = T1-T0
+
+
+saveRDS(est, paste0(Sys.Date(), "_est.rds")
+
 ```
 
 
