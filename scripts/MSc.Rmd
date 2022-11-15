@@ -2,7 +2,6 @@
 title: "`r params$doc_title`"
 author: | 
         | christoph.reich@med.uni-heidelberg.de 
-        | lorenzo@imbi.uni-heidelberg.de
         | 
 date: "`r format(Sys.time(), '%d %B, %Y, %H:%M')`"
 params:
@@ -18,7 +17,7 @@ output:
     toc_depth: 4
     df_print: kable
     latex_engine: xelatex
-#bibliography: ../references/project01.bib
+bibliography: ../references/references.bib
 ---
 
 
@@ -1057,83 +1056,85 @@ est %>%
 ## Simulation
 
 
-```{r simulatesimulatesimulate}
+```{r simulatesimulatesimulate, warning=FALSE}
 ## try starting with n=50.000 -> selected 9 IVs
-set.seed(1234)
-
-## initialize
-nsim <- 100
-se_update_BMI <- c()
-se_update_GBC <- c()
-
-est <- tibble(no_sim = 1:nsim)
-#est <- matrix(NA, 
-#              nrow = nsim, 
-#              ncol = 2*length(n)  # theta_sim and theta_se_sim
-#              ) 
-#colnames(est) <- c(paste0("theta_sim_", n), paste0("theta_se_sim_", n))
-
-## START SIM
-T0 = proc.time()[3]
-for (i in 1:length(colnames_pval)) {
-  T0 = proc.time()[3]
-  threshold <- 5*10^-6
-  numIV <- sum(my_data_harm[[colnames_pval[i]]] < threshold)
-  if (numIV<5) { # start with 5 IVs only (sample size ~50,000)
-    next
-  }
-  
-  # FILTER DATA
-  sim_dat <- my_data_harm %>% 
-    filter(!!sym(colnames_pval[i]) < threshold) %>% 
-    select(SNP, eaf.bmi, beta.bmi, p.value.bmi, eaf.gbc, beta.gbc, p.value.gbc)
-  
-  # get simulated se_{sample size}
-  for (j in 1:nrow(sim_dat)) {
-    # as done before in section "simulating on empirical data"
-    se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
-    se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
-  }
-  
-  sim_dat <- sim_dat %>%
-      bind_cols(tibble(se_update_BMI=se_update_BMI, se_update_GBC=se_update_GBC))
-  
-  # simulate beta values from normal_distribution
-  for (k in 1:nsim) {
-    sim_dat <- sim_dat %>% 
-      mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se_update_BMI, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
-      mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se_update_GBC, .f = ~rnorm(n = 1, mean = .x, sd = .y)))
-    
-    # PERFORM MR_analysis
-    mr.obj = MendelianRandomization::mr_input(
-          bx = sim_dat$beta.bmi_sim_norm, 
-          bxse = sim_dat$se_update_BMI, 
-          # outcome
-          by = sim_dat$beta.gbc_sim_norm, 
-          byse = sim_dat$se_update_GBC, 
-          snps = sim_dat$SNP,
-          exposure = "Body mass index",
-          outcome = "Gallbladder Cancer"
-        ) 
-    # CONMIX (as reference)
-    res = MendelianRandomization::mr_conmix(mr.obj)
-    colname_theta <- paste0("theta_sim_", n[i])
-    colname_theta_se <- paste0("theta_se_sim_", n[i])
-    ## store results
-    est[k, colname_theta] <- res$Estimate
-    CIlength = res$CIUpper-res$CILower
-    if (length(CIlength)>1) print("conmix multimodal")
-    est[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
-    rm(res)
-  }
-  print(paste0("|||-----------------------Run finished for sample size: ", n[i], " -----------------------|||"))
-}
-T1 = proc.time()[3]
-timediff = T1-T0
-
-
-saveRDS(est, paste0(Sys.Date(), "_est.rds")
-
+# set.seed(1234)
+# 
+# ## initialize
+# nsim <- 25
+# est <- tibble(no_sim = 1:nsim)
+# #est <- matrix(NA, 
+# #              nrow = nsim, 
+# #              ncol = 2*length(n)  # theta_sim and theta_se_sim
+# #              ) 
+# #colnames(est) <- c(paste0("theta_sim_", n), paste0("theta_se_sim_", n))
+# 
+# ## START SIM
+# T0 = proc.time()[3]
+# for (i in 1:length(colnames_pval)) {
+#   threshold <- 5*10^-6
+#   se_update_BMI <- c()
+#   se_update_GBC <- c()
+#   
+#   numIV <- sum(my_data_harm[[colnames_pval[i]]] < threshold)
+#   
+#   if (numIV<5) { # start with 5 IVs only (sample size ~50,000)
+#     next
+#   }
+#   
+#   # FILTER DATA
+#   sim_dat <- my_data_harm %>% 
+#     filter(!!sym(colnames_pval[i]) < threshold) %>% 
+#     select(SNP, eaf.bmi, beta.bmi, p.value.bmi, eaf.gbc, beta.gbc, p.value.gbc)
+#   
+#   # get simulated se_{sample size}
+#   for (j in 1:nrow(sim_dat)) {
+#     # as done before in section "simulating on empirical data"
+#     se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+#     se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+#   }
+#   
+#   sim_dat <- sim_dat %>%
+#       bind_cols(tibble(se_update_BMI=se_update_BMI, se_update_GBC=se_update_GBC))
+#   
+#   # simulate beta values from normal_distribution
+#   for (k in 1:nsim) {
+#     sim_dat <- sim_dat %>% 
+#       mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se_update_BMI, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
+#       mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se_update_GBC, .f = ~rnorm(n = 1, mean = .x, sd = .y)))
+#     
+#     # PERFORM MR_analysis
+#     mr.obj = MendelianRandomization::mr_input(
+#           bx = sim_dat$beta.bmi_sim_norm, 
+#           bxse = sim_dat$se_update_BMI, 
+#           # outcome
+#           by = sim_dat$beta.gbc_sim_norm, 
+#           byse = sim_dat$se_update_GBC, 
+#           snps = sim_dat$SNP,
+#           exposure = "Body mass index",
+#           outcome = "Gallbladder Cancer"
+#         ) 
+#     # CONMIX (as reference)
+#     res = MendelianRandomization::mr_conmix(mr.obj)
+#     colname_theta <- paste0("theta_sim_", n[i])
+#     colname_theta_se <- paste0("theta_se_sim_", n[i])
+#     ## store results
+#     est[k, colname_theta] <- res$Estimate
+#     CIlength = res$CIUpper-res$CILower
+#     if (length(CIlength)>1) print("conmix multimodal")
+#     est[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
+#     rm(res)
+#   }
+#   rm(se_update_BMI, se_update_GBC)
+#   print(paste0("|||-----------------------Run finished for sample size: ", n[i], " -----------------------|||"))
+# }
+# 
+# 
+# T1 = proc.time()[3]
+# timediff = T1-T0
+# 
+# 
+# saveRDS(est, paste0(Sys.Date(), "_est.rds"))
 ```
 
 
