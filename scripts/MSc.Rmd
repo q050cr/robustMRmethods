@@ -58,13 +58,24 @@ conflict_prefer("filter", "dplyr")
         - need to change betas as well? +-
     -   We discussed $K=0.05$ in our last meeting for the "prevalence" of GBC after looking at [Cancer Today](https://gco.iarc.fr/today/home) 
         - If done this way we yield a 20% proportion of variance explained in PVE. Switch back to ASR used last week!
-    
+
+-   2022-11-15: 
+    1. Check if formula PVE numeric can be used for binary traits as well. Can the $\%var(X)$ – numeric – be compared with $\%var(U)$ $\%var(Y)$ – binary?
+    2. How is $\%var$ calculated in the MRbase package in the `mr_steiger` function (Steiger filtering)?
+    3. Prefer new formula for $\%var(X)$ calculation
+    4. FTO gene: Add SNP associated with FTO gene to analysis that was considered ambiguous. Check the beta estimate from UK Biobank (provide rsID to Felix: `rs1558902`)
+    5. Try also $K_{GBC}= 0.05/100$ for $\%var(Y)$ (before used $ASR=1.2/100.000$)
+    6. Update „Figure 1“ to 6 parts
+    7. Also run BMI -> GSD, FTO -> GSD + BMI -> GBC, FTO->GBC: How different are the MR methods in estimating the causal estimate?
+    8. Reference estimates for simulation: Wald estimate (FTO variant) + IVW total sample + conmix total sample
+    9. Plot PVE from all simulated variants as boxplots on each dot of Figure 01
+
 
 # Version Update
 
 The new report version includes: 
 
-- First analysis
+- Issues from discussion mentioned above
 
 
 ```{r load-data}
@@ -372,6 +383,17 @@ my_data_harm <- my_data_harm %>%
                                                             K =1.2/100000  # assumed prevalence in population
                                                             )$Vg
          )
+```
+
+
+### %var(X) BMI formula comparison
+
+
+```{r}
+ggplot(data=my_data_harm, aes(x=explained_variance_BMI, y=explained_variance_BMI2)) +
+  geom_point(alpha=0.6)+
+  geom_abline()+
+  theme_few()
 ```
 
 
