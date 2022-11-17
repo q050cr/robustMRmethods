@@ -1067,10 +1067,13 @@ if (numIV>2){
         rm(res)
 }
 
+
 est %>% 
   mutate(OR=exp(estimate), CI.lower=exp(estimate-se.estimate),CI.upper=exp(estimate+se.estimate)) %>%  
   kable(digits=3, caption = "MR Results for GBC (outcome) using genetic variants as instrumental variables for BMI") %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
+
+saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
 ```
 
 
@@ -1084,12 +1087,12 @@ set.seed(1234)
 
 ## initialize
 nsim <- 25
-est <- tibble(no_sim = 1:nsim)
-#est <- matrix(NA, 
+est_sim <- tibble(no_sim = 1:nsim)
+#est_sim <- matrix(NA, 
 #              nrow = nsim, 
 #              ncol = 2*length(n)  # theta_sim and theta_se_sim
 #              ) 
-#colnames(est) <- c(paste0("theta_sim_", n), paste0("theta_se_sim_", n))
+#colnames(est_sim) <- c(paste0("theta_sim_", n), paste0("theta_se_sim_", n))
 
 ## START SIM
 T0 = proc.time()[3]
@@ -1141,10 +1144,10 @@ for (i in 1:length(colnames_pval)) {
    colname_theta <- paste0("theta_sim_", n[i])
    colname_theta_se <- paste0("theta_se_sim_", n[i])
    ## store results
-   est[k, colname_theta] <- res$Estimate
+   est_sim[k, colname_theta] <- res$Estimate
    CIlength = res$CIUpper-res$CILower
    if (length(CIlength)>1) print("conmix multimodal")
-   est[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
+   est_sim[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
    rm(res)
  }
  rm(se_update_BMI, se_update_GBC)
@@ -1156,11 +1159,19 @@ T1 = proc.time()[3]
 timediff = T1-T0
 
 
-saveRDS(est, paste0(Sys.Date(), "_est.rds"))
+saveRDS(est_sim, paste0("../output/Rdata/", Sys.Date(), "_est_sim.rds"))
+est_sim <- readRDS(file = "../output/Rdata/2022-11-15_est_sim.rds")
 ```
 
+### Performance Metrics
 
+```{r}
+bias <- function(thetaobs,theta) mean(thetaobs)- theta
+mse <- function(thetaobs, theta) mean((thetaobs-theta)^2)
 
+bias(thetaobs = est_sim$theta_sim_50000, theta = est$estimate[est$mr_methods == "conmix"])
+mse(thetaobs = est_sim$theta_sim_50000, theta = est$estimate[est$mr_methods == "conmix"])
+```
 
 
 
