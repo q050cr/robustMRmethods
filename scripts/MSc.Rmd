@@ -1141,8 +1141,8 @@ for (i in 1:length(colnames_pval)) {
        ) 
    # CONMIX (as reference)
    res = MendelianRandomization::mr_conmix(mr.obj)
-   colname_theta <- paste0("theta_sim_", n[i])
-   colname_theta_se <- paste0("theta_se_sim_", n[i])
+   colname_theta <- paste0("theta_sim_", format(n[i], scientific=FALSE))
+   colname_theta_se <- paste0("theta_se_sim_", format(n[i], scientific=FALSE))
    ## store results
    est_sim[k, colname_theta] <- res$Estimate
    CIlength = res$CIUpper-res$CILower
@@ -1151,7 +1151,7 @@ for (i in 1:length(colnames_pval)) {
    rm(res)
  }
  rm(se_update_BMI, se_update_GBC)
- print(paste0("|||-----------------------Run finished for sample size: ", n[i], " -----------------------|||"))
+ print(paste0("|||-----------------------Run finished for sample size: ", format(n[i], scientific=FALSE), " -----------------------|||"))
 }
 
 
@@ -1165,12 +1165,48 @@ est_sim <- readRDS(file = "../output/Rdata/2022-11-15_est_sim.rds")
 
 ### Performance Metrics
 
-```{r}
+```{r calculate-performance-metrics}
 bias <- function(thetaobs,theta) mean(thetaobs)- theta
 mse <- function(thetaobs, theta) mean((thetaobs-theta)^2)
 
-bias(thetaobs = est_sim$theta_sim_50000, theta = est$estimate[est$mr_methods == "conmix"])
-mse(thetaobs = est_sim$theta_sim_50000, theta = est$estimate[est$mr_methods == "conmix"])
+colname_theta <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_sim")]
+colname_theta_se <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_se_sim")]
+
+# filter out sample sizes
+sample_size_filtered <- as.numeric(str_extract(colname_theta, pattern = "(\\d)+"))
+
+## get performance metrics
+funs <- c(bias = bias, mse = mse)
+args <- list(theta = est$estimate[est$mr_methods == "conmix"]) # trim argument non-matching and ignored for median
+
+performance_metrics <- est_sim %>% 
+  select(!!!(colname_theta)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+```
+
+
+```{r plot-performance-metrics}
+#BIAS
+ggplot(performance_metrics, aes(x=N, y=bias))+ 
+  geom_point()
+
+#MSE
+ggplot(performance_metrics, aes(x=N, y=mse))+ 
+  geom_point()
+
+# compare distribution of simulated thetas against theta_324000
+boxplot_dat <- est_sim %>% 
+  select(!!!(colname_theta)) %>% 
+  pivot_longer(cols = everything(), names_to = "theta_sim")
+           
+
+ggplot(boxplot_dat, aes(x=theta_sim, y=value))+
+  geom_boxplot()+
+  coord_flip()
+
 ```
 
 
