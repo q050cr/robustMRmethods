@@ -624,7 +624,8 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
     # Features of the first axis
     name = "% variance explained by IVs",
     # Add a second axis and specify its features
-    sec.axis = sec_axis(~./scale_factor, name="Number of IVs")
+    sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
+    limits = c(0,5)
   ) + 
   theme_few()+
   #scale_colour_few() +
@@ -819,7 +820,8 @@ plotfigure01 <- function(data, effect_size="strong", maf="rare"){
       # Features of the first axis
       name = "% variance explained by IVs",
       # Add a second axis and specify its features
-      sec.axis = sec_axis(~./scale_factor, name="Number of IVs")
+      sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
+      limits = c(0,2)
     ) + 
     theme_few()+
     #scale_colour_few() +
@@ -846,6 +848,12 @@ plotfigure01 <- function(data, effect_size="strong", maf="rare"){
          width = 10, height = 6, 
          units = "in"  # default
          )
+  
+  # store plot in global environment
+  plotname <<- paste0("figure01_EFFECT_SIZE_", effect_size, "_VARIANTS_", maf)
+  assign(plotname, figure01.quadrant, envir = .GlobalEnv)
+  #list2env(assign(plotname, figure01.quadrant), envir = .GlobalEnv)
+  
 }
 
 # create all combis
@@ -862,6 +870,15 @@ for (i in 1:nrow(all_quadrants)) {
 
 ```
 
+## FINAL PLOT
+
+
+```{r fig.height=10, fig.width=14, warning=FALSE}
+ggpubr::ggarrange(fig01b.update, fig02.update, 
+                  figure01_EFFECT_SIZE_strong_VARIANTS_common, figure01_EFFECT_SIZE_strong_VARIANTS_rare,
+                  figure01_EFFECT_SIZE_weak_VARIANTS_common, figure01_EFFECT_SIZE_weak_VARIANTS_rare, 
+                  ncol=2, nrow=3)
+```
 
 
 
@@ -1080,7 +1097,6 @@ saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
 
 ## Simulation
 
-
 ```{r simulatesimulatesimulate, warning=FALSE}
 # try starting with n=50.000 -> selected 9 IVs
 set.seed(1234)
@@ -1094,7 +1110,10 @@ est_sim <- tibble(no_sim = 1:nsim)
 #              ) 
 #colnames(est_sim) <- c(paste0("theta_sim_", n), paste0("theta_se_sim_", n))
 
+runSimulation <- FALSE
+
 ## START SIM
+if (runSimulation==TRUE) {
 T0 = proc.time()[3]
 for (i in 1:length(colnames_pval)) {
  threshold <- 5*10^-6
@@ -1158,9 +1177,11 @@ for (i in 1:length(colnames_pval)) {
 T1 = proc.time()[3]
 timediff = T1-T0
 
-
 saveRDS(est_sim, paste0("../output/Rdata/", Sys.Date(), "_est_sim.rds"))
-est_sim <- readRDS(file = "../output/Rdata/2022-11-15_est_sim.rds")
+}
+
+# read dat
+est_sim <- readRDS(file = "../output/Rdata/2022-11-18_est_sim.rds")
 ```
 
 ### Performance Metrics
@@ -1188,24 +1209,38 @@ performance_metrics <- est_sim %>%
 ```
 
 
+### Performance plots
+
 ```{r plot-performance-metrics}
 #BIAS
 ggplot(performance_metrics, aes(x=N, y=bias))+ 
-  geom_point()
+  geom_point()+
+  scale_x_continuous(labels = comma)+
+  theme_few()
 
 #MSE
 ggplot(performance_metrics, aes(x=N, y=mse))+ 
-  geom_point()
+  geom_point()+
+  scale_x_continuous(labels = comma)+
+  theme_few()
 
 # compare distribution of simulated thetas against theta_324000
 boxplot_dat <- est_sim %>% 
   select(!!!(colname_theta)) %>% 
-  pivot_longer(cols = everything(), names_to = "theta_sim")
+  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+  mutate(theta_sim_numeric = format(as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")), scientific=FALSE))
            
 
-ggplot(boxplot_dat, aes(x=theta_sim, y=value))+
+ggplot(boxplot_dat, aes(x=forcats::fct_rev( as.factor(theta_sim_numeric)), y=value)) +
   geom_boxplot()+
-  coord_flip()
+  geom_jitter(width=0.1,alpha=0.2)+
+  #scale_x_discrete(name = paste0("Size of sample ", as.roman(1)),  breaks = c(" 50000", "100000", "200000", "300000"), )+ 
+  ylab(expression(paste(theta[sim], " with ", n[sim]== 25 ) )  ) +
+  labs(title = "Estimates from beta simulation",
+       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+       )+
+  coord_flip()+
+  theme_few()
 ```
 
 
