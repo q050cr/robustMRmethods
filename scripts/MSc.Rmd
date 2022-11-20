@@ -33,8 +33,8 @@ library(stringr)
 library(tibble)
 library(ggplot2)
 library(ggthemes)
+library(ggpubr)
 library(scales)
-library(ggthemes)
 #library(biomaRt)  # different script
 library(kableExtra)
 library(MendelianRandomization)
@@ -874,13 +874,70 @@ for (i in 1:nrow(all_quadrants)) {
 
 
 ```{r fig.height=10, fig.width=14, warning=FALSE}
-ggpubr::ggarrange(fig01b.update, fig02.update, 
-                  figure01_EFFECT_SIZE_strong_VARIANTS_common, figure01_EFFECT_SIZE_strong_VARIANTS_rare,
-                  figure01_EFFECT_SIZE_weak_VARIANTS_common, figure01_EFFECT_SIZE_weak_VARIANTS_rare, 
-                  ncol=2, nrow=3)
+fig01b.update + 
+  labs(title= "Figure 1", caption = "") -> fig01b.update.arrange
+
+fig02.update+
+  labs(title= "Genetic architectures", subtitle="", caption = "") -> fig02.update.arrange
+
+figure01_EFFECT_SIZE_strong_VARIANTS_common+
+  labs(title= "", caption = "") -> figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange
+
+figure01_EFFECT_SIZE_strong_VARIANTS_rare+
+  labs(title= "", caption = "") -> figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange
+
+figure01_EFFECT_SIZE_weak_VARIANTS_common+
+  labs(title= "", caption = "") -> figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange
+
+figure01_EFFECT_SIZE_weak_VARIANTS_rare+
+  labs(title= "", caption = "") -> figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange
+
+ggpubr::ggarrange(fig01b.update.arrange, fig02.update.arrange,
+                  gfigure01_EFFECT_SIZE_strong_VARIANTS_common.arrange, figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange,
+                  figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange, figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange, 
+                  ncol=2, nrow=3, 
+                  heights = c(2, 1.5, 1.5),
+                  legend = "bottom", common.legend = TRUE, align = "hv"
+                  ) -> final_plot1.arrange
+
+
+figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange+
+  scale_y_continuous(name="", sec.axis = sec_axis(~./scale_factor, name=""), limits = c(0,2))
+
+
+    scale_y_continuous(
+      # Features of the first axis
+      name = "% variance explained by IVs",
+      # Add a second axis and specify its features
+      sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
+      limits = c(0,2)
+    ) + 
+
+ggpubr::ggarrange(ggarrange(fig01b.update.arrange, fig02.update.arrange, ncol=2, labels = c("A", "B"), legend = "none", align = "hv"),
+                  ggarrange(figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange, figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange,
+                  figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange, figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange, 
+                  ncol=4, labels = c("C", "D", "E", "F"), legend="bottom", common.legend = TRUE),
+                  nrow=2
+                  #heights = c(2, 1.5, 1.5),
+                  #legend = "bottom", common.legend = TRUE, align = "hv"
+                  ) -> final_plot1.arrange2
+
+final_plot1.arrange
+final_plot1.arrange2
+
+filename_final_plot1 <- paste0("../output/plots/", Sys.Date(), "_final_plot1.arrange.png")
+filename_final_plot1b <- paste0("../output/plots/", Sys.Date(), "_final_plot1b.arrange.png")
+
+ggsave(filename = filename_final_plot1, plot = final_plot1.arrange, 
+         width = 14, height = 10, 
+         units = "in"  # default
+         )
+ggsave(filename = filename_final_plot1b, plot = final_plot1.arrange2, 
+         width = 14, height = 10, 
+         units = "in"  # default
+         )
+
 ```
-
-
 
 
 \clearpage
