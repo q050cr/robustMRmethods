@@ -17,7 +17,7 @@
 
 
 # set to TRUE if simulation should run when script is sourced
-runSimulation <- FALSE
+runSimulation <- TRUE
 
 library(dplyr)
 library(purrr)
@@ -47,13 +47,14 @@ est <- readRDS(file = "./output/Rdata/2022-11-22_est.rds")
 sim_vars <- readRDS(file = "./output/Rdata/2022-11-22_sim_vars.rds")
 n <- sim_vars$n
 colnames_pval <- sim_vars$colnames_pval
+n.orig <- 334487
 
 ###
 # SIMULATION --------------------------------------------------------------
 ###
 set.seed(1234)
 ## initialize
-nsim <- 25
+nsim <- 5
 est_sim <- tibble(no_sim = 1:nsim)
 
 ## START SIM
@@ -145,7 +146,7 @@ if (runSimulation==TRUE) {
   T1 = proc.time()[3]
   timediff = T1-T0
   
-  saveRDS(est_sim, paste0("../output/Rdata/", Sys.Date(), "_est_sim.rds"))
+  saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_NSIM_", nsim,".rds"))
 }
 
 

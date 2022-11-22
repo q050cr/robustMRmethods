@@ -1090,6 +1090,8 @@ saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
 
 ## Simulation
 
+We simulate 
+
 ```{r simulatesimulatesimulate, warning=FALSE}
 
 # data FOR simulation in simulation script
@@ -1097,114 +1099,12 @@ saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"
 sim_vars <- list(n=n, colnames_pval=colnames_pval)
 saveRDS(sim_vars, paste0("../output/Rdata/", Sys.Date(), "_sim_vars.rds"))
 
-# try starting with n=50.000 -> selected 9 IVs
-set.seed(1234)
+## SIMULATION OUTSOURCED TO "./scripts/simstudy.R"
 
-## initialize
-nsim <- 25
-est_sim <- tibble(no_sim = 1:nsim)
-#est_sim <- matrix(NA, 
-#              nrow = nsim, 
-#              ncol = 2*length(n)  # theta_sim and theta_se_sim
-#              ) 
-#colnames(est_sim) <- c(paste0("theta_sim_", n), paste0("theta_se_sim_", n))
-
-runSimulation <- FALSE
-
-## START SIM
-if (runSimulation==TRUE) {
-T0 = proc.time()[3]
-for (i in 1:length(colnames_pval)) {
- threshold <- 5*10^-6
- se_update_BMI <- c()
- se_update_GBC <- c()
- 
- numIV <- sum(my_data_harm[[colnames_pval[i]]] < threshold)
- 
- if (numIV<5) { # start with 5 IVs only (sample size ~50,000)
-   next
- }
- 
- # FILTER DATA
- sim_dat <- my_data_harm %>% 
-   filter(!!sym(colnames_pval[i]) < threshold) %>% 
-   select(SNP, eaf.bmi, beta.bmi, p.value.bmi, eaf.gbc, beta.gbc, p.value.gbc)
- 
- # get simulated se_{sample size}
- for (j in 1:nrow(sim_dat)) {
-   # as done before in section "simulating on empirical data"
-   se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
-   se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
- }
- 
- sim_dat <- sim_dat %>%
-     bind_cols(tibble(se_update_BMI=se_update_BMI, se_update_GBC=se_update_GBC))
- 
- # simulate beta values from normal_distribution # -----------------------------------------------------
- for (k in 1:nsim) {
-   sim_dat <- sim_dat %>% 
-     mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se_update_BMI, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
-     mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se_update_GBC, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
-     mutate(#explained_variance_X_sim = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
-         explained_variance_X2_sim = explained_variance_numeric2(maf=eaf.bmi, 
-                                                           beta=beta.bmi_sim_norm, 
-                                                           se_beta=se_update_BMI, 
-                                                           samplesize=n[i]
-         ),
-        # explained_variance_GSD = explained_variance_binary(PA = eaf.gsd, 
-        #                                                    RR1 = exp(beta.gsd), 
-        #                                                    RR2 = exp(beta.gsd)^2, 
-        #                                                    K = 0.1  # assumed prevalence in population
-        #                                                    )$Vg,
-         explained_variance_Y_sim = explained_variance_binary(PA = eaf.gbc, 
-                                                            RR1 = exp(beta.gbc_sim_norm), 
-                                                            RR2 = exp(beta.gbc_sim_norm)^2, 
-                                                            K =1.2/100000  # assumed prevalence in population
-                                                            )$Vg
-         )
-
-   # PERFORM MR_analysis
-   mr.obj = MendelianRandomization::mr_input(
-         bx = sim_dat$beta.bmi_sim_norm, 
-         bxse = sim_dat$se_update_BMI, 
-         # outcome
-         by = sim_dat$beta.gbc_sim_norm, 
-         byse = sim_dat$se_update_GBC, 
-         snps = sim_dat$SNP,
-         exposure = "Body mass index",
-         outcome = "Gallbladder Cancer"
-       ) 
-   # CONMIX (as reference)
-   res = MendelianRandomization::mr_conmix(mr.obj)
-   colname_theta <- paste0("theta_sim_", format(n[i], scientific=FALSE))
-   colname_theta_se <- paste0("theta_se_sim_", format(n[i], scientific=FALSE))
-   colname_pve_X <- paste0("pve_X_sim_", format(n[i], scientific=FALSE))
-   colname_pve_Y <- paste0("pve_Y_sim_", format(n[i], scientific=FALSE))
-   
-   ## store results
-   est_sim[k, colname_theta] <- res$Estimate
-   CIlength = res$CIUpper-res$CILower
-   if (length(CIlength)>1) print("conmix multimodal")
-   est_sim[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
-   # add PVE cols
-   est_sim[k, colname_pve_X] <- sum(sim_dat$explained_variance_X2_sim)
-   est_sim[k, colname_pve_Y] <- sum(sim_dat$explained_variance_Y_sim)
-   
-   rm(res)
- }
- rm(se_update_BMI, se_update_GBC)
- print(paste0("|||-----------------------Run finished for sample size: ", format(n[i], scientific=FALSE), " -----------------------|||"))
-}
-
-
-T1 = proc.time()[3]
-timediff = T1-T0
-
-saveRDS(est_sim, paste0("../output/Rdata/", Sys.Date(), "_est_sim.rds"))
-}
-
-# read dat
+# read dat from "simstudy.R"
 est_sim <- readRDS(file = "../output/Rdata/2022-11-18_est_sim.rds")
+
+est_sim <- readRDS(file = "../output/Rdata/2022-11-22_est_sim_NSIM_5.rds")
 ```
 
 ### Performance Metrics
@@ -1215,6 +1115,8 @@ mse <- function(thetaobs, theta) mean((thetaobs-theta)^2)
 
 colname_theta <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_sim")]
 colname_theta_se <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_se_sim")]
+colname_pve_X <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_X_sim")]
+colname_pve_Y <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_Y_sim")]
 
 # filter out sample sizes
 sample_size_filtered <- as.numeric(str_extract(colname_theta, pattern = "(\\d)+"))
@@ -1257,7 +1159,12 @@ boxplot_dat <- est_sim %>%
 ggplot(boxplot_dat, aes(x=forcats::fct_rev( as.factor(theta_sim_numeric)), y=value)) +
   geom_boxplot()+
   geom_jitter(width=0.1,alpha=0.2)+
-  #scale_x_discrete(name = paste0("Size of sample ", as.roman(1)),  breaks = c(" 50000", "100000", "200000", "300000"), )+ 
+  geom_hline(yintercept=  args$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = "300000", y = args$theta+0.5,
+           label= expression( paste("ref: ", theta[X] ))  , 
+           color= ggthemes_data$few$colors$Dark[9,2][[1]]
+             )+
+  scale_x_discrete(name = paste0("Size of sample ", as.roman(1)),  breaks = c(" 50000", "100000", "150000", "200000", "250000", "300000"), )+ 
   ylab(expression(paste(theta[sim], " with ", n[sim]== 25 ) )  ) +
   labs(title = "Estimates from beta simulation",
        caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
@@ -1266,8 +1173,86 @@ ggplot(boxplot_dat, aes(x=forcats::fct_rev( as.factor(theta_sim_numeric)), y=val
   theme_few()
 ```
 
+```{r}
+# EXPOSURE PVE
+est_sim %>% 
+  select(!!!(colname_pve_X)) %>% 
+  pivot_longer(everything(), names_to = "PVE_X", values_to = "value_X") %>% 
+  cbind(sample_size_filtered) %>% as_tibble() -> pve_X_sim
+
+est_sim %>% 
+  select(!!!(colname_pve_Y)) %>% 
+  pivot_longer(everything(), names_to = "PVE_Y", values_to = "value_Y") %>% 
+  cbind(sample_size_filtered) %>% as_tibble() -> pve_Y_sim
+
+boxplot_overlay_dat <- pve_X_sim %>% 
+  cbind(pve_Y_sim %>% select(-sample_size_filtered)) %>% 
+  as_tibble()
+
+fig01b.update +
+  geom_boxplot(data=boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered))
 
 
+  geom_boxplot(data = test, aes(x=sample_size_filtered, y=value*100, # *100 to get percent values
+                                group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.6)+
+
+ggplot(test, aes(x=as.factor(sample_size_filtered), y=value))+
+  geom_boxplot()
+
+
+plot_data1b <- df_cum_expl_var %>% 
+  pivot_longer(cols = c(cum_expl_varX2, cum_expl_varU, cum_expl_varY)) %>% 
+  mutate(name = factor(name, labels = c("% var(U)", "% var(X)", "% var(Y)")),
+         name = factor(name, levels = c("% var(X)", "% var(Y)", "% var(U)") )
+         )
+## plot
+ggplot(plot_data1b, aes(x=n, y=value, col=name))+
+  geom_point(alpha=0.6)+
+  geom_line(alpha=0.6)+
+  geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
+  scale_x_continuous(name = paste0("Size of sample ", as.roman(1)),  # 2-sample-MR or label "Study Size"
+                     labels = comma, 
+                     breaks = N_annotation, #c( 10000, n[7:length(n)]),
+                     limits = c(10000, 300000))+
+  #ylab("% variance explained by IVs")+
+  labs(title = "Figure 1",
+       col='', 
+       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+       ) +
+  scale_y_continuous(
+    # Features of the first axis
+    name = "% variance explained by IVs",
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
+    limits = c(0,5)
+  ) + 
+  #geom_boxplot(data=boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered))
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, # *100 to get percent values
+                                group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2)+
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_Y*100, # *100 to get percent values
+                                group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[4,2][[1]],
+               alpha=0.2, size=0.2)+
+  theme_few()+
+  #scale_colour_few() +
+  #scale_color_manual(name = "", values = c("% var(U)" = "red", 
+  #                                         "% var(X)" = "blue", 
+  #                                         "% var(Y)" = "darkblue", 
+  #                                         "Number of IVs" = "black"
+  #                                         ))
+  #
+  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
+                                           "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
+                                           "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
+                                           "Number of IVs" = "black"),
+                     # order
+                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
+  )
+```
 
 
 
