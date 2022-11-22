@@ -45,6 +45,7 @@ library(MRPRESSO)
 library(penalized)
 library(conflicted)
 source("MR_lasso.R")  # Slob&Burgess 2020
+source("PVE_calculation_fns.R") 
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 ```
@@ -311,78 +312,7 @@ my_data_harm <- as_tibble(cbind(my_data_harm, pvals_df))
 We added a second formula to calculate the explained variance for numeric traits [@Teslovich_2010]. 
 
 ```{r calculate-explained-variance}
-explained_variance_numeric <- function(eaf, beta) {
-  # eaf = allele frequency
-  # beta = additive genetic effect
-  explained_variance_numeric <- 2*eaf *(1-eaf) * beta^2
-  return(explained_variance_numeric)
-}
-
-explained_variance_numeric2 <- function(maf, beta, se_beta, samplesize) {
-  ### Teslovich Nature 2010
-  # 1) maf = minor allele frequency
-  # 2) beta = additive genetic effect
-  # 3) se_beta = standard error of beta estimate
-  # 4) samplesize = samplesize of study
-  maf <- ifelse(maf>0.5, 1-maf, maf)
-  
-  explained_variance_numeric <- (2*beta^2*maf*(1-maf))/ 
-    ( 2*beta^2*maf*(1-maf) + (se_beta^2)*2*samplesize*maf*(1-maf) )
-  return(explained_variance_numeric)
-}
-
-
-explained_variance_binary <- function(PA,RR1,RR2,K) {
-  # from So et al 2011
-  # Calculates the variance in liability explained by a single biallelic loci.
-  # PA: allele frequency of the risk allele (denoted A)
-  # RR1: relative risk of Aa (one risk allele) compared to aa (no risk allele)
-  # RR2: relative risk of AA (two risk alleles) compared to aa (no risk allele)
-  # K:  overall probability of disease in population
-  # Returns the variance explained (Vg) and the mean liability for each genotype (the overall liability is normalized to mean 0 and variance 1)
-  Paa = (1-PA)^2
-  PAa = 2*PA*(1-PA)
-  PAA = PA^2
-  muaa=0
-  faa= K/(Paa + PAa*RR1 + PAA*RR2)
-  fAa= RR1*faa
-  fAA= RR2*faa 
-  T = qnorm(1-faa) 
-  muAa = T-qnorm(1-fAa)
-  muAA = T-qnorm(1-fAA)
-  mean.all= PAa*muAa+ PAA*muAA
-  Vg= Paa*(muaa-mean.all)^2 + PAa*(muAa-mean.all)^2+ PAA*(muAA-mean.all)^2
-  actual.Vg =  Vg/(1+Vg) 
-  VR = 1-actual.Vg 
-  actual.T = Paa*sqrt(VR)*qnorm(1-faa) + PAa*sqrt(VR)*qnorm(1-fAa) + PAA*sqrt(VR)*qnorm(1-fAA)
-  actual.muaa = actual.T - sqrt(VR) * qnorm(1-faa)
-  actual.muAa = actual.T - sqrt(VR) * qnorm(1-fAa)
-  actual.muAA = actual.T - sqrt(VR) * qnorm(1-fAA)
-  
-  res <- list(Vg=actual.Vg,muaa=actual.muaa, muAa = actual.muAa, muAA=actual.muAA)
-  res
-} 
-
-## calculate explained variance
-my_data_harm <- my_data_harm %>% 
-  mutate(explained_variance_BMI = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
-         explained_variance_BMI2 = explained_variance_numeric2(maf=eaf.bmi, 
-                                                           beta=beta.bmi, 
-                                                           se_beta=se.bmi, 
-                                                           samplesize=n[length(n)]
-           
-         ),
-         explained_variance_GSD = explained_variance_binary(PA = eaf.gsd, 
-                                                            RR1 = exp(beta.gsd), 
-                                                            RR2 = exp(beta.gsd)^2, 
-                                                            K = 0.1  # assumed prevalence in population
-                                                            )$Vg,
-         explained_variance_GBC = explained_variance_binary(PA = eaf.gbc, 
-                                                            RR1 = exp(beta.gbc), 
-                                                            RR2 = exp(beta.gbc)^2, 
-                                                            K =1.2/100000  # assumed prevalence in population
-                                                            )$Vg
-         )
+# outsourced to "./scripts/PVE_calculation_fns.R"
 ```
 
 
@@ -893,7 +823,7 @@ figure01_EFFECT_SIZE_weak_VARIANTS_rare+
   labs(title= "", caption = "") -> figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange
 
 ggpubr::ggarrange(fig01b.update.arrange, fig02.update.arrange,
-                  gfigure01_EFFECT_SIZE_strong_VARIANTS_common.arrange, figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange,
+                  figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange, figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange,
                   figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange, figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange, 
                   ncol=2, nrow=3, 
                   heights = c(2, 1.5, 1.5),
@@ -901,17 +831,21 @@ ggpubr::ggarrange(fig01b.update.arrange, fig02.update.arrange,
                   ) -> final_plot1.arrange
 
 
+figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange+
+  # delete y-labels
+  scale_y_continuous(name="% variance explained by IVs", sec.axis = sec_axis(~./scale_factor, name=""), limits = c(0,2)) -> figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange
+
 figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange+
-  scale_y_continuous(name="", sec.axis = sec_axis(~./scale_factor, name=""), limits = c(0,2))
+  # delete y-labels
+  scale_y_continuous(name="", sec.axis = sec_axis(~./scale_factor, name=""), limits = c(0,2)) -> figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange
 
+figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange+
+  # delete y-labels
+  scale_y_continuous(name="",sec.axis = sec_axis(~./scale_factor, name=""), limits = c(0,2)) -> figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange
 
-    scale_y_continuous(
-      # Features of the first axis
-      name = "% variance explained by IVs",
-      # Add a second axis and specify its features
-      sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
-      limits = c(0,2)
-    ) + 
+figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange+
+  # delete y-labels
+  scale_y_continuous(name="", sec.axis = sec_axis(~./scale_factor, name="Number of IVs"), limits = c(0,2)) -> figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange
 
 ggpubr::ggarrange(ggarrange(fig01b.update.arrange, fig02.update.arrange, ncol=2, labels = c("A", "B"), legend = "none", align = "hv"),
                   ggarrange(figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange, figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange,
@@ -1148,6 +1082,8 @@ est %>%
   kable_classic(full_width = FALSE, html_font = "Cambria")
 
 saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
+
+
 ```
 
 
@@ -1155,6 +1091,12 @@ saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
 ## Simulation
 
 ```{r simulatesimulatesimulate, warning=FALSE}
+
+# data FOR simulation in simulation script
+saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
+sim_vars <- list(n=n, colnames_pval=colnames_pval)
+saveRDS(sim_vars, paste0("../output/Rdata/", Sys.Date(), "_sim_vars.rds"))
+
 # try starting with n=50.000 -> selected 9 IVs
 set.seed(1234)
 
@@ -1198,12 +1140,29 @@ for (i in 1:length(colnames_pval)) {
  sim_dat <- sim_dat %>%
      bind_cols(tibble(se_update_BMI=se_update_BMI, se_update_GBC=se_update_GBC))
  
- # simulate beta values from normal_distribution
+ # simulate beta values from normal_distribution # -----------------------------------------------------
  for (k in 1:nsim) {
    sim_dat <- sim_dat %>% 
      mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se_update_BMI, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
-     mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se_update_GBC, .f = ~rnorm(n = 1, mean = .x, sd = .y)))
-   
+     mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se_update_GBC, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
+     mutate(#explained_variance_X_sim = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
+         explained_variance_X2_sim = explained_variance_numeric2(maf=eaf.bmi, 
+                                                           beta=beta.bmi_sim_norm, 
+                                                           se_beta=se_update_BMI, 
+                                                           samplesize=n[i]
+         ),
+        # explained_variance_GSD = explained_variance_binary(PA = eaf.gsd, 
+        #                                                    RR1 = exp(beta.gsd), 
+        #                                                    RR2 = exp(beta.gsd)^2, 
+        #                                                    K = 0.1  # assumed prevalence in population
+        #                                                    )$Vg,
+         explained_variance_Y_sim = explained_variance_binary(PA = eaf.gbc, 
+                                                            RR1 = exp(beta.gbc_sim_norm), 
+                                                            RR2 = exp(beta.gbc_sim_norm)^2, 
+                                                            K =1.2/100000  # assumed prevalence in population
+                                                            )$Vg
+         )
+
    # PERFORM MR_analysis
    mr.obj = MendelianRandomization::mr_input(
          bx = sim_dat$beta.bmi_sim_norm, 
@@ -1219,11 +1178,18 @@ for (i in 1:length(colnames_pval)) {
    res = MendelianRandomization::mr_conmix(mr.obj)
    colname_theta <- paste0("theta_sim_", format(n[i], scientific=FALSE))
    colname_theta_se <- paste0("theta_se_sim_", format(n[i], scientific=FALSE))
+   colname_pve_X <- paste0("pve_X_sim_", format(n[i], scientific=FALSE))
+   colname_pve_Y <- paste0("pve_Y_sim_", format(n[i], scientific=FALSE))
+   
    ## store results
    est_sim[k, colname_theta] <- res$Estimate
    CIlength = res$CIUpper-res$CILower
    if (length(CIlength)>1) print("conmix multimodal")
    est_sim[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
+   # add PVE cols
+   est_sim[k, colname_pve_X] <- sum(sim_dat$explained_variance_X2_sim)
+   est_sim[k, colname_pve_Y] <- sum(sim_dat$explained_variance_Y_sim)
+   
    rm(res)
  }
  rm(se_update_BMI, se_update_GBC)
