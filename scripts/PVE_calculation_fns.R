@@ -1,5 +1,21 @@
 
 
+## ---------------------------
+##
+## Script name: PVE_calculation_fns.R
+##
+## Author: Christoph Reich
+## Date Created: 2022-11-23
+##
+## Copyright (c) Christoph Reich, 2022
+## Email: christoph.reich@med.uni-heidelberg.de
+##
+## ---------------------------
+## Notes:
+##   formulas to calculate the proportion of variance explained for numeric and 
+##   binary traits      
+## ---------------------------
+
 
 # PVE FORMULAS ------------------------------------------------------------
 explained_variance_numeric <- function(eaf, beta) {

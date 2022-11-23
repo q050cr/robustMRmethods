@@ -2,7 +2,7 @@
 
 ## ---------------------------
 ##
-## Script name: Simulation of betas and sample sizes
+## Script name: simstudy.R
 ##
 ## Author: Christoph Reich
 ## Date Created: 2022-11-22
@@ -12,7 +12,8 @@
 ##
 ## ---------------------------
 ## Notes:
-##   
+##   creates df `est_sim` with nsim* theta_estimates, nsim* standard errors of theta sims, nsim* pve for exposure and outcome
+##      cols: "no_sim", "theta_sim_SAMPLE_SIZES", "theta_se_sim_SAMPLE_SIZES", "pve_X_sim_SAMPLE_SIZES", "pve_Y_sim_SAMPLE_SIZES"
 ## ---------------------------
 
 
@@ -39,12 +40,12 @@ conflict_prefer("filter", "dplyr")
 
 
 # GET DATA ----------------------------------------------------------------
-# dataa
-my_data_harm <- readRDS(file = "./output/Rdata/2022-11-22_my_data_harm.rds")
+# data
+my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "my_data_harm.rds", full.names = TRUE)))
 # MR estimates from full study
-est <- readRDS(file = "./output/Rdata/2022-11-22_est.rds")
+est <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_est.rds", full.names = TRUE)))
 # vars from MSc script
-sim_vars <- readRDS(file = "./output/Rdata/2022-11-22_sim_vars.rds")
+sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
 n <- sim_vars$n
 colnames_pval <- sim_vars$colnames_pval
 n.orig <- 334487
@@ -97,11 +98,6 @@ if (runSimulation==TRUE) {
                                                                   se_beta=se_update_BMI, 
                                                                   samplesize=n[i]
           ),
-          # explained_variance_GSD = explained_variance_binary(PA = eaf.gsd, 
-          #                                                    RR1 = exp(beta.gsd), 
-          #                                                    RR2 = exp(beta.gsd)^2, 
-          #                                                    K = 0.1  # assumed prevalence in population
-          #                                                    )$Vg,
           explained_variance_Y_sim = explained_variance_binary(PA = eaf.gbc, 
                                                                RR1 = exp(beta.gbc_sim_norm), 
                                                                RR2 = exp(beta.gbc_sim_norm)^2, 
@@ -124,6 +120,7 @@ if (runSimulation==TRUE) {
       res = MendelianRandomization::mr_conmix(mr.obj)
       colname_theta <- paste0("theta_sim_", format(n[i], scientific=FALSE))
       colname_theta_se <- paste0("theta_se_sim_", format(n[i], scientific=FALSE))
+      colname_pvalue <- paste0("mr_pval_", format(n[i], scientific=FALSE))
       colname_pve_X <- paste0("pve_X_sim_", format(n[i], scientific=FALSE))
       colname_pve_Y <- paste0("pve_Y_sim_", format(n[i], scientific=FALSE))
       
@@ -132,6 +129,7 @@ if (runSimulation==TRUE) {
       CIlength = res$CIUpper-res$CILower
       if (length(CIlength)>1) print("conmix multimodal")
       est_sim[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
+      est_sim[k, colname_pvalue] <- res$Pvalue
       # add PVE cols
       est_sim[k, colname_pve_X] <- sum(sim_dat$explained_variance_X2_sim)
       est_sim[k, colname_pve_Y] <- sum(sim_dat$explained_variance_Y_sim)

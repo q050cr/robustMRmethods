@@ -224,7 +224,7 @@ filter_FTO <- rsIds_GeneNames %>%
   filter(str_detect(associated_gene, pattern = "FTO") | str_detect(associated_gene, pattern = "MC4R")) %>% 
   distinct(refsnp_id, .keep_all = TRUE)
 
-t(filter_FTO) %>% kable() #%>% 
+t(filter_FTO) %>% kable() %>% 
   kable_styling(font_size=10)
 ```
 
@@ -452,60 +452,6 @@ df_cum_expl_var <- df_cum_expl_var %>%
     cum_expl_varU = cum_expl_varU *100,
     cum_expl_varY = cum_expl_varY *100,
     count_IVs_scaled = count_IVs*scale_factor)
-
-# plot_data <- df_cum_expl_var %>% 
-#   pivot_longer(cols = c(cum_expl_varX, cum_expl_varU, count_IVs_scaled)) %>% 
-#   mutate(name = factor(name, labels = c("Number of IVs", "% var(U)", "% var(X)")))
-# 
-# ggplot(plot_data, aes(x=log10(n), y=value, col=name))+
-#   geom_point(alpha=0.6)+
-#   geom_line(alpha=0.6)+
-#   xlab("log10(N)")+
-#   #ylab("% variance explained by IVs")+
-#   labs(title = "Figure 1",
-#        col='', 
-#        caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
-#        ) +
-#   scale_y_continuous(
-#     # Features of the first axis
-#     name = "% variance explained by IVs",
-#     # Add a second axis and specify its features
-#     sec.axis = sec_axis(~./scale_factor, name="Number of IVs")
-#   ) + 
-#   theme_few()+
-#   scale_colour_few() ->fig01
-# fig01
-# 
-# plot_data_b <- df_cum_expl_var %>% 
-#   pivot_longer(cols = c(cum_expl_varX2, cum_expl_varU, count_IVs_scaled)) %>% 
-#   mutate(name = factor(name, labels = c("Number of IVs", "% var(U)", "% var(X)")))
-# 
-# ggplot(plot_data_b, aes(x=log10(n), y=value, col=name))+
-#   geom_point(alpha=0.6)+
-#   geom_line(alpha=0.6)+
-#   xlab("log10(N)")+
-#   #ylab("% variance explained by IVs")+
-#   labs(title = "Figure 1",
-#        col='', 
-#        caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
-#        ) +
-#   scale_y_continuous(
-#     # Features of the first axis
-#     name = "% variance explained by IVs",
-#     # Add a second axis and specify its features
-#     sec.axis = sec_axis(~./scale_factor, name="Number of IVs")
-#   ) + 
-#   theme_few()+
-#   scale_colour_few() ->fig01_b
-# fig01_b
-# 
-# ggsave(filename = "../output/plots/figure01.png", plot = fig01_b, 
-#        width = 10, height = 6, 
-#        units = "in"  # default
-#        )
-# 
-# filenamefig01_a <- paste0("../output/plots/", Sys.Date(), "_figure01_a.png")
-# filenamefig01_b <- paste0("../output/plots/", Sys.Date(), "_figure01_b.png")
 ```
 
 ```{r updated-fig01, warning=FALSE}
@@ -961,151 +907,17 @@ p4[[1]] +
 ### Using {MendelianRandomization} package
 
 ```{r MendelianRandomization-analysis, warning=FALSE}
-mr_methods = c("IVW", "median", "mode", "PRESSO", "Robust", "Lasso", "egger", "conmix", "MRMix", "RAPS")
-est <- tibble(mr_methods=mr_methods, estimate=NA, se.estimate=NA, time=NA)
-numIV <- nrow(my_data_harm)
+# outsourced calculation to `perform_mr.R`
+# data FOR estimates in `perform_mr.R` script and simulation in `simstudy.R` script
+saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
 
-if (numIV>2){
-        mr.obj = MendelianRandomization::mr_input(
-          # exposure
-          bx = my_data_harm$beta.bmi, 
-          bxse = my_data_harm$se.bmi, 
-          # outcome
-          by = my_data_harm$beta.gbc, 
-          byse = my_data_harm$se.gbc, 
-          snps = my_data_harm$SNP,
-          exposure = "Body mass index",
-          outcome = "Gallbladder Cancer"
-        )
-        # 1. IVW
-        T0 = proc.time()[3]
-        res = MendelianRandomization::mr_ivw(mr.obj)
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="IVW"] = res$Estimate
-        est$se.estimate[est$mr_methods=="IVW"] = res$StdError
-        est$time[est$mr_methods=="IVW"] = T1-T0
-        rm(res)
-        
-        # 2. median
-        T0 = proc.time()[3]
-        res = MendelianRandomization::mr_median(mr.obj)
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="median"] = res$Estimate
-        est$se.estimate[est$mr_methods=="median"] = res$StdError
-        est$time[est$mr_methods=="median"] = T1-T0
-        rm(res)
-        # 3. mode
-        T0 = proc.time()[3]
-        res = MendelianRandomization::mr_mbe(mr.obj)
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="mode"] = res$Estimate
-        est$se.estimate[est$mr_methods=="mode"] = res$StdError
-        est$time[est$mr_methods=="mode"] = T1-T0
-        rm(res)
-        # 4.MR-PRESSO    ## CAVE: 5 minutes per round, consider only calculating for defined thresholds
-        T0 = proc.time()[3]
-        res <- MRPRESSO:: mr_presso(BetaOutcome = "beta.gbc", 
-                    BetaExposure = "beta.bmi", 
-                    SdOutcome = "se.gbc", 
-                    SdExposure = "se.bmi", 
-                    OUTLIERtest = TRUE, 
-                    DISTORTIONtest = TRUE, 
-                    seed = 20221114,
-                    data = as.data.frame(my_data_harm), ## must be a data.frame
-                    NbDistribution = 1000,   # must be changed
-                    SignifThreshold = 0.05)
-        T1 = proc.time()[3]
-        if (!is.na(res$`Main MR results`[2,"Causal Estimate"]) & !is.na(res$`Main MR results`[2,"Sd"])){
-                est$estimate[est$mr_methods=="PRESSO"] =  res$`Main MR results`[2,"Causal Estimate"]
-                est$se.estimate[est$mr_methods=="PRESSO"] = res$`Main MR results`[2,"Sd"]
-            } else{
-                est$estimate[est$mr_methods=="PRESSO"] =  res$`Main MR results`[1,"Causal Estimate"]
-                est$se.estimate[est$mr_methods=="PRESSO"] = res$`Main MR results`[1,"Sd"]
-            }
-        est$time[est$mr_methods=="PRESSO"] = T1-T0
-        rm(res)
-        # 5. robust
-        T0 = proc.time()[3]
-        res = MendelianRandomization::mr_ivw(mr.obj,"random", robust = TRUE)
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="Robust"] = res$Estimate
-        est$se.estimate[est$mr_methods=="Robust"] = res$StdError
-        est$time[est$mr_methods=="Robust"] = T1-T0
-        rm(res)
-        # 6. MR-Lasso
-        T0 = proc.time()[3]
-        res = MR_lasso(betaYG = my_data_harm$beta.gbc, betaXG = my_data_harm$beta.bmi, sebetaYG = my_data_harm$se.gbc)
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="Lasso"] = res$ThetaEstimate
-        est$se.estimate[est$mr_methods=="Lasso"] = res$ThetaSE
-        est$time[est$mr_methods=="Lasso"] = T1-T0
-        rm(res)
-        # 7. Egger
-        T0 = proc.time()[3]
-        res = MendelianRandomization::mr_egger(mr.obj)
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="egger"] = res$Estimate
-        est$se.estimate[est$mr_methods=="egger"] = res$StdError.Est
-        est$time[est$mr_methods=="egger"] = T1-T0
-        rm(res)
-        # 8. contamination mixture
-        T0 = proc.time()[3]
-        res = MendelianRandomization::mr_conmix(mr.obj)
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="conmix"] = res$Estimate
-        CIlength = res$CIUpper-res$CILower
-        if (length(CIlength)>1) print("conmix multimodal")
-        est$se.estimate[est$mr_methods=="conmix"] = sum(CIlength)/1.96/2 ## Caution: this may be problematic (Qi&Chatterjee2021)
-        est$time[est$mr_methods=="conmix"] = T1-T0
-        rm(res)
-        # 9. MRMix
-              # theta_temp_vec = seq(-0.5,0.5,by=0.01)
-        T0 = proc.time()[3]
-        res = MRMix::MRMix(betahat_x = my_data_harm$beta.bmi, 
-                          betahat_y = my_data_harm$beta.gbc, 
-                          sx =my_data_harm$se.bmi, 
-                          sy = my_data_harm$se.gbc)
-        res_se = MRMix::MRMix_se(betahat_x = my_data_harm$beta.bmi, 
-                          betahat_y = my_data_harm$beta.gbc, 
-                          sx =my_data_harm$se.bmi, 
-                          sy = my_data_harm$se.gbc, 
-                          theta = res$theta, # estimate of causal effect, assuming the summary stats are standardized, theta represents increase in mean value of Y in s.d. unit of Y (for cont outcomes) or log-OR of Y (for binary outcomes)
-                          pi0 = res$pi0, 
-                          sigma2 = res$sigma2
-                          )
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="MRMix"] = res$theta
-        est$se.estimate[est$mr_methods=="MRMix"] = res_se
-        est$time[est$mr_methods=="MRMix"] = T1-T0
-        rm(res, res_se)
-        # 10. MR-RAPS  
-        ## Warning: The estimated overdispersion parameter is very small. Consider using the simple model without overdispersion.
-        T0 = proc.time()[3]
-        res = mr.raps::mr.raps.overdispersed.robust(b_exp = my_data_harm$beta.bmi, 
-                                                    b_out = my_data_harm$beta.gbc, 
-                                                    se_exp = my_data_harm$se.bmi, 
-                                                    se_out = my_data_harm$se.gbc, 
-                                                    loss.function = "huber", 
-                                                    k = 1.345, 
-                                                    initialization = c("l2"), 
-                                                    suppress.warning = FALSE, 
-                                                    diagnosis = FALSE, 
-                                                    niter = 20, 
-                                                    tol = .Machine$double.eps^0.5)
-        T1 = proc.time()[3]
-        est$estimate[est$mr_methods=="RAPS"] = res$beta.hat
-        est$se.estimate[est$mr_methods=="RAPS"] = res$beta.se
-        est$time[est$mr_methods=="RAPS"] = T1-T0
-        rm(res)
-}
-
+## load results
+est <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est.rds", full.names = TRUE)))
 
 est %>% 
   mutate(OR=exp(estimate), CI.lower=exp(estimate-se.estimate),CI.upper=exp(estimate+se.estimate)) %>%  
   kable(digits=3, caption = "MR Results for GBC (outcome) using genetic variants as instrumental variables for BMI") %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
-
-saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
 ```
 
 
@@ -1115,13 +927,10 @@ saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
 We simulate 
 
 ```{r simulatesimulatesimulate, warning=FALSE}
-# data FOR simulation in simulation script
-saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
+# save simulation-vars for simulation `simstudy.R` script
 sim_vars <- list(n=n, colnames_pval=colnames_pval)
 saveRDS(sim_vars, paste0("../output/Rdata/", Sys.Date(), "_sim_vars.rds"))
-
 ## SIMULATION OUTSOURCED TO "./scripts/simstudy.R"
-
 
 # read dat from "simstudy.R"  #------------------------------------------------
 est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_est_sim_NSIM_", full.names = TRUE)))
@@ -1130,8 +939,12 @@ est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_
 ### Performance Metrics
 
 ```{r calculate-performance-metrics}
-bias <- function(thetaobs,theta) mean(thetaobs)- theta
-mse <- function(thetaobs, theta) mean((thetaobs-theta)^2)
+# fns
+bias <- function(thetaobs,theta, ...) mean(thetaobs)- theta
+mse <- function(thetaobs, theta, ...) mean((thetaobs-theta)^2)
+emp_se <- function(nsim, thetaobs, theta, ...) sqrt( 1/(nsim-1) * sum((thetaobs-mean(thetaobs))^2) )  # == sd
+
+
 
 colname_theta <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_sim")]
 colname_theta_se <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_se_sim")]
@@ -1141,9 +954,9 @@ colname_pve_Y <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve
 # filter out sample sizes
 sample_size_filtered <- as.numeric(str_extract(colname_theta, pattern = "(\\d)+"))
 
-## get performance metrics
-funs <- c(bias = bias, mse = mse)
-args <- list(theta = est$estimate[est$mr_methods == "conmix"]) # trim argument non-matching and ignored for median
+## get performance metrics    # https://stackoverflow.com/questions/47415072/pass-multiple-functions-to-purrrmap
+funs <- c(mean = mean, bias = bias, mse = mse, emp_se=emp_se)
+args <- list(theta = est$estimate[est$mr_methods == "conmix"], nsim=nrow(est_sim)) # trim argument non-matching and ignored for median
 
 performance_metrics <- est_sim %>% 
   select(!!!(colname_theta)) %>% 
@@ -1151,35 +964,55 @@ performance_metrics <- est_sim %>%
            map(exec, .x, !!!args), .id = "var") %>% 
   cbind(sample_size_filtered) %>% 
   rename(N = sample_size_filtered)
+
+# est_sim %>%    # equivalent to `emp_se()` function, but `sd()` misses dotdotdot argument 
+#   select(!!!(colname_theta)) %>% 
+#   map_dbl(.f = ~sd(.))
+```
+
+
+```{r further-metrics}
+# coverage
+coverage <- function(thetaobs, thetaobs_se, theta, ...) {
+  lower_ci <- thetaobs - thetaobs_se
+  upper_ci <- thetaobs + thetaobs_se
+  coverage <- mean(lower_ci <= theta & upper_ci >= theta)
+  return(coverage)
+}
+coverage_bias_eliminated <- function(thetaobs, thetaobs_se, ...) {
+  lower_ci <- thetaobs - thetaobs_se
+  upper_ci <- thetaobs + thetaobs_se
+  mean_thetaobs <- mean(thetaobs)
+  coverage_bias_eliminated <- mean(lower_ci <= mean_thetaobs & upper_ci >=mean_thetaobs)
+  return(coverage_bias_eliminated)
+}
+
+type1error <- function(pvals) sum(pvals<=0.05)/length(pvals)  # no causal_effect
+
+coverage_calc <- c()
+coverage_bias_eliminated_calc <- c()
+type1error_calc <- c()
+for (i in 1:length(sample_size_filtered)) {
+  sample_size <- sample_size_filtered[i]
+  col_theta <- paste0("theta_sim_", format(sample_size, scientific = FALSE))
+  col_theta_se <- paste0("theta_se_sim_", format(sample_size, scientific = FALSE))
+  col_mr_pval <- paste0("mr_pval_", format(sample_size, scientific = FALSE))
+  
+  coverage_calc[i] <- coverage(thetaobs = est_sim[col_theta], thetaobs_se = est_sim[col_theta_se], theta = est$estimate[est$mr_methods == "conmix"])
+  coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_theta]], thetaobs_se = est_sim[[col_theta_se]])
+  type1error_calc[i] <- type1error(est_sim[[col_mr_pval]])
+}
+
+performance_metrics <- performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(coverage_calc, coverage_bias_eliminated_calc, type1error_calc)) %>% 
+  as_tibble()
 ```
 
 
 ### Performance plots
 
-```{r plot-performance-metrics-bias-mse}
-#BIAS
-ggplot(performance_metrics, aes(x=N, y=bias))+ 
-  geom_point()+
-  scale_x_continuous(labels = comma)+
-  theme_few() -> biasplot
-
-#MSE
-ggplot(performance_metrics, aes(x=N, y=mse))+ 
-  geom_point()+
-  scale_x_continuous(labels = comma)+
-  theme_few() -> mseplot
-
-ggarrange(biasplot, mseplot) ->bias_mse_plot
-
-filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_bias_mse.png")
-ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot, 
-       width = 10, height = 6, 
-       units = "in"  # default
-       )
-```
-
-
-```{r plot-performance-metrics-boxplot}
+```{r boxplot-theta-sim-distribution, fig.height=6, fig.width=10}
 # compare distribution of simulated thetas against theta_324000
 boxplot_dat <- est_sim %>% 
   select(!!!(colname_theta)) %>% 
@@ -1201,16 +1034,68 @@ ggplot(boxplot_dat, aes(x=forcats::fct_rev( as.factor(theta_sim_numeric)), y=val
        caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
        )+
   coord_flip()+
-  theme_few() -> simplot_betas
-simplot_betas
+  theme_few() -> simplot_thetas
+simplot_thetas
 
+### same plot as above, but from already calculated performance metrics theta_mean + theta_sd
+ggplot(performance_metrics, aes(x=N, y=mean))+ 
+  geom_point()+
+  geom_hline(yintercept=  args$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = 300000, y = args$theta+0.25,
+         label= expression( paste("ref: ", theta[X] ))  , 
+         color= ggthemes_data$few$colors$Dark[9,2][[1]]
+           )+
+  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
+                width=3000, # x-axis dimension
+                position = "dodge")+
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("Mean thetas")+
+  labs(title = "Simulated Thetas with Empirical Standard Error")+
+  theme_few() -> simplot_thetas2
+simplot_thetas2
 
-filename_simplot_betas <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_betas.png")
-ggsave(filename = filename_simplot_betas, plot = simplot_betas, 
+filename_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_thetas.png")
+ggsave(filename = filename_simplot_thetas, plot = simplot_thetas, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
+filename_simplot_thetas2 <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_thetas2.png")
+ggsave(filename = filename_simplot_thetas2, plot = simplot_thetas2, 
        width = 10, height = 6, 
        units = "in"  # default
        )
 ```
+
+```{r plot-performance-metrics-bias-mse, fig.height=6, fig.width=14}
+#BIAS
+ggplot(performance_metrics, aes(x=N, y=bias))+ 
+  geom_point()+
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("Bias")+
+  labs(title = "Bias with Empirical Standard Error")+
+  theme_few() -> biasplot
+
+#MSE
+ggplot(performance_metrics, aes(x=N, y=mse))+ 
+  geom_point()+
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("MSE")+
+  labs(title = "MSE")+
+  theme_few() -> mseplot
+
+ggarrange(biasplot, mseplot) ->bias_mse_plot
+bias_mse_plot
+
+filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_bias_mse.png")
+ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot, 
+       width = 14, height = 6, 
+       units = "in"  # default
+       )
+```
+
 
 
 ```{r simulated-pves}
@@ -1274,7 +1159,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
                      # order
                      breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
   ) -> plot_pve_simulated
-
+plot_pve_simulated
 
 filename_pveplot_sim <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve.png")
 ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
