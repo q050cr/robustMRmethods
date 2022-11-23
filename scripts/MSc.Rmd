@@ -221,10 +221,10 @@ my_data_harm <- my_data_harm %>%
 rsIds_GeneNames <- as_tibble(readRDS("../data/biomartBMIsearch.rds"))
 
 filter_FTO <- rsIds_GeneNames %>% 
-  filter(str_detect(associated_gene, pattern = "FTO")) %>% 
+  filter(str_detect(associated_gene, pattern = "FTO") | str_detect(associated_gene, pattern = "MC4R")) %>% 
   distinct(refsnp_id, .keep_all = TRUE)
 
-t(filter_FTO) %>% kable() %>% 
+t(filter_FTO) %>% kable() #%>% 
   kable_styling(font_size=10)
 ```
 
@@ -293,9 +293,6 @@ pvals_df %>%
 #   count()
 
 my_data_harm <- as_tibble(cbind(my_data_harm, pvals_df))
-
-# 5. Calculate cumulative explained variances
-# 6. Represent figure similar to Fig1 in Chatterjee’s paper
 ```
 
 
@@ -313,6 +310,33 @@ We added a second formula to calculate the explained variance for numeric traits
 
 ```{r calculate-explained-variance}
 # outsourced to "./scripts/PVE_calculation_fns.R"
+
+## CALCULATE explained variance
+my_data_harm <- my_data_harm %>% 
+  mutate(explained_variance_BMI = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
+         explained_variance_BMI2 = explained_variance_numeric2(maf=eaf.bmi, 
+                                                           beta=beta.bmi, 
+                                                           se_beta=se.bmi, 
+                                                           samplesize=n[length(n)]
+           
+         ),
+         explained_variance_GSD = explained_variance_binary(PA = eaf.gsd, 
+                                                            RR1 = exp(beta.gsd), 
+                                                            RR2 = exp(beta.gsd)^2, 
+                                                            K = 0.1  # assumed prevalence in population
+                                                            )$Vg,
+         explained_variance_GBC = explained_variance_binary(PA = eaf.gbc, 
+                                                            RR1 = exp(beta.gbc), 
+                                                            RR2 = exp(beta.gbc)^2, 
+                                                            K =1.2/100000  # assumed prevalence in population
+                                                            )$Vg,
+         explained_variance_GBC2 = explained_variance_binary(PA = eaf.gbc, 
+                                                            RR1 = exp(beta.gbc), 
+                                                            RR2 = 1+(2*(exp(beta.gbc)-1)), 
+                                                            K =1.2/100000  # assumed prevalence in population
+                                                            )$Vg
+         
+         )
 ```
 
 
@@ -1082,8 +1106,6 @@ est %>%
   kable_classic(full_width = FALSE, html_font = "Cambria")
 
 saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
-
-
 ```
 
 
@@ -1093,7 +1115,6 @@ saveRDS(est, paste0("../output/Rdata/", Sys.Date(), "_est.rds"))
 We simulate 
 
 ```{r simulatesimulatesimulate, warning=FALSE}
-
 # data FOR simulation in simulation script
 saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
 sim_vars <- list(n=n, colnames_pval=colnames_pval)
@@ -1101,10 +1122,9 @@ saveRDS(sim_vars, paste0("../output/Rdata/", Sys.Date(), "_sim_vars.rds"))
 
 ## SIMULATION OUTSOURCED TO "./scripts/simstudy.R"
 
-# read dat from "simstudy.R"
-est_sim <- readRDS(file = "../output/Rdata/2022-11-18_est_sim.rds")
 
-est_sim <- readRDS(file = "../output/Rdata/2022-11-22_est_sim_NSIM_5.rds")
+# read dat from "simstudy.R"  #------------------------------------------------
+est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_est_sim_NSIM_", full.names = TRUE)))
 ```
 
 ### Performance Metrics
@@ -1136,19 +1156,30 @@ performance_metrics <- est_sim %>%
 
 ### Performance plots
 
-```{r plot-performance-metrics}
+```{r plot-performance-metrics-bias-mse}
 #BIAS
 ggplot(performance_metrics, aes(x=N, y=bias))+ 
   geom_point()+
   scale_x_continuous(labels = comma)+
-  theme_few()
+  theme_few() -> biasplot
 
 #MSE
 ggplot(performance_metrics, aes(x=N, y=mse))+ 
   geom_point()+
   scale_x_continuous(labels = comma)+
-  theme_few()
+  theme_few() -> mseplot
 
+ggarrange(biasplot, mseplot) ->bias_mse_plot
+
+filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_bias_mse.png")
+ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
+```
+
+
+```{r plot-performance-metrics-boxplot}
 # compare distribution of simulated thetas against theta_324000
 boxplot_dat <- est_sim %>% 
   select(!!!(colname_theta)) %>% 
@@ -1170,10 +1201,19 @@ ggplot(boxplot_dat, aes(x=forcats::fct_rev( as.factor(theta_sim_numeric)), y=val
        caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
        )+
   coord_flip()+
-  theme_few()
+  theme_few() -> simplot_betas
+simplot_betas
+
+
+filename_simplot_betas <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_betas.png")
+ggsave(filename = filename_simplot_betas, plot = simplot_betas, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
 ```
 
-```{r}
+
+```{r simulated-pves}
 # EXPOSURE PVE
 est_sim %>% 
   select(!!!(colname_pve_X)) %>% 
@@ -1189,26 +1229,8 @@ boxplot_overlay_dat <- pve_X_sim %>%
   cbind(pve_Y_sim %>% select(-sample_size_filtered)) %>% 
   as_tibble()
 
-fig01b.update +
-  geom_boxplot(data=boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered))
-
-
-  geom_boxplot(data = test, aes(x=sample_size_filtered, y=value*100, # *100 to get percent values
-                                group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[3,2][[1]],
-               alpha=0.6)+
-
-ggplot(test, aes(x=as.factor(sample_size_filtered), y=value))+
-  geom_boxplot()
-
-
-plot_data1b <- df_cum_expl_var %>% 
-  pivot_longer(cols = c(cum_expl_varX2, cum_expl_varU, cum_expl_varY)) %>% 
-  mutate(name = factor(name, labels = c("% var(U)", "% var(X)", "% var(Y)")),
-         name = factor(name, levels = c("% var(X)", "% var(Y)", "% var(U)") )
-         )
 ## plot
-ggplot(plot_data1b, aes(x=n, y=value, col=name))+
+ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section Simlating on empirical data (PVE)
   geom_point(alpha=0.6)+
   geom_line(alpha=0.6)+
   geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
@@ -1217,7 +1239,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
                      breaks = N_annotation, #c( 10000, n[7:length(n)]),
                      limits = c(10000, 300000))+
   #ylab("% variance explained by IVs")+
-  labs(title = "Figure 1",
+  labs(title = "PVE with simulation added",
        col='', 
        caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
        ) +
@@ -1226,7 +1248,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
     name = "% variance explained by IVs",
     # Add a second axis and specify its features
     sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
-    limits = c(0,5)
+    limits = c(0,10)
   ) + 
   #geom_boxplot(data=boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered))
   geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, # *100 to get percent values
@@ -1251,7 +1273,14 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
                                            "Number of IVs" = "black"),
                      # order
                      breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
-  )
+  ) -> plot_pve_simulated
+
+
+filename_pveplot_sim <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve.png")
+ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
 ```
 
 

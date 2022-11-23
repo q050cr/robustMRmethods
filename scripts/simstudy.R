@@ -54,7 +54,7 @@ n.orig <- 334487
 ###
 set.seed(1234)
 ## initialize
-nsim <- 5
+nsim <- 25
 est_sim <- tibble(no_sim = 1:nsim)
 
 ## START SIM
