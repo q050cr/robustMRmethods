@@ -32,6 +32,8 @@ library(tidyr)
 library(stringr)
 library(tibble)
 library(ggplot2)
+library(ggdist)
+library(gghalves)
 library(ggthemes)
 library(ggpubr)
 library(scales)
@@ -600,18 +602,18 @@ ggplot(data = plot_data_2, aes(x=maf.bmi, y=abs(beta.bmi)))+
   geom_vline(xintercept=median(plot_data_2$maf.bmi), 
              col=ggthemes_data$few$colors$Dark[6,2][[1]], alpha=0.6, linetype=2)+
   annotate(geom = "text", x = 0.15, y = 0.045, 
-           label="relatively rare variants\nwith relatively strong effects", 
+           label="relatively rare\nrelatively strong", 
            color= ggthemes_data$few$colors$Dark[2,2][[1]]
              )+
   annotate(geom = "text", x = 0.42, y = 0.05, 
-           label="relatively common variants\nwith relatively strong effects", 
+           label="relatively common\nrelatively strong", 
            color=ggthemes_data$few$colors$Dark[3,2][[1]])+
   annotate(geom = "text", x = 0.1, y = 0.015, 
-           label="rare variants\nwith weak effects", color=ggthemes_data$few$colors$Dark[4,2][[1]])+
+           label="relatively rare\nrelatively weak", color=ggthemes_data$few$colors$Dark[4,2][[1]])+
   annotate("segment", x=0.44,xend=0.42,y=0.025,yend=0.013,arrow=arrow(), 
            color=ggthemes_data$few$colors$Dark[5,2][[1]])+
   annotate(geom = "text", x = 0.44, y = 0.03, 
-           label="common variants\nwith weak effects", 
+           label="relatively common\nrelatively weak", 
            color=ggthemes_data$few$colors$Dark[5,2][[1]])+
   #geom_text(x=0.1, y=0.05, label="hello", family = "Times New Roman",
   #          size=6, col="red")+
@@ -702,7 +704,7 @@ plotfigure01 <- function(data, effect_size="strong", maf="rare"){
   
   N_annotation <- c(10000, 100000, 200000, 300000)
   ## plot
-  plotsubtitle <- paste0("Relatively ", maf ," variants\nwith relatively ", effect_size, " effects")
+  plotsubtitle <- paste0("relatively ", maf ,", relatively ", effect_size)
   ggplot(plot_data1, aes(x=n, y=value, col=name))+
     geom_point(alpha=0.6)+
     geom_line(alpha=0.6)+
@@ -775,24 +777,29 @@ for (i in 1:nrow(all_quadrants)) {
 
 ```{r fig.height=10, fig.width=14, warning=FALSE}
 fig01b.update + 
-  labs(title= "Figure 1", caption = "") -> fig01b.update.arrange
+  labs(title= "", caption = "") -> fig01b.update.arrange
 
 fig02.update+
-  labs(title= "Genetic architectures", subtitle="", caption = "") -> fig02.update.arrange
+  labs(title= "", subtitle="", caption = "") -> fig02.update.arrange
 
 figure01_EFFECT_SIZE_strong_VARIANTS_common+
-  labs(title= "", caption = "") -> figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange
+  labs(title= "", caption = "") +
+  theme(plot.subtitle = element_text(color = ggthemes_data$few$colors$Dark[3,2][[1]])) -> figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange
 
 figure01_EFFECT_SIZE_strong_VARIANTS_rare+
-  labs(title= "", caption = "") -> figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange
+  labs(title= "", caption = "") +
+  theme(plot.subtitle = element_text(color = ggthemes_data$few$colors$Dark[2,2][[1]])) -> 
+  figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange
 
 figure01_EFFECT_SIZE_weak_VARIANTS_common+
-  labs(title= "", caption = "") -> figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange
+  labs(title= "", caption = "") +
+  theme(plot.subtitle = element_text(color = ggthemes_data$few$colors$Dark[5,2][[1]])) -> figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange
 
 figure01_EFFECT_SIZE_weak_VARIANTS_rare+
-  labs(title= "", caption = "") -> figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange
+  labs(title= "", caption = "") +
+  theme(plot.subtitle = element_text(color = ggthemes_data$few$colors$Dark[4,2][[1]])) -> figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange
 
-ggpubr::ggarrange(fig01b.update.arrange, fig02.update.arrange,
+ggpubr::ggarrange(fig02.update.arrange, fig01b.update.arrange,
                   figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange, figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange,
                   figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange, figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange, 
                   ncol=2, nrow=3, 
@@ -817,10 +824,13 @@ figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange+
   # delete y-labels
   scale_y_continuous(name="", sec.axis = sec_axis(~./scale_factor, name="Number of IVs"), limits = c(0,2)) -> figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange
 
-ggpubr::ggarrange(ggarrange(fig01b.update.arrange, fig02.update.arrange, ncol=2, labels = c("A", "B"), legend = "none", align = "hv"),
-                  ggarrange(figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange, figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange,
-                  figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange, figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange, 
-                  ncol=4, labels = c("C", "D", "E", "F"), legend="bottom", common.legend = TRUE),
+ggpubr::ggarrange(ggarrange(fig02.update.arrange, fig01b.update.arrange, ncol=2, labels = c("A", "B"), legend = "none", align = "hv"),
+                  ggarrange(figure01_EFFECT_SIZE_strong_VARIANTS_rare.arrange,
+                            figure01_EFFECT_SIZE_strong_VARIANTS_common.arrange, 
+                            figure01_EFFECT_SIZE_weak_VARIANTS_rare.arrange,
+                            figure01_EFFECT_SIZE_weak_VARIANTS_common.arrange, 
+                            ncol=4, labels = c("C", "D", "E", "F"), 
+                            legend="bottom", common.legend = TRUE),
                   nrow=2
                   #heights = c(2, 1.5, 1.5),
                   #legend = "bottom", common.legend = TRUE, align = "hv"
@@ -840,7 +850,6 @@ ggsave(filename = filename_final_plot1b, plot = final_plot1.arrange2,
          width = 14, height = 10, 
          units = "in"  # default
          )
-
 ```
 
 
