@@ -1177,6 +1177,75 @@ ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated,
        )
 ```
 
+```{r simulated-pves-raincloud-plot}
+ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section Simlating on empirical data (PVE)
+  geom_point(alpha=0.6)+
+  geom_line(alpha=0.6)+
+  geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
+  scale_x_continuous(name = paste0("Size of sample ", as.roman(1)),  # 2-sample-MR or label "Study Size"
+                     labels = comma, 
+                     breaks = N_annotation, #c( 10000, n[7:length(n)]),
+                     #limits = c(10000, 300000)  # throws an error when used with ggdist -> use coord_cartesian() instead!
+                     )+
+  #ylab("% variance explained by IVs")+
+  labs(title = "PVE with simulation added",
+       col='', 
+       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+  ) +
+  scale_y_continuous(
+    # Features of the first axis
+    name = "% variance explained by IVs",
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
+    limits = c(0,10)
+  ) + 
+  ## Rainclouds
+  # https://z3tt.github.io/Rainclouds/
+  # exposure simulation
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, # *100 to get percent values
+                                               group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_X*100, group=sample_size_filtered), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  # outcome simulation
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_Y*100, # *100 to get percent values
+                                               group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[4,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_Y*100, group=sample_size_filtered), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[4,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_Y*100, group=sample_size_filtered), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[4,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  coord_cartesian(xlim=c(10000, 300000))+
+  theme_few()+
+  #scale_colour_few() +
+  #scale_color_manual(name = "", values = c("% var(U)" = "red", 
+  #                                         "% var(X)" = "blue", 
+  #                                         "% var(Y)" = "darkblue", 
+  #                                         "Number of IVs" = "black"
+  #                                         ))
+  #
+  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
+                                           "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
+                                           "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
+                                           "Number of IVs" = "black"),
+                     # order
+                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
+  ) -> plot_pve_simulated.raincloud
+```
 
 
 
