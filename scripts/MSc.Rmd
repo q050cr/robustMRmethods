@@ -456,7 +456,7 @@ df_cum_expl_var <- df_cum_expl_var %>%
     count_IVs_scaled = count_IVs*scale_factor)
 ```
 
-```{r updated-fig01, warning=FALSE}
+```{r updated-fig01, fig.height=6, fig.width=10, warning=FALSE}
 plot_data1 <- df_cum_expl_var %>% 
   pivot_longer(cols = c(cum_expl_varX, cum_expl_varU, cum_expl_varY)) %>% 
   mutate(name = factor(name, labels = c("% var(U)", "% var(X)", "% var(Y)")),
@@ -1107,7 +1107,7 @@ ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot,
 
 
 
-```{r simulated-pves}
+```{r simulated-pves, fig.height=6, fig.width=10, warning=FALSE}
 # EXPOSURE PVE
 est_sim %>% 
   select(!!!(colname_pve_X)) %>% 
@@ -1177,7 +1177,7 @@ ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated,
        )
 ```
 
-```{r simulated-pves-raincloud-plot}
+```{r simulated-pves-raincloud-plot, fig.height=6, fig.width=10, warning=FALSE}
 ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section Simlating on empirical data (PVE)
   geom_point(alpha=0.6)+
   geom_line(alpha=0.6)+
@@ -1245,6 +1245,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
                      # order
                      breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
   ) -> plot_pve_simulated.raincloud
+plot_pve_simulated.raincloud
 ```
 
 
