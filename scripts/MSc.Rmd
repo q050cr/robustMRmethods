@@ -82,6 +82,8 @@ conflict_prefer("filter", "dplyr")
 The new report version includes: 
 
 - Issues from discussion mentioned above
+- Interchanged panel A and panel B in the first version of Figure 1, used the same colours in panel B and in the legends
+- Added five estimates for "BMI -> GSD": Wald estimate (FTO), Wald estimate (MC4R variant), random IVW, MRMix, weighted mode
 
 
 ```{r load-data}
@@ -363,11 +365,11 @@ ggplot(data=my_data_harm, aes(x=explained_variance_BMI, y=explained_variance_BMI
 ```{r PVE_BMI_vs_pval, warning=FALSE}
 # labeling (only FTO label)
 my_data_harm$gene_label <- NA
-my_data_harm$gene_label[my_data_harm$SNP %in% filter_FTO$refsnp_id] <- "FTO"
+my_data_harm$gene_label[my_data_harm$SNP %in% filter_FTO$refsnp_id] <- "FTO/MC4R"
 
 # color labeling
-my_data_harm$fto_col_annot <- "No FTO variant"
-my_data_harm$fto_col_annot[my_data_harm$SNP %in% filter_FTO$refsnp_id] <- "FTO variant"
+my_data_harm$fto_col_annot <- "No FTO/MC4R variant"
+my_data_harm$fto_col_annot[my_data_harm$SNP %in% filter_FTO$refsnp_id] <- "FTO/MC4R variant"
 
 ggplot(data = my_data_harm, 
        mapping = aes(x=explained_variance_BMI*100, y= -log10(p.value.bmi),  
@@ -957,8 +959,6 @@ est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_
 bias <- function(thetaobs,theta, ...) mean(thetaobs)- theta
 mse <- function(thetaobs, theta, ...) mean((thetaobs-theta)^2)
 emp_se <- function(nsim, thetaobs, theta, ...) sqrt( 1/(nsim-1) * sum((thetaobs-mean(thetaobs))^2) )  # == sd
-
-
 
 colname_theta <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_sim")]
 colname_theta_se <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_se_sim")]

@@ -21,7 +21,7 @@ templates/
 Vorlagen/
 # subdirectories
 scripts/old/
-scripts/test/
+#scripts/test/
 presentation/robustMR_files/
 presentation/old/
 # files in subdirs

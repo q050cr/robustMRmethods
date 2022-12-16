@@ -1,0 +1,173 @@
+---
+title: "MR-methods"
+author: "Christoph Reich"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+---
+# Perform MR-analysis
+
+We first perform MR analysis.
+
+```{r MendelianRandomization}
+# create object
+mr_object <- MendelianRandomization:: mr_input(
+  # exposure
+  bx = my_data$beta_exp, bxse = my_data$se_exp, 
+  # outcome
+  by = my_data$beta_out, byse = my_data$se_out, 
+  exposure = "Body mass index",
+  outcome = "Gallstone disease")
+
+#perform MR-Robust
+mrrobust <- mr_ivw(mr_object, "random", robust = TRUE)  # {MendelianRandomization}
+#mrrobust
+
+#perform MR-Egger
+mregger <- mr_egger(mr_object)  # {MendelianRandomization}
+#mregger
+
+#perform weighted median
+weighted_median <- mr_median(mr_object,  # {MendelianRandomization}
+                             weighting = "weighted", 
+                             iterations = 10000)
+#weighted_median
+
+#perform Mode based estimation
+mode_based <- mr_mbe(mr_object,  # {MendelianRandomization}
+       weighting = "weighted", 
+       stderror = "delta", 
+       phi = 1,
+       seed = 19940407, 
+       iterations = 10000, 
+       distribution = "normal",
+       alpha = 0.05)
+#mode_based
+```
+
+
+```{r MRMix}
+#perform MR-Mix  (Slob & Burgess squared their standard deviations`???); in vignette before analysis summary stats are standardized with `standardize` function
+mrmix_est <- MRMix::MRMix(betahat_x = my_data$beta_exp, 
+                          betahat_y = my_data$beta_out, 
+                          sx = my_data$se_exp, 
+                          sy = my_data$se_out)
+#mrmix_est
+
+mrmix_se <- MRMix::MRMix_se(betahat_x = my_data$beta_exp, 
+                          betahat_y = my_data$beta_out, 
+                          sx = my_data$se_exp, 
+                          sy = my_data$se_out, 
+                          theta = mrmix_est$theta, # estimate of causal effect, assuming the summary stats are standardized, theta represents increase in mean value of Y in s.d. unit of Y (for cont outcomes) or log-OR of Y (for binary outcomes)
+                          pi0 = mrmix_est$pi0, 
+                          sigma2 = mrmix_est$sigma2
+                          )
+#mrmix_se
+```
+
+```{r MRPRESSO}
+#perform MR-PRESSO
+# presso <- MRPRESSO:: mr_presso(BetaOutcome = "beta_out", 
+#                     BetaExposure = "beta_exp", 
+#                     SdOutcome = "se_out", 
+#                     SdExposure = "se_exp", 
+#                     OUTLIERtest = TRUE, 
+#                     DISTORTIONtest = TRUE, 
+#                     data = my_data, 
+#                     NbDistribution = 1000,   # must be changed
+#                     SignifThreshold = 0.05)
+```
+
+
+```{r MR-lasso}
+#define function for MR-Lasso with heterogeneity criterion
+MR_lasso<-function(betaYG, betaXG,sebetaYG){
+  betaYGw = betaYG/sebetaYG # dividing the association estimates by sebetaYG is equivalent
+  betaXGw = betaXG/sebetaYG # to weighting by sebetaYG^-2
+  pleio = diag(rep(1, length(betaXG)))
+  l1grid = c(seq(from=0.1, to=5, by=0.1), seq(from=5.2, to=10, by
+  =0.2))
+  
+  # values of lambda for grid search
+  l1grid_rse = NULL; l1grid_length = NULL; l1grid_beta = NULL; l1grid_se = NULL
+  for (i in 1:length(l1grid)) {
+    l1grid_which = which(attributes(penalized(betaYGw, pleio,
+                                              betaXGw, lambda1=l1grid[i], trace=FALSE))$penalized==0) 
+    
+    l1grid_rse[i] = summary(lm(betaYG[l1grid_which]~betaXG[l1grid_which]-1, 
+                               weights=sebetaYG[l1grid_which]^-2))$sigma 
+    l1grid_length[i] = length(l1grid_which)
+    l1grid_beta[i] = lm(betaYG[l1grid_which]~betaXG[l1grid_which]-1,
+                        weights=sebetaYG[l1grid_which]^-2)$coef[1]
+    l1grid_se[i] = summary(lm(betaYG[l1grid_which]~betaXG[l1grid_which]-1, 
+                              weights=
+                                sebetaYG[l1grid_which]^-2))$coef[1,2]/
+      min(summary(lm(betaYG[l1grid_which]~betaXG[l1grid_which]-1,
+                     weights=sebetaYG[l1grid_which]^-2))$sigma, 1)
+  }
+  
+  l1which_hetero = c(which(l1grid_rse[1:(length(l1grid)-1)]>1 & 
+                             diff(l1grid_rse)>qchisq(0.95, df=1)/l1grid_length[2:length(l1grid)]), 
+                     length(l1grid))[1]
+  # heterogeneity criterion for choosing lambda
+  l1hetero_beta = l1grid_beta[l1which_hetero] 
+  l1hetero_se = l1grid_se[l1which_hetero]
+  list(ThetaEstimate=l1hetero_beta, ThetaSE=l1hetero_se )
+}
+
+#perform MR-Lasso
+mrlasso <- MR_lasso(betaYG = my_data$beta_out, betaXG = my_data$beta_exp, sebetaYG = my_data$se_out)
+#mrlasso
+```
+
+```{r contamination-mixture}
+contaminationmixture<-function(by, bx, byse){
+  iters = 2001; theta = seq(from=-3, to=3, by=2/(iters-1))
+  # if the causal estimate (and confidence interval) is not expected
+  #     to lie between -1 and 1 then change from and to (and maybe
+  #     increase iters)
+  ratio = by/bx; ratio.se = abs(byse/bx); psi = 1.5*sd(ratio) 
+  lik=NULL
+  
+  for (j1 in 1:iters) {
+    lik.inc = exp(-(theta[j1]-ratio)^2/2/ratio.se^2) /sqrt(2*pi* ratio.se^2)
+    lik.exc = exp(-ratio^2/2/(psi^2+ratio.se^2)) /(sqrt(2*pi*(psi^2+ ratio.se^2)))
+    valid = (lik.inc>lik.exc)*1
+    lik[j1] = prod(c(lik.inc[valid==1], lik.exc[valid==0])) 
+    if (which.max(lik)==length(lik)) { valid.best = valid }
+  }
+  
+  phi = ifelse(test = sum(valid.best)<1.5, 
+               yes = 1, 
+               no = 
+                 max(
+                  sqrt(sum(
+                    ((ratio[valid.best==1]-weighted.mean(ratio[valid.best==1], ratio.se[valid.best==1]^-2))^2 * ratio.se[valid.best==1]^-2)) / 
+                      (sum(valid.best) -1)),
+                  1)
+               )
+  loglik = log(lik)
+  whichin = which(2*loglik>(2*max(loglik)-qchisq(0.95, df=1)*phi^2)) 
+  
+  theta[which.max(loglik)] # estimate
+  theta[whichin[1]] # lower limit of CI 
+  theta[whichin[length(whichin)]] # upper limit of CI
+  # return
+  list(ThetaEstimate=theta[which.max(loglik)], ThetaLower=theta[ whichin[1]] , ThetaUpper= theta[whichin[length(whichin)]] )
+}
+
+#perform contamination mixture, note Slob & Burgess removed the 27th variable 
+#   due to having a ratio to close to infty in their analysis
+contam.mix <- contaminationmixture(by = my_data$beta_out, 
+                                   bx = my_data$beta_exp, 
+                                   byse = my_data$se_out)
+#contam.mix
+```
+
+---

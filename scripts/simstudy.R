@@ -96,7 +96,7 @@ if (runSimulation==TRUE) {
           explained_variance_X2_sim = explained_variance_numeric2(maf=eaf.bmi, 
                                                                   beta=beta.bmi_sim_norm, 
                                                                   se_beta=se.bmi, 
-                                                                  samplesize=n[i]
+                                                                  samplesize=n[length(n)]  # n[i]
           ),
           explained_variance_Y_sim = explained_variance_binary(PA = eaf.gbc, 
                                                                RR1 = exp(beta.gbc_sim_norm), 
