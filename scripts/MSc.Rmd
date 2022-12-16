@@ -217,7 +217,7 @@ dropped_data <- my_data_harm %>%
   filter(mr_keep==FALSE)
 
 my_data_harm <- my_data_harm %>% 
-  filter(mr_keep==TRUE)
+  filter(mr_keep==TRUE | SNP == "rs1558902")  # also include FTO SNP
 ```
 
 
@@ -321,6 +321,7 @@ We added a second formula to calculate the explained variance for numeric traits
 ## CALCULATE explained variance
 my_data_harm <- my_data_harm %>% 
   mutate(explained_variance_BMI = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
+         # USE THIS !
          explained_variance_BMI2 = explained_variance_numeric2(maf=eaf.bmi, 
                                                            beta=beta.bmi, 
                                                            se_beta=se.bmi, 
@@ -329,24 +330,17 @@ my_data_harm <- my_data_harm %>%
          ),
          explained_variance_GSD = explained_variance_binary(PA = eaf.gsd, 
                                                             RR1 = exp(beta.gsd), 
-                                                            RR2 = exp(beta.gsd)^2, 
+                                                            RR2 = 1+(2*(exp(beta.gsd)-1)), 
                                                             K = 0.1  # assumed prevalence in population
-                                                            )$Vg,
-         explained_variance_GBC2 = explained_variance_binary(PA = eaf.gbc, 
-                                                            RR1 = exp(beta.gbc), 
-                                                            RR2 = exp(beta.gbc)^2, 
-                                                            K =1.2/100000  # assumed prevalence in population
                                                             )$Vg,
          explained_variance_GBC = explained_variance_binary(PA = eaf.gbc, 
                                                             RR1 = exp(beta.gbc), 
-                                                            RR2 = 1+(2*(exp(beta.gbc)-1)), 
+                                                            RR2 = 1+(2*(exp(beta.gbc)-1)), # exp(beta.gbc)^2, 
                                                             K =1.2/100000  # assumed prevalence in population
                                                             )$Vg
          
          )
-
-sum(my_data_harm$explained_variance_GBC)
-sum(my_data_harm$explained_variance_GBC2)
+# sum(my_data_harm$explained_variance_GBC)
 ```
 
 
@@ -366,6 +360,8 @@ ggplot(data=my_data_harm, aes(x=explained_variance_BMI, y=explained_variance_BMI
 # labeling (only FTO label)
 my_data_harm$gene_label <- NA
 my_data_harm$gene_label[my_data_harm$SNP %in% filter_FTO$refsnp_id] <- "FTO/MC4R"
+my_data_harm$gene_label[my_data_harm$SNP == "rs1558902"] <- "FTO"
+my_data_harm$gene_label[my_data_harm$SNP == "rs6567160"] <- "MC4R"
 
 # color labeling
 my_data_harm$fto_col_annot <- "No FTO/MC4R variant"
@@ -436,6 +432,7 @@ for (i in 1:length(colnames_pval) ) {
   summarydat <- my_data_harm %>% 
     filter(!!sym(select_col) < threshold) %>% 
     select(explained_variance_BMI, explained_variance_BMI2, explained_variance_GSD, explained_variance_GBC) %>% 
+    # cumulative PVE
     summarise(expl_variances =across(.cols = everything(), function(x) sum(x, na.rm = TRUE)),
               count_IVs = n())
   # fill up df
@@ -448,12 +445,13 @@ for (i in 1:length(colnames_pval) ) {
 ```
 
 
-```{r plot-fig1, warning=FALSE}
+```{r updated-fig01, fig.height=6, fig.width=10, warning=FALSE}
 # 6.       Represent figure similar to Fig1 in Chatterjee’s paper
 
 # Dual Y axis: we have 284 IVs, scale them to 5% (y-axis [0;5%]): 3/284 
 ## https://r-graph-gallery.com/line-chart-dual-Y-axis-ggplot2.html
 scale_factor <- 4.5/284
+
 df_cum_expl_var <- df_cum_expl_var %>% 
   mutate(
     cum_expl_varX = cum_expl_varX *100, # in percent 
@@ -461,9 +459,7 @@ df_cum_expl_var <- df_cum_expl_var %>%
     cum_expl_varU = cum_expl_varU *100,
     cum_expl_varY = cum_expl_varY *100,
     count_IVs_scaled = count_IVs*scale_factor)
-```
 
-```{r updated-fig01, fig.height=6, fig.width=10, warning=FALSE}
 plot_data1 <- df_cum_expl_var %>% 
   pivot_longer(cols = c(cum_expl_varX, cum_expl_varU, cum_expl_varY)) %>% 
   mutate(name = factor(name, labels = c("% var(U)", "% var(X)", "% var(Y)")),
@@ -551,7 +547,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
                      # order
                      breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
   ) -> fig01b.update
-fig01b.update
+fig01b.update  # USE THIS
 
 # SAVE
 filenamefig01_a <- paste0("../output/plots/", Sys.Date(), "_figure01_a.png")
@@ -780,7 +776,6 @@ for (i in 1:nrow(all_quadrants)) {
 ```
 
 ## FINAL PLOT
-
 
 ```{r fig.height=10, fig.width=14, warning=FALSE}
 fig01b.update + 
@@ -1251,6 +1246,12 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
                      breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
   ) -> plot_pve_simulated.raincloud
 plot_pve_simulated.raincloud
+
+filename_pveplot_sim.raincloud <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve_raincloud.png")
+ggsave(filename = filename_pveplot_sim.raincloud, plot = plot_pve_simulated.raincloud, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
 ```
 
 

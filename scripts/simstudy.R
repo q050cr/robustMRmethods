@@ -89,9 +89,13 @@ if (runSimulation==TRUE) {
     
     # simulate beta values from normal_distribution # -----------------------------------------------------
     for (k in 1:nsim) {
+      # scaling se_Y so that max(se_Y) = max(se_X)
+      factor1 <- max(sim_dat$se.bmi)/max(sim_dat$se.gbc)
+      se.gbc_narrow <- sim_dat$se.gbc * factor1
       sim_dat <- sim_dat %>% 
         mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se.bmi, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
-        mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se.gbc, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
+        # here we need to deal with standard deviation (standard errors for Y are  huge/ see mail 2022-12-16)
+        mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se.gbc_narrow, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
         mutate(#explained_variance_X_sim = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
           explained_variance_X2_sim = explained_variance_numeric2(maf=eaf.bmi, 
                                                                   beta=beta.bmi_sim_norm, 
