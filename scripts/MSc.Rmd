@@ -74,6 +74,9 @@ conflict_prefer("filter", "dplyr")
     9. Plot PVE from all simulated variants as boxplots on each dot of Figure 01
 
 
+-   2022-12-05
+    1. How did the large CI for the simulated PVEs arise? The simulated beta coefficients were drawn from given betas **AND** sample-size adjusted standard errors `*get simulated se_{sample size}*`. Therefore, for small sample sizes we yielded large variance for the beta coefficients. I changed the simulation and only used the given standard errors for our simulation scenarios in "scripts/simstudy.R".
+
 # Version Update
 
 The new report version includes: 
@@ -284,7 +287,7 @@ for (i in 1:nrow(my_data_harm)) {
   }
 }
 
-# 4. Exclude the IV if Pval > genome-wide significance threshold  (5 × 10−8)
+# 4. Exclude the IV if Pval > genome-wide significance threshold  (5 × 10−8) --> updated to 5 × 10−6
 pvals_df %>% 
   summarize(across(.cols = everything(), function(x) sum(x < 5*10^(-6)))) %>% 
   t() %>% 
@@ -327,25 +330,27 @@ my_data_harm <- my_data_harm %>%
                                                             RR2 = exp(beta.gsd)^2, 
                                                             K = 0.1  # assumed prevalence in population
                                                             )$Vg,
-         explained_variance_GBC = explained_variance_binary(PA = eaf.gbc, 
+         explained_variance_GBC2 = explained_variance_binary(PA = eaf.gbc, 
                                                             RR1 = exp(beta.gbc), 
                                                             RR2 = exp(beta.gbc)^2, 
                                                             K =1.2/100000  # assumed prevalence in population
                                                             )$Vg,
-         explained_variance_GBC2 = explained_variance_binary(PA = eaf.gbc, 
+         explained_variance_GBC = explained_variance_binary(PA = eaf.gbc, 
                                                             RR1 = exp(beta.gbc), 
                                                             RR2 = 1+(2*(exp(beta.gbc)-1)), 
                                                             K =1.2/100000  # assumed prevalence in population
                                                             )$Vg
          
          )
+
+sum(my_data_harm$explained_variance_GBC)
+sum(my_data_harm$explained_variance_GBC2)
 ```
 
 
 ### %var(X) BMI formula comparison
 
-
-```{r}
+```{r compare-formulas-numeric-pve}
 ggplot(data=my_data_harm, aes(x=explained_variance_BMI, y=explained_variance_BMI2)) +
   geom_point(alpha=0.6)+
   geom_abline()+
@@ -429,7 +434,7 @@ for (i in 1:length(colnames_pval) ) {
   summarydat <- my_data_harm %>% 
     filter(!!sym(select_col) < threshold) %>% 
     select(explained_variance_BMI, explained_variance_BMI2, explained_variance_GSD, explained_variance_GBC) %>% 
-    summarise(expl_variances =across(.cols = everything(), function(x) sum(x)),
+    summarise(expl_variances =across(.cols = everything(), function(x) sum(x, na.rm = TRUE)),
               count_IVs = n())
   # fill up df
   df_cum_expl_var[i, 2] <- summarydat$expl_variances[1]

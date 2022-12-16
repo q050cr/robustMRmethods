@@ -75,32 +75,32 @@ if (runSimulation==TRUE) {
     # FILTER DATA
     sim_dat <- my_data_harm %>% 
       filter(!!sym(colnames_pval[i]) < threshold) %>% 
-      select(SNP, eaf.bmi, beta.bmi, p.value.bmi, eaf.gbc, beta.gbc, p.value.gbc)
+      select(SNP, eaf.bmi, beta.bmi, se.bmi, p.value.bmi, eaf.gbc, beta.gbc, se.gbc ,p.value.gbc)
     
-    # get simulated se_{sample size}
-    for (j in 1:nrow(sim_dat)) {
-      # as done before in section "simulating on empirical data"
-      se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
-      se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
-    }
-    
-    sim_dat <- sim_dat %>%
-      bind_cols(tibble(se_update_BMI=se_update_BMI, se_update_GBC=se_update_GBC))
+    # get simulated se_{sample size} --> this yields large standard errors for small sample sizes -> use original sd
+    # for (j in 1:nrow(sim_dat)) {
+    #   # as done before in section "simulating on empirical data"
+    #   se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+    #   se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+    # }
+    #
+    # sim_dat <- sim_dat %>%
+    #   bind_cols(tibble(se_update_BMI=se_update_BMI, se_update_GBC=se_update_GBC))
     
     # simulate beta values from normal_distribution # -----------------------------------------------------
     for (k in 1:nsim) {
       sim_dat <- sim_dat %>% 
-        mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se_update_BMI, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
-        mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se_update_GBC, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
+        mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se.bmi, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
+        mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se.gbc, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
         mutate(#explained_variance_X_sim = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
           explained_variance_X2_sim = explained_variance_numeric2(maf=eaf.bmi, 
                                                                   beta=beta.bmi_sim_norm, 
-                                                                  se_beta=se_update_BMI, 
+                                                                  se_beta=se.bmi, 
                                                                   samplesize=n[i]
           ),
           explained_variance_Y_sim = explained_variance_binary(PA = eaf.gbc, 
                                                                RR1 = exp(beta.gbc_sim_norm), 
-                                                               RR2 = exp(beta.gbc_sim_norm)^2, 
+                                                               RR2 = 1+(2*(exp(beta.gbc_sim_norm)-1)),  #exp(beta.gbc_sim_norm)^2, 
                                                                K =1.2/100000  # assumed prevalence in population
           )$Vg
         )
@@ -108,10 +108,10 @@ if (runSimulation==TRUE) {
       # PERFORM MR_analysis
       mr.obj = MendelianRandomization::mr_input(
         bx = sim_dat$beta.bmi_sim_norm, 
-        bxse = sim_dat$se_update_BMI, 
+        bxse = sim_dat$se.bmi, 
         # outcome
         by = sim_dat$beta.gbc_sim_norm, 
-        byse = sim_dat$se_update_GBC, 
+        byse = sim_dat$se.gbc, 
         snps = sim_dat$SNP,
         exposure = "Body mass index",
         outcome = "Gallbladder Cancer"
@@ -136,7 +136,7 @@ if (runSimulation==TRUE) {
       
       rm(res)
     }
-    rm(se_update_BMI, se_update_GBC)
+    #rm(se_update_BMI, se_update_GBC)
     print(paste0("|||-----------------------Run finished for sample size: ", format(n[i], scientific=FALSE), " -----------------------|||"))
   }  ## END OF SIMULATION
   
