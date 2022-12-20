@@ -1,5 +1,4 @@
 
-
 ## ---------------------------
 ##
 ## Script name: simstudy.R
@@ -43,7 +42,11 @@ conflict_prefer("filter", "dplyr")
 # data
 my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "my_data_harm.rds", full.names = TRUE)))
 # MR estimates from full study
+## BMI -> GSD
+est.bmi.gsd <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est_BMI_GSD.rds", full.names = TRUE)))
+## BMI -> GBC
 est <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_est.rds", full.names = TRUE)))
+
 # vars from MSc script
 sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
 n <- sim_vars$n
@@ -64,6 +67,7 @@ if (runSimulation==TRUE) {
   for (i in 1:length(colnames_pval)) {
     threshold <- 5*10^-6
     se_update_BMI <- c()
+    se_update_GSD <- c()
     se_update_GBC <- c()
     
     numIV <- sum(my_data_harm[[colnames_pval[i]]] < threshold)
@@ -75,12 +79,16 @@ if (runSimulation==TRUE) {
     # FILTER DATA
     sim_dat <- my_data_harm %>% 
       filter(!!sym(colnames_pval[i]) < threshold) %>% 
-      select(SNP, eaf.bmi, beta.bmi, se.bmi, p.value.bmi, eaf.gbc, beta.gbc, se.gbc ,p.value.gbc)
+      select(SNP, 
+             eaf.bmi, beta.bmi, se.bmi, p.value.bmi, 
+             eaf.gsd, beta.gsd, se.gsd, p.value.gsd,
+             eaf.gbc, beta.gbc, se.gbc ,p.value.gbc)
     
     # get simulated se_{sample size} --> this yields large standard errors for small sample sizes -> use original sd
     # for (j in 1:nrow(sim_dat)) {
     #   # as done before in section "simulating on empirical data"
     #   se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+    #   se_update_GSD[j] <- abs(sim_dat[["beta.gsd"]][j]/-qnorm(p=(sim_dat[["p.value.gsd"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
     #   se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
     # }
     #

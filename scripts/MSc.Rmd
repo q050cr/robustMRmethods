@@ -18,6 +18,8 @@ output:
     df_print: kable
     latex_engine: xelatex
 bibliography: ../references/references.bib
+editor_options: 
+  chunk_output_type: inline
 ---
 
 
@@ -206,6 +208,11 @@ my_data_harm <-
   relocate(
     p.value.gbc, .before = palindromic
   ) %>% 
+  mutate(
+    p.value.gsd = ifelse(p.value.gsd == "<.0001",  # convert from string
+                         yes = "0.0001", 
+                         no=p.value.gsd), 
+    p.value.gsd = as.numeric(p.value.gsd)) %>% 
   as_tibble()
 ```
 
@@ -575,8 +582,8 @@ For the ~200 IVs, please plot the minor allele frequency (x-axis) versus -log10P
 ```{r MAF-Pval, warning=FALSE}
 ggplot(data = my_data_harm, aes(x=eaf.bmi, y=-log10(p.value.bmi)))+
   geom_point(alpha=0.6)+
-  geom_hline(yintercept=-log10(median(my_data$p_value_exp)), col="red", alpha=0.6)+
-  geom_vline(xintercept=median(my_data$eaf_exp), col="red", alpha=0.6)+
+  geom_hline(yintercept=-log10(median(my_data$p_value_exp)), col=ggthemes_data$few$colors$Dark[3,2][[1]], alpha=0.6)+
+  geom_vline(xintercept=median(my_data$eaf_exp), col=ggthemes_data$few$colors$Dark[3,2][[1]], alpha=0.6)+
   xlab("Effect allele frequency for exposure")+
   ylab("-log10(P-value) ")+
   labs(title = "MAF vs Pval",
@@ -857,7 +864,127 @@ ggsave(filename = filename_final_plot1b, plot = final_plot1.arrange2,
 
 \clearpage
 
-# Simulation Framework
+# A *Gallstone Disease* Simulation Framework
+
+## Get MR-estimates first
+
+### Using {MendelianRandomization} package
+
+```{r MendelianRandomization-analysis-GSD, warning=FALSE}
+# outsourced calculation to `perform_mr.R`
+# data FOR estimates in `perform_mr.R` script and simulation in `simstudy.R` script
+saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
+
+## load results
+est.bmi.gsd <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est_BMI_GSD.rds", full.names = TRUE)))
+
+est.bmi.gsd %>% 
+  mutate(OR=exp(estimate), CI.lower=exp(estimate-se.estimate),CI.upper=exp(estimate+se.estimate)) %>%  
+  kable(digits=3, caption = "MR Results for GSD (outcome) using genetic variants as instrumental variables for BMI") %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+
+### Scatter Plot
+
+```{r scatter-MendelianRandomization-GSD, fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
+# create mr.object
+mr.obj = MendelianRandomization::mr_input(
+    # exposure
+    bx = my_data_harm$beta.bmi, 
+    bxse = my_data_harm$se.bmi, 
+    # outcome
+    by = my_data_harm$beta.gsd, 
+    byse = my_data_harm$se.gsd, 
+    snps = my_data_harm$SNP,
+    exposure = "Body mass index",
+    outcome = "Gallstone disease"
+  )
+
+p1.gsd <- mr_plot(mr.obj, error = TRUE, 
+                  line = "ivw", 
+                  orientate = FALSE, 
+                  interactive = FALSE, 
+                  labels = FALSE)
+
+p1.gsd$layers[[1]]$aes_params$size <- 1
+p1.gsd$layers[[1]]$aes_params$alpha <- 0.5
+
+p1.gsd$layers[[4]]$aes_params$colour <- ggthemes_data$few$colors$Dark[1,2][[1]]
+p1.gsd$layers[[5]]$aes_params$colour <- ggthemes_data$few$colors$Dark[1,2][[1]]
+p1.gsd$layers[[4]]$aes_params$alpha <- 0.3
+p1.gsd$layers[[5]]$aes_params$alpha <- 0.3
+
+p1.gsd$layers[[6]]$aes_params$colour <- ggthemes_data$few$colors$Dark[2,2][[1]]
+
+p1.gsd+
+  ggthemes::theme_few() -> p1.gsd
+
+p1.gsd
+
+# SAVE
+filename.mr.scatter.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrscatter_gsd.png")
+ggsave(filename = filename.mr.scatter.gsd, plot = p1.gsd, 
+         width = 10, height = 6, 
+         units = "in"  # default
+         )
+```
+
+
+### Forest Plot
+
+```{r forestplot-MendelianRandomization-GSD, fig.width=5, fig.height=24, warning=FALSE}
+p2.gsd <- mr_forest(
+  mr.obj,
+  alpha = 0.05,
+  snp_estimates = TRUE,
+  methods = "ivw",
+  ordered = TRUE
+) +
+  ggthemes::theme_few()
+
+#SAVE
+filename.mr.forest.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_gsd.png")
+ggsave(filename = filename.mr.forest.gsd, plot = p2.gsd, 
+       width = 5, 
+       height = 24, 
+         #units = "in"  # default
+         )
+```
+
+### Funnel Plot
+
+```{r funnel-plot-GSD, fig.height=3, fig.width=5}
+p4.gsd <- mr_funnel(mr.obj, CI=TRUE)+
+  ggthemes::theme_few()
+
+p4.gsd$layers[[1]]$aes_params$size <- 1
+p4.gsd$layers[[1]]$aes_params$alpha <- 0.8
+# linerange layer
+p4.gsd$layers[[2]]$aes_params$alpha <- 0.2
+# xintercept layer - estimate
+p4.gsd$layers[[4]]$aes_params$colour <- ggthemes_data$few$colors$Dark[9,2][[1]]
+# delete linerange layer
+p4.gsd$layers <- p4.gsd$layers[-2]  
+
+# plot
+p4.gsd
+
+#SAVE
+filename.mr.funnel.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrfunnel_gsd.png")
+ggsave(filename = filename.mr.funnel.gsd, plot = p4.gsd, 
+       width = 8, 
+       height = 4, 
+       units = "in"  # default
+         )
+
+```
+
+
+\clearpage
+
+
+# B *Gallbladder Cancer* Simulation Framework
 
 ## Get MR-estimates first
 
@@ -877,6 +1004,7 @@ res %>%
   kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
 
+### Scatter Plot
 
 ```{r scatter-TwoSampleMR, warning=FALSE, message=FALSE}
 # mr_method_list()
@@ -894,6 +1022,8 @@ ggsave(filename = filename.mr.scatter, plot = p1[[1]],
          )
 ```
 
+### Forest Plot
+
 ```{r forestplot-TwoSampleMR, fig.width=5, fig.height=24, warning=FALSE}
 res_single <- TwoSampleMR::mr_singlesnp(harmonised_dat4TwoSampleMR, all_method = c("mr_egger_regression", "mr_ivw"))
 p2 <- mr_forest_plot(res_single,  exponentiate = FALSE)
@@ -908,20 +1038,28 @@ ggsave(filename = filename.mr.forest, plot = p2[[1]],
          )
 ```
 
-```{r funnel-plot}
+### Funnel Plot
+
+```{r funnel-plot, fig.height=3, fig.width=5}
 p4 <- mr_funnel_plot(res_single)
 p4[[1]] +
-  ggthemes::theme_few()
+  ggthemes::theme_few() -> p4
+
+p4
+
+#SAVE
+filename.mr.funnel.gbc <- paste0("../output/plots/", Sys.Date(), "_figure_mrfunnel_gbc.png")
+ggsave(filename = filename.mr.funnel.gbc, plot = p4, 
+       width = 8, 
+       height = 4, 
+       units = "in"  # default
+         )
 ```
 
 
 ### Using {MendelianRandomization} package
 
 ```{r MendelianRandomization-analysis, warning=FALSE}
-# outsourced calculation to `perform_mr.R`
-# data FOR estimates in `perform_mr.R` script and simulation in `simstudy.R` script
-saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
-
 ## load results
 est <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est.rds", full.names = TRUE)))
 
