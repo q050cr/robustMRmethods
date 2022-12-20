@@ -878,6 +878,27 @@ saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"
 ## load results
 est.bmi.gsd <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est_BMI_GSD.rds", full.names = TRUE)))
 
+# biology plausibility FTO & MC4R
+# ## The mr_ivw function implements the inverse-variance method, informally 
+# known as the "Toby Johnson" method. With a single genetic variant, this 
+# is simply the ratio method.
+fto_wald <- mr_wald_ratio(
+  my_data_harm$beta.bmi[my_data_harm$SNP == "rs1558902"], 
+  my_data_harm$beta.gsd[my_data_harm$SNP == "rs1558902"], 
+  my_data_harm$se.bmi[my_data_harm$SNP == "rs1558902"], 
+  my_data_harm$se.gsd[my_data_harm$SNP == "rs1558902"]
+)
+mc4r_wald <- mr_wald_ratio(
+  my_data_harm$beta.bmi[my_data_harm$SNP == "rs6567160"], 
+  my_data_harm$beta.gsd[my_data_harm$SNP == "rs6567160"], 
+  my_data_harm$se.bmi[my_data_harm$SNP == "rs6567160"], 
+  my_data_harm$se.gsd[my_data_harm$SNP == "rs6567160"]
+)
+# add rows
+est.bmi.gsd <- est.bmi.gsd %>% 
+  add_row(mr_methods = "FTO_Wald", estimate = fto_wald$b, se.estimate=fto_wald$se) %>% 
+  add_row(mr_methods = "MC4R_Wald", estimate = mc4r_wald$b, se.estimate=mc4r_wald$se)
+
 est.bmi.gsd %>% 
   mutate(OR=exp(estimate), CI.lower=exp(estimate-se.estimate),CI.upper=exp(estimate+se.estimate)) %>%  
   kable(digits=3, caption = "MR Results for GSD (outcome) using genetic variants as instrumental variables for BMI") %>% 
@@ -1062,6 +1083,28 @@ ggsave(filename = filename.mr.funnel.gbc, plot = p4,
 ```{r MendelianRandomization-analysis, warning=FALSE}
 ## load results
 est <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est.rds", full.names = TRUE)))
+
+# biology plausibility FTO & MC4R
+# ## The mr_ivw function implements the inverse-variance method, informally 
+# known as the "Toby Johnson" method. With a single genetic variant, this 
+# is simply the ratio method.
+fto_wald.gbc <- mr_wald_ratio(
+  my_data_harm$beta.bmi[my_data_harm$SNP == "rs1558902"], 
+  my_data_harm$beta.gbc[my_data_harm$SNP == "rs1558902"], 
+  my_data_harm$se.bmi[my_data_harm$SNP == "rs1558902"], 
+  my_data_harm$se.gbc[my_data_harm$SNP == "rs1558902"]
+)
+mc4r_wald.gbc <- mr_wald_ratio(
+  my_data_harm$beta.bmi[my_data_harm$SNP == "rs6567160"], 
+  my_data_harm$beta.gbc[my_data_harm$SNP == "rs6567160"], 
+  my_data_harm$se.bmi[my_data_harm$SNP == "rs6567160"], 
+  my_data_harm$se.gbc[my_data_harm$SNP == "rs6567160"]
+)
+# add rows
+est <- est %>% 
+  add_row(mr_methods = "FTO_Wald", estimate = fto_wald.gbc$b, se.estimate=fto_wald.gbc$se) %>% 
+  add_row(mr_methods = "MC4R_Wald", estimate = mc4r_wald.gbc$b, se.estimate=mc4r_wald.gbc$se)
+
 
 est %>% 
   mutate(OR=exp(estimate), CI.lower=exp(estimate-se.estimate),CI.upper=exp(estimate+se.estimate)) %>%  

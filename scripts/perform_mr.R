@@ -11,7 +11,8 @@
 ##
 ## ---------------------------
 ## Notes:
-##   creates dataframe `est` with estimates from different robust MR methods
+##   creates dataframe `est` with estimates from different robust MR methods: BMI -> GBC
+##   creates dataframe `est.bmi.gsd` with estimates from different robust MR methods: BMI -> GSD
 ##        
 ## ---------------------------
 
@@ -49,7 +50,7 @@ if (numIV>2){
   )
   # 1. IVW
   T0 = proc.time()[3]
-  res = MendelianRandomization::mr_ivw(mr.obj)
+  res = MendelianRandomization::mr_ivw(mr.obj, model = "random")
   T1 = proc.time()[3]
   est$estimate[est$mr_methods=="IVW"] = res$Estimate
   est$se.estimate[est$mr_methods=="IVW"] = res$StdError
@@ -173,7 +174,6 @@ if (numIV>2){
 saveRDS(est, paste0("./output/Rdata/", Sys.Date(), "_est.rds"))
 
 
-
 # BMI -> GSD --------------------------------------------------------------
 
 mr_methods = c("IVW", "median", "mode", "PRESSO", "Robust", "Lasso", "egger", "conmix", "MRMix", "RAPS")
@@ -194,7 +194,7 @@ if (numIV>2){
   )
   # 1. IVW
   T0 = proc.time()[3]
-  res = MendelianRandomization::mr_ivw(mr.obj)
+  res = MendelianRandomization::mr_ivw(mr.obj, model = "random")
   T1 = proc.time()[3]
   est.bmi.gsd$estimate[est.bmi.gsd$mr_methods=="IVW"] = res$Estimate
   est.bmi.gsd$se.estimate[est.bmi.gsd$mr_methods=="IVW"] = res$StdError
