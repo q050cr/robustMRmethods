@@ -41,11 +41,6 @@ conflict_prefer("filter", "dplyr")
 # GET DATA ----------------------------------------------------------------
 # data
 my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "my_data_harm.rds", full.names = TRUE)))
-# MR estimates from full study
-## BMI -> GSD
-est.bmi.gsd <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est_BMI_GSD.rds", full.names = TRUE)))
-## BMI -> GBC
-est <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_est.rds", full.names = TRUE)))
 
 # vars from MSc script
 sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
@@ -87,9 +82,9 @@ if (runSimulation==TRUE) {
     # get simulated se_{sample size} --> this yields large standard errors for small sample sizes -> use original sd
     # for (j in 1:nrow(sim_dat)) {
     #   # as done before in section "simulating on empirical data"
-    #   se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
-    #   se_update_GSD[j] <- abs(sim_dat[["beta.gsd"]][j]/-qnorm(p=(sim_dat[["p.value.gsd"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
-    #   se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][i]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+    #   se_update_BMI[j] <- abs(sim_dat[["beta.bmi"]][j]/-qnorm(p=(sim_dat[["p.value.bmi"]][j]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+    #   se_update_GSD[j] <- abs(sim_dat[["beta.gsd"]][j]/-qnorm(p=(sim_dat[["p.value.gsd"]][j]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
+    #   se_update_GBC[j] <- abs(sim_dat[["beta.gbc"]][j]/-qnorm(p=(sim_dat[["p.value.gbc"]][j]/2),mean=0)*sqrt(n.orig)/sqrt(n[i]))
     # }
     #
     # sim_dat <- sim_dat %>%
@@ -99,10 +94,13 @@ if (runSimulation==TRUE) {
     for (k in 1:nsim) {
       # scaling se_Y so that max(se_Y) = max(se_X)
       factor1 <- max(sim_dat$se.bmi)/max(sim_dat$se.gbc)
+      factor2 <- max(sim_dat$se.bmi)/max(sim_dat$se.gsd)
       se.gbc_narrow <- sim_dat$se.gbc * factor1
+      se.gsd_narrow <- sim_dat$se.gsd * factor2
       sim_dat <- sim_dat %>% 
         mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se.bmi, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
         # here we need to deal with standard deviation (standard errors for Y are  huge/ see mail 2022-12-16)
+        mutate(beta.gsd_sim_norm = purrr::map2_dbl(.x = beta.gsd, .y = se.gsd_narrow, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
         mutate(beta.gbc_sim_norm = purrr::map2_dbl(.x = beta.gbc, .y = se.gbc_narrow, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
         mutate(#explained_variance_X_sim = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
           explained_variance_X2_sim = explained_variance_numeric2(maf=eaf.bmi, 
@@ -110,6 +108,11 @@ if (runSimulation==TRUE) {
                                                                   se_beta=se.bmi, 
                                                                   samplesize=n[length(n)]  # n[i]
           ),
+          explained_variance_U_sim = explained_variance_binary(PA = eaf.gsd, 
+                                                             RR1 = exp(beta.gsd_sim_norm), 
+                                                             RR2 = 1+(2*(exp(beta.gsd_sim_norm)-1)), 
+                                                             K = 0.1  # assumed prevalence in population
+          )$Vg,
           explained_variance_Y_sim = explained_variance_binary(PA = eaf.gbc, 
                                                                RR1 = exp(beta.gbc_sim_norm), 
                                                                RR2 = 1+(2*(exp(beta.gbc_sim_norm)-1)),  #exp(beta.gbc_sim_norm)^2, 
@@ -117,8 +120,66 @@ if (runSimulation==TRUE) {
           )$Vg
         )
       
-      # PERFORM MR_analysis
-      mr.obj = MendelianRandomization::mr_input(
+      # PVE 
+      colname_pve_X <- paste0("pve_X_sim_", format(n[i], scientific=FALSE))
+      colname_pve_U <- paste0("pve_U_sim_", format(n[i], scientific=FALSE))
+      colname_pve_Y <- paste0("pve_Y_sim_", format(n[i], scientific=FALSE))
+      ## add PVE cols
+      est_sim[k, colname_pve_X] <- sum(sim_dat$explained_variance_X2_sim)
+      est_sim[k, colname_pve_U] <- sum(sim_dat$explained_variance_U_sim)
+      est_sim[k, colname_pve_Y] <- sum(sim_dat$explained_variance_Y_sim)
+      
+      # PERFORM MR_analysis 
+      ## A/ GSD  ---------------------------------------------------------------
+      mr.obj.gsd = MendelianRandomization::mr_input(
+        bx = sim_dat$beta.bmi_sim_norm, 
+        bxse = sim_dat$se.bmi, 
+        # outcome
+        by = sim_dat$beta.gsd_sim_norm, 
+        byse = sim_dat$se.gsd, 
+        snps = sim_dat$SNP,
+        exposure = "Body mass index",
+        outcome = "Gallstone Disease"
+      ) 
+      
+      # 1. random IVW
+      ivw.res.gsd = MendelianRandomization::mr_ivw(mr.obj.gsd, model = "random")
+      # colnames
+      ivw.colname_theta_gsd <- paste0("IVW_theta_sim_BMI_GSD_", format(n[i], scientific=FALSE))
+      ivw.colname_theta_se_gsd <- paste0("IVW_theta_se_sim_BMI_GSD_", format(n[i], scientific=FALSE))
+      ivw.colname_pvalue_gsd <- paste0("IVW_mr_pval_BMI_GSD_", format(n[i], scientific=FALSE))
+      # store results
+      est_sim[k, ivw.colname_theta_gsd] <- ivw.res.gsd$Estimate
+      est_sim[k, ivw.colname_theta_se_gsd] <- ivw.res.gsd$StdError
+      est_sim[k, ivw.colname_pvalue_gsd] <- ivw.res.gsd$Pvalue
+      
+      # 2. weighted mode
+      mode.res.gsd = MendelianRandomization::mr_mbe(mr.obj.gsd)
+      # colnames
+      mode.colname_theta_gsd <- paste0("MODE_theta_sim_BMI_GSD_", format(n[i], scientific=FALSE))
+      mode.colname_theta_se_gsd <- paste0("MODE_theta_se_sim_BMI_GSD_", format(n[i], scientific=FALSE))
+      mode.colname_pvalue_gsd <- paste0("MODE_mr_pval_BMI_GSD_", format(n[i], scientific=FALSE))
+      # store results
+      est_sim[k, mode.colname_theta_gsd] <- mode.res.gsd$Estimate
+      est_sim[k, mode.colname_theta_se_gsd] <- mode.res.gsd$StdError
+      est_sim[k, mode.colname_pvalue_gsd] <- mode.res.gsd$Pvalue
+      
+      # 3. CONMIX 
+      conmix.res.gsd = MendelianRandomization::mr_conmix(mr.obj.gsd)
+      # colnames
+      conmix.colname_theta_gsd <- paste0("CONMIX_theta_sim_BMI_GSD_", format(n[i], scientific=FALSE))
+      conmix.colname_theta_se_gsd <- paste0("CONMIX_theta_se_sim_BMI_GSD_", format(n[i], scientific=FALSE))
+      conmix.colname_pvalue_gsd <- paste0("CONMIX_mr_pval_BMI_GSD_", format(n[i], scientific=FALSE))
+      ## store results
+      est_sim[k, conmix.colname_theta_gsd] <- conmix.res.gsd$Estimate
+      CIlength = conmix.res.gsd$CIUpper-conmix.res.gsd$CILower
+      if (length(CIlength)>1) print("conmix multimodal")
+      est_sim[k, conmix.colname_theta_se_gsd] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
+      est_sim[k, conmix.colname_pvalue_gsd] <- conmix.res.gsd$Pvalue
+      rm(conmix.res.gsd)  
+      
+      ## B/ GBC ---------------------------------------------------------------
+      mr.obj.gbc = MendelianRandomization::mr_input(
         bx = sim_dat$beta.bmi_sim_norm, 
         bxse = sim_dat$se.bmi, 
         # outcome
@@ -128,35 +189,72 @@ if (runSimulation==TRUE) {
         exposure = "Body mass index",
         outcome = "Gallbladder Cancer"
       ) 
-      # CONMIX (as reference)
-      res = MendelianRandomization::mr_conmix(mr.obj)
-      colname_theta <- paste0("theta_sim_", format(n[i], scientific=FALSE))
-      colname_theta_se <- paste0("theta_se_sim_", format(n[i], scientific=FALSE))
-      colname_pvalue <- paste0("mr_pval_", format(n[i], scientific=FALSE))
-      colname_pve_X <- paste0("pve_X_sim_", format(n[i], scientific=FALSE))
-      colname_pve_Y <- paste0("pve_Y_sim_", format(n[i], scientific=FALSE))
+      
+      # 1. random IVW
+      ivw.res.gbc = MendelianRandomization::mr_ivw(mr.obj.gbc, model = "random")
+      # colnames
+      ivw.colname_theta_gbc <- paste0("IVW_theta_sim_BMI_GBC_", format(n[i], scientific=FALSE))
+      ivw.colname_theta_se_gbc <- paste0("IVW_theta_se_sim_BMI_GBC_", format(n[i], scientific=FALSE))
+      ivw.colname_pvalue_gbc <- paste0("IVW_mr_pval_BMI_GBC_", format(n[i], scientific=FALSE))
+      # store results
+      est_sim[k, ivw.colname_theta_gbc] <- ivw.res.gbc$Estimate
+      est_sim[k, ivw.colname_theta_se_gbc] <- ivw.res.gbc$StdError
+      est_sim[k, ivw.colname_pvalue_gbc] <- ivw.res.gbc$Pvalue
+      
+      # 2. weighted mode
+      mode.res.gbc = MendelianRandomization::mr_mbe(mr.obj.gbc)
+      # colnames
+      mode.colname_theta_gbc <- paste0("MODE_theta_sim_BMI_GBC_", format(n[i], scientific=FALSE))
+      mode.colname_theta_se_gbc <- paste0("MODE_theta_se_sim_BMI_GBC_", format(n[i], scientific=FALSE))
+      mode.colname_pvalue_gbc <- paste0("MODE_mr_pval_BMI_GBC_", format(n[i], scientific=FALSE))
+      # store results
+      est_sim[k, mode.colname_theta_gbc] <- mode.res.gbc$Estimate
+      est_sim[k, mode.colname_theta_se_gbc] <- mode.res.gbc$StdError
+      est_sim[k, mode.colname_pvalue_gbc] <- mode.res.gbc$Pvalue
+      
+      # 3. CONMIX
+      conmix.res.gbc <- tryCatch(
+        expr = {
+          MendelianRandomization::mr_conmix(mr.obj.gbc)
+        },
+        error = function(e){
+          # the error we encounter is with "i=7" 
+          #     Error in seq.default(from = CIMin, to = CIMax, by = CIStep) : 
+          #         wrong sign in 'by' argument
+          message(paste0("Caught an error with mr_conmix (BMI -> GBC)!\nSample size: ", n[i], 
+                         "\nComputed CI's with predefined range of [-15;15]"))
+          message("Below is the error message from R:")
+          print(e) 
+          return(MendelianRandomization::mr_conmix(mr.obj.gbc, CIMin = -15, CIMax=15))
+        },
+        warning = function(w){
+          message('Caught an warning!')
+          print(w)
+        },
+        finally = {
+          #message('All done, quitting.')
+        }
+      )
+      conmix.colname_theta_gbc <- paste0("CONMIX_theta_sim_BMI_GBC_", format(n[i], scientific=FALSE))
+      conmix.colname_theta_se_gbc <- paste0("CONMIX_theta_se_sim_BMI_GBC_", format(n[i], scientific=FALSE))
+      conmix.colname_pvalue_gbc <- paste0("CONMIX_mr_pval_BMI_GBC_", format(n[i], scientific=FALSE))
       
       ## store results
-      est_sim[k, colname_theta] <- res$Estimate
-      CIlength = res$CIUpper-res$CILower
+      est_sim[k, conmix.colname_theta_gbc] <- conmix.res.gbc$Estimate
+      CIlength = conmix.res.gbc$CIUpper-conmix.res.gbc$CILower
       if (length(CIlength)>1) print("conmix multimodal")
-      est_sim[k, colname_theta_se] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
-      est_sim[k, colname_pvalue] <- res$Pvalue
-      # add PVE cols
-      est_sim[k, colname_pve_X] <- sum(sim_dat$explained_variance_X2_sim)
-      est_sim[k, colname_pve_Y] <- sum(sim_dat$explained_variance_Y_sim)
+      est_sim[k, conmix.colname_theta_se_gbc] <- sum(CIlength)/1.96/2  ## Caution: this may be problematic 
+      est_sim[k, conmix.colname_pvalue_gbc] <- conmix.res.gbc$Pvalue
       
-      rm(res)
+      rm(conmix.res.gbc, mode.res.gbc, mode.res.gsd, ivw.res.gbc, ivw.res.gsd)
     }
     #rm(se_update_BMI, se_update_GBC)
     print(paste0("|||-----------------------Run finished for sample size: ", format(n[i], scientific=FALSE), " -----------------------|||"))
   }  ## END OF SIMULATION
-  
   
   T1 = proc.time()[3]
   timediff = T1-T0
   
   saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_NSIM_", nsim,".rds"))
 }
-
 
