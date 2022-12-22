@@ -53,7 +53,7 @@ n.orig <- 334487
 ###
 set.seed(1234)
 ## initialize
-nsim <- 50
+nsim <- 100
 est_sim <- tibble(no_sim = 1:nsim)
 
 ## START SIM
@@ -165,7 +165,28 @@ if (runSimulation==TRUE) {
       est_sim[k, mode.colname_pvalue_gsd] <- mode.res.gsd$Pvalue
       
       # 3. CONMIX 
-      conmix.res.gsd = MendelianRandomization::mr_conmix(mr.obj.gsd)
+      conmix.res.gsd <- tryCatch(
+        expr = {
+          MendelianRandomization::mr_conmix(mr.obj.gsd)
+        },
+        error = function(e){
+          # the error we encounter is with "i=7" 
+          #     Error in seq.default(from = CIMin, to = CIMax, by = CIStep) : 
+          #         wrong sign in 'by' argument
+          message(paste0("Caught an error with mr_conmix (BMI -> GSD)!\nSample size: ", n[i], 
+                         "\nComputed CI's with predefined range of [-15;15]"))
+          message("Below is the error message from R:")
+          print(e) 
+          return(MendelianRandomization::mr_conmix(mr.obj.gbc, CIMin = -15, CIMax=15))
+        },
+        warning = function(w){
+          message('Caught an warning!')
+          print(w)
+        },
+        finally = {
+          #message('All done, quitting.')
+        }
+      )
       # colnames
       conmix.colname_theta_gsd <- paste0("CONMIX_theta_sim_BMI_GSD_", format(n[i], scientific=FALSE))
       conmix.colname_theta_se_gsd <- paste0("CONMIX_theta_se_sim_BMI_GSD_", format(n[i], scientific=FALSE))
