@@ -1114,9 +1114,9 @@ est %>%
 
 
 
-## Simulation
+# Simulation
 
-We simulate 
+We simulate betas from a normal distribution. The script is outsourced to `simstudy.R`. 
 
 ```{r simulatesimulatesimulate, warning=FALSE}
 # save simulation-vars for simulation `simstudy.R` script
@@ -1128,38 +1128,286 @@ saveRDS(sim_vars, paste0("../output/Rdata/", Sys.Date(), "_sim_vars.rds"))
 est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_est_sim_NSIM_", full.names = TRUE)))
 ```
 
-### Performance Metrics
+
+## PVE with simulated data Plot
+
+```{r simulated-pves, fig.height=6, fig.width=10, warning=FALSE}
+# EXPOSURE PVE
+est_sim %>% 
+  select(!!!(colname_pve_X)) %>% 
+  pivot_longer(everything(), names_to = "PVE_X", values_to = "value_X") %>% 
+  cbind(sample_size_filtered) %>% as_tibble() -> pve_X_sim
+
+est_sim %>% 
+  select(!!!(colname_pve_U)) %>% 
+  pivot_longer(everything(), names_to = "PVE_U", values_to = "value_U") %>% 
+  cbind(sample_size_filtered) %>% as_tibble() -> pve_U_sim
+
+est_sim %>% 
+  select(!!!(colname_pve_Y)) %>% 
+  pivot_longer(everything(), names_to = "PVE_Y", values_to = "value_Y") %>% 
+  cbind(sample_size_filtered) %>% as_tibble() -> pve_Y_sim
+
+boxplot_overlay_dat <- pve_X_sim %>% 
+  cbind(pve_U_sim %>% select(-sample_size_filtered)) %>% 
+  cbind(pve_Y_sim %>% select(-sample_size_filtered)) %>% 
+  as_tibble()
+
+## plot
+ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section Simlating on empirical data (PVE)
+  geom_point(alpha=0.6)+
+  geom_line(alpha=0.6)+
+  geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
+  scale_x_continuous(name = paste0("Size of sample ", as.roman(1)),  # 2-sample-MR or label "Study Size"
+                     labels = comma, 
+                     breaks = N_annotation, #c( 10000, n[7:length(n)]),
+                     limits = c(10000, 300000))+
+  #ylab("% variance explained by IVs")+
+  labs(title = "PVE with simulation added",
+       col='', 
+       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+       ) +
+  scale_y_continuous(
+    # Features of the first axis
+    name = "% variance explained by IVs",
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
+    limits = c(0,10)
+  ) + 
+  #geom_boxplot(data=boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered))
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, # *100 to get percent values
+                                group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2)+
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_U*100, # *100 to get percent values
+                                group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[2,2][[1]],
+               alpha=0.2, size=0.2)+
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_Y*100, # *100 to get percent values
+                                group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[4,2][[1]],
+               alpha=0.2, size=0.2)+
+  theme_few()+
+  #scale_colour_few() +
+  #scale_color_manual(name = "", values = c("% var(U)" = "red", 
+  #                                         "% var(X)" = "blue", 
+  #                                         "% var(Y)" = "darkblue", 
+  #                                         "Number of IVs" = "black"
+  #                                         ))
+  #
+  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
+                                           "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
+                                           "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
+                                           "Number of IVs" = "black"),
+                     # order
+                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
+  ) -> plot_pve_simulated
+plot_pve_simulated
+
+filename_pveplot_sim <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve.png")
+ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
+```
+
+```{r simulated-pves-raincloud-plot, fig.height=6, fig.width=10, warning=FALSE}
+ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section Simlating on empirical data (PVE)
+  geom_point(alpha=0.6)+
+  geom_line(alpha=0.6)+
+  geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
+  scale_x_continuous(name = paste0("Size of sample ", as.roman(1)),  # 2-sample-MR or label "Study Size"
+                     labels = comma, 
+                     breaks = N_annotation, #c( 10000, n[7:length(n)]),
+                     #limits = c(10000, 300000)  # throws an error when used with ggdist -> use coord_cartesian() instead!
+                     )+
+  #ylab("% variance explained by IVs")+
+  labs(title = "PVE with simulation added",
+       col='', 
+       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+  ) +
+  scale_y_continuous(
+    # Features of the first axis
+    name = "% variance explained by IVs",
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
+    limits = c(0,10)
+  ) + 
+  ## Rainclouds
+  # https://z3tt.github.io/Rainclouds/
+  # exposure simulation
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, # *100 to get percent values
+                                               group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_X*100, group=sample_size_filtered), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  # confounder simulation
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_U*100, # *100 to get percent values
+                                               group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[2,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_U*100, group=sample_size_filtered), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[2,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_U*100, group=sample_size_filtered), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[2,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  # outcome simulation
+  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_Y*100, # *100 to get percent values
+                                               group=sample_size_filtered), 
+               col=ggthemes_data$few$colors$Dark[4,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_Y*100, group=sample_size_filtered), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[4,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_Y*100, group=sample_size_filtered), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[4,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  coord_cartesian(xlim=c(10000, 300000))+
+  theme_few()+
+  #scale_colour_few() +
+  #scale_color_manual(name = "", values = c("% var(U)" = "red", 
+  #                                         "% var(X)" = "blue", 
+  #                                         "% var(Y)" = "darkblue", 
+  #                                         "Number of IVs" = "black"
+  #                                         ))
+  #
+  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
+                                           "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
+                                           "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
+                                           "Number of IVs" = "black"),
+                     # order
+                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
+  ) -> plot_pve_simulated.raincloud
+plot_pve_simulated.raincloud
+
+filename_pveplot_sim.raincloud <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve_raincloud.png")
+ggsave(filename = filename_pveplot_sim.raincloud, plot = plot_pve_simulated.raincloud, 
+       width = 10, height = 6, 
+       units = "in"  # default
+       )
+```
+
+## Performance Metrics BIAS, MSE, MEAN, EMP_SE
 
 ```{r calculate-performance-metrics}
 # fns
 bias <- function(thetaobs,theta, ...) mean(thetaobs)- theta
 mse <- function(thetaobs, theta, ...) mean((thetaobs-theta)^2)
-emp_se <- function(nsim, thetaobs, theta, ...) sqrt( 1/(nsim-1) * sum((thetaobs-mean(thetaobs))^2) )  # == sd
+emp_se <- function(nsim, thetaobs, theta, ...) sqrt( 1/(nsim-1) * sum((thetaobs-mean(thetaobs))^2) )  # == sd (with ...)
 
-colname_theta <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_sim")]
-colname_theta_se <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "theta_se_sim")]
+# retrieve PVE colnames
 colname_pve_X <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_X_sim")]
+colname_pve_U <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_U_sim")]
 colname_pve_Y <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_Y_sim")]
+# retrieve IVW/ MODE/ CONMIX cols for BMI -> GSD
+colname_IVW_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GSD_")]
+colname_IVW_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GSD_")]
+colname_MODE_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GSD_")]
+colname_MODE_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GSD_")]
+colname_CONMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GSD_")]
+colname_CONMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GSD_")]
+# retrieve IVW/ MODE/ CONMIX cols for BMI -> GBC
+colname_IVW_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GBC_")]
+colname_IVW_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GBC_")]
+colname_MODE_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GBC_")]
+colname_MODE_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GBC_")]
+colname_CONMIX_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GBC_")]
+colname_CONMIX_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GBC_")]
 
-# filter out sample sizes
-sample_size_filtered <- as.numeric(str_extract(colname_theta, pattern = "(\\d)+"))
+# filter out sample sizes (IVW only used as example, could be any other col)
+sample_size_filtered <- as.numeric(str_extract(colname_IVW_theta_sim_BMI_GSD, pattern = "(\\d)+"))
 
 ## get performance metrics    # https://stackoverflow.com/questions/47415072/pass-multiple-functions-to-purrrmap
-funs <- c(mean = mean, bias = bias, mse = mse, emp_se=emp_se)
-args <- list(theta = est$estimate[est$mr_methods == "conmix"], nsim=nrow(est_sim)) # trim argument non-matching and ignored for median
-
-performance_metrics <- est_sim %>% 
-  select(!!!(colname_theta)) %>% 
-  map_df(.f = ~ funs %>% 
-           map(exec, .x, !!!args), .id = "var") %>% 
-  cbind(sample_size_filtered) %>% 
-  rename(N = sample_size_filtered)
-
+funs <- c(mean = mean, emp_se=emp_se, bias = bias, mse = mse)
+## args gsd
+args.gsd.ivw <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "IVW"], 
+                     nsim=nrow(est_sim)
+                     ) # trim argument non-matching and ignored for median
+args.gsd.mode <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "mode"], 
+                     nsim=nrow(est_sim)
+                     )
+args.gsd.conmix <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "conmix"], 
+                     nsim=nrow(est_sim)
+                     )
+## args gbc
+args.gbc.ivw <- list(theta = est$estimate[est$mr_methods == "IVW"], 
+                     nsim=nrow(est_sim)
+                     ) 
+args.gbc.mode <- list(theta = est$estimate[est$mr_methods == "mode"], 
+                     nsim=nrow(est_sim)
+                     )
+args.gbc.conmix <- list(theta = est$estimate[est$mr_methods == "conmix"], 
+                     nsim=nrow(est_sim)
+                     )
+## Standard Deviation
 # est_sim %>%    # equivalent to `emp_se()` function, but `sd()` misses dotdotdot argument 
 #   select(!!!(colname_theta)) %>% 
 #   map_dbl(.f = ~sd(.))
 ```
 
+
+```{r CALC-perf-metrics-GSD}
+IVW_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.ivw), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+
+MODE_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_MODE_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.mode), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+
+CONMIX_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_CONMIX_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.conmix), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+```
+
+```{r CALC-perf-metrics-GBC}
+IVW_GBC_performance_metrics <- est_sim %>% 
+  select(!!!(colname_IVW_theta_sim_BMI_GBC)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gbc.ivw), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+
+MODE_GBC_performance_metrics <- est_sim %>% 
+  select(!!!(colname_MODE_theta_sim_BMI_GBC)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gbc.mode), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+
+CONMIX_GBC_performance_metrics <- est_sim %>% 
+  select(!!!(colname_CONMIX_theta_sim_BMI_GBC)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gbc.conmix), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+```
+
+## Performance Metrics COVERAGE, COVERAGE-BIAS-ELIMINATED, TYPE1ERROR
 
 ```{r further-metrics}
 # coverage
@@ -1169,6 +1417,7 @@ coverage <- function(thetaobs, thetaobs_se, theta, ...) {
   coverage <- mean(lower_ci <= theta & upper_ci >= theta)
   return(coverage)
 }
+# coverage bias eliminated
 coverage_bias_eliminated <- function(thetaobs, thetaobs_se, ...) {
   lower_ci <- thetaobs - thetaobs_se
   upper_ci <- thetaobs + thetaobs_se
@@ -1176,31 +1425,171 @@ coverage_bias_eliminated <- function(thetaobs, thetaobs_se, ...) {
   coverage_bias_eliminated <- mean(lower_ci <= mean_thetaobs & upper_ci >=mean_thetaobs)
   return(coverage_bias_eliminated)
 }
-
+# type1error
 type1error <- function(pvals) sum(pvals<=0.05)/length(pvals)  # no causal_effect
 
-coverage_calc <- c()
-coverage_bias_eliminated_calc <- c()
-type1error_calc <- c()
+# GSD
+IVW_GSD_coverage_calc <- c()
+IVW_GSD_coverage_bias_eliminated_calc <- c()
+IVW_GSD_type1error_calc <- c()
+MODE_GSD_coverage_calc <- c()
+MODE_GSD_coverage_bias_eliminated_calc <- c()
+MODE_GSD_type1error_calc <- c()
+CONMIX_GSD_coverage_calc <- c()
+CONMIX_GSD_coverage_bias_eliminated_calc <- c()
+CONMIX_GSD_type1error_calc <- c()
+# GBC
+IVW_GBC_coverage_calc <- c()
+IVW_GBC_coverage_bias_eliminated_calc <- c()
+IVW_GBC_type1error_calc <- c()
+MODE_GBC_coverage_calc <- c()
+MODE_GBC_coverage_bias_eliminated_calc <- c()
+MODE_GBC_type1error_calc <- c()
+CONMIX_GBC_coverage_calc <- c()
+CONMIX_GBC_coverage_bias_eliminated_calc <- c()
+CONMIX_GBC_type1error_calc <- c()
 for (i in 1:length(sample_size_filtered)) {
   sample_size <- sample_size_filtered[i]
-  col_theta <- paste0("theta_sim_", format(sample_size, scientific = FALSE))
-  col_theta_se <- paste0("theta_se_sim_", format(sample_size, scientific = FALSE))
-  col_mr_pval <- paste0("mr_pval_", format(sample_size, scientific = FALSE))
+  ## GSD additional metrics ----------------------------------------------------
+  # IVW
+  col_IVW_GSD_theta <- paste0("IVW_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_IVW_GSD_theta_se <- paste0("IVW_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_IVW_GSD_mr_pval <- paste0("IVW_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  IVW_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_IVW_GSD_theta], thetaobs_se = est_sim[col_IVW_GSD_theta_se], theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "IVW"])
+  IVW_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_IVW_GSD_theta]], thetaobs_se = est_sim[[col_IVW_GSD_theta_se]])
+  IVW_GSD_type1error_calc[i] <- type1error(est_sim[[col_IVW_GSD_mr_pval]])
+  # MODE
+  col_MODE_GSD_theta <- paste0("MODE_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_MODE_GSD_theta_se <- paste0("MODE_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_MODE_GSD_mr_pval <- paste0("MODE_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  MODE_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MODE_GSD_theta], 
+                                       thetaobs_se = est_sim[col_MODE_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "mode"])
+  MODE_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MODE_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_MODE_GSD_theta_se]])
+  MODE_GSD_type1error_calc[i] <- type1error(est_sim[[col_MODE_GSD_mr_pval]])
+  # CONMIX
+  col_CONMIX_GSD_theta <- paste0("CONMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_CONMIX_GSD_theta_se <- paste0("CONMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_CONMIX_GSD_mr_pval <- paste0("CONMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  CONMIX_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_CONMIX_GSD_theta], 
+                                       thetaobs_se = est_sim[col_CONMIX_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "conmix"])
+  CONMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_CONMIX_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_CONMIX_GSD_theta_se]])
+  CONMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_CONMIX_GSD_mr_pval]])  
   
-  coverage_calc[i] <- coverage(thetaobs = est_sim[col_theta], thetaobs_se = est_sim[col_theta_se], theta = est$estimate[est$mr_methods == "conmix"])
-  coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_theta]], thetaobs_se = est_sim[[col_theta_se]])
-  type1error_calc[i] <- type1error(est_sim[[col_mr_pval]])
+  ## GBC additional metrics ----------------------------------------------------
+  # IVW
+  col_IVW_GBC_theta <- paste0("IVW_theta_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
+  col_IVW_GBC_theta_se <- paste0("IVW_theta_se_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
+  col_IVW_GBC_mr_pval <- paste0("IVW_mr_pval_BMI_GBC_", format(sample_size, scientific = FALSE))
+  # calc
+  IVW_GBC_coverage_calc[i] <- coverage(thetaobs = est_sim[col_IVW_GBC_theta], thetaobs_se = est_sim[col_IVW_GBC_theta_se], theta = est$estimate[est$mr_methods == "IVW"])
+  IVW_GBC_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_IVW_GBC_theta]], thetaobs_se = est_sim[[col_IVW_GSD_theta_se]])
+  IVW_GBC_type1error_calc[i] <- type1error(est_sim[[col_IVW_GBC_mr_pval]])
+  # MODE
+  col_MODE_GBC_theta <- paste0("MODE_theta_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
+  col_MODE_GBC_theta_se <- paste0("MODE_theta_se_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
+  col_MODE_GBC_mr_pval <- paste0("MODE_mr_pval_BMI_GBC_", format(sample_size, scientific = FALSE))
+  # calc
+  MODE_GBC_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MODE_GBC_theta], 
+                                       thetaobs_se = est_sim[col_MODE_GBC_theta_se], 
+                                       theta = est$estimate[est$mr_methods == "mode"])
+  MODE_GBC_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MODE_GBC_theta]], 
+                                                                       thetaobs_se = est_sim[[col_MODE_GBC_theta_se]])
+  MODE_GBC_type1error_calc[i] <- type1error(est_sim[[col_MODE_GBC_mr_pval]])
+  # CONMIX
+  col_CONMIX_GBC_theta <- paste0("CONMIX_theta_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
+  col_CONMIX_GBC_theta_se <- paste0("CONMIX_theta_se_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
+  col_CONMIX_GBC_mr_pval <- paste0("CONMIX_mr_pval_BMI_GBC_", format(sample_size, scientific = FALSE))
+  # calc
+  CONMIX_GBC_coverage_calc[i] <- coverage(thetaobs = est_sim[col_CONMIX_GBC_theta], 
+                                       thetaobs_se = est_sim[col_CONMIX_GBC_theta_se], 
+                                       theta = est$estimate[est$mr_methods == "conmix"])
+  CONMIX_GBC_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_CONMIX_GBC_theta]], 
+                                                                       thetaobs_se = est_sim[[col_CONMIX_GBC_theta_se]])
+  CONMIX_GBC_type1error_calc[i] <- type1error(est_sim[[col_CONMIX_GBC_mr_pval]])  
 }
+```
 
-performance_metrics <- performance_metrics %>% 
+```{r add-additional-metrics-to-df}
+## GSD
+IVW_GSD_performance_metrics <- IVW_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
-  cbind(data.frame(coverage_calc, coverage_bias_eliminated_calc, type1error_calc)) %>% 
+  cbind(data.frame(IVW_GSD_coverage_calc, IVW_GSD_coverage_bias_eliminated_calc, IVW_GSD_type1error_calc)) %>% 
+  rename(coverage = IVW_GSD_coverage_calc, 
+         coverage_bias_eliminated = IVW_GSD_coverage_bias_eliminated_calc, 
+         type1error = IVW_GSD_type1error_calc) %>% 
+  as_tibble()
+MODE_GSD_performance_metrics <- MODE_GSD_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(MODE_GSD_coverage_calc, MODE_GSD_coverage_bias_eliminated_calc, MODE_GSD_type1error_calc)) %>% 
+  rename(coverage = MODE_GSD_coverage_calc, 
+         coverage_bias_eliminated = MODE_GSD_coverage_bias_eliminated_calc, 
+         type1error = MODE_GSD_type1error_calc) %>% 
+  as_tibble()
+CONMIX_GSD_performance_metrics <- CONMIX_GSD_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(CONMIX_GSD_coverage_calc, CONMIX_GSD_coverage_bias_eliminated_calc, CONMIX_GSD_type1error_calc)) %>% 
+  rename(coverage = CONMIX_GSD_coverage_calc, 
+         coverage_bias_eliminated = CONMIX_GSD_coverage_bias_eliminated_calc, 
+         type1error = CONMIX_GSD_type1error_calc) %>% 
+  as_tibble()
+
+## GBC
+IVW_GBC_performance_metrics <- IVW_GBC_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(IVW_GBC_coverage_calc, IVW_GBC_coverage_bias_eliminated_calc, IVW_GBC_type1error_calc)) %>% 
+  rename(coverage = IVW_GBC_coverage_calc, 
+         coverage_bias_eliminated = IVW_GBC_coverage_bias_eliminated_calc, 
+         type1error = IVW_GBC_type1error_calc) %>% 
+  as_tibble()
+MODE_GBC_performance_metrics <- MODE_GBC_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(MODE_GBC_coverage_calc, MODE_GBC_coverage_bias_eliminated_calc, MODE_GBC_type1error_calc)) %>% 
+  rename(coverage = MODE_GBC_coverage_calc, 
+         coverage_bias_eliminated = MODE_GBC_coverage_bias_eliminated_calc, 
+         type1error = MODE_GBC_type1error_calc) %>% 
+  as_tibble()
+CONMIX_GBC_performance_metrics <- CONMIX_GBC_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(CONMIX_GBC_coverage_calc, CONMIX_GBC_coverage_bias_eliminated_calc, CONMIX_GBC_type1error_calc)) %>% 
+  rename(coverage = CONMIX_GBC_coverage_calc, 
+         coverage_bias_eliminated = CONMIX_GBC_coverage_bias_eliminated_calc, 
+         type1error = CONMIX_GBC_type1error_calc) %>% 
   as_tibble()
 ```
 
+```{r store-performance-metrics-csv}
+## GSD
+filename_IVW_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_IVW_GSD_performance_metrics_NSIM_", nsim, ".csv")
+filename_MODE_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_MODE_GSD_performance_metrics_NSIM_", nsim, ".csv")
+filename_CONMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_CONMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
+write.csv2(x = IVW_GSD_performance_metrics, file = filename_IVW_GSD_performance_metrics)
+write.csv2(x = MODE_GSD_performance_metrics, file = filename_MODE_GSD_performance_metrics)
+write.csv2(x = CONMIX_GSD_performance_metrics, file = filename_CONMIX_GSD_performance_metrics)
 
-### Performance plots
+## GBC
+filename_IVW_GBC_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_IVW_GBC_performance_metrics_NSIM_", nsim, ".csv")
+filename_MODE_GBC_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_MODE_GBC_performance_metrics_NSIM_", nsim, ".csv")
+filename_CONMIX_GBC_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_CONMIX_GBC_performance_metrics_NSIM_", nsim, ".csv")
+write.csv2(x = IVW_GBC_performance_metrics, file = filename_IVW_GBC_performance_metrics)
+write.csv2(x = MODE_GBC_performance_metrics, file = filename_MODE_GBC_performance_metrics)
+write.csv2(x = CONMIX_GBC_performance_metrics, file = filename_CONMIX_GBC_performance_metrics)
+```
+
+
+## Performance Plots
 
 ```{r boxplot-theta-sim-distribution, fig.height=6, fig.width=10}
 # compare distribution of simulated thetas against theta_324000
@@ -1288,152 +1677,6 @@ ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot,
 
 
 
-```{r simulated-pves, fig.height=6, fig.width=10, warning=FALSE}
-# EXPOSURE PVE
-est_sim %>% 
-  select(!!!(colname_pve_X)) %>% 
-  pivot_longer(everything(), names_to = "PVE_X", values_to = "value_X") %>% 
-  cbind(sample_size_filtered) %>% as_tibble() -> pve_X_sim
-
-est_sim %>% 
-  select(!!!(colname_pve_Y)) %>% 
-  pivot_longer(everything(), names_to = "PVE_Y", values_to = "value_Y") %>% 
-  cbind(sample_size_filtered) %>% as_tibble() -> pve_Y_sim
-
-boxplot_overlay_dat <- pve_X_sim %>% 
-  cbind(pve_Y_sim %>% select(-sample_size_filtered)) %>% 
-  as_tibble()
-
-## plot
-ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section Simlating on empirical data (PVE)
-  geom_point(alpha=0.6)+
-  geom_line(alpha=0.6)+
-  geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
-  scale_x_continuous(name = paste0("Size of sample ", as.roman(1)),  # 2-sample-MR or label "Study Size"
-                     labels = comma, 
-                     breaks = N_annotation, #c( 10000, n[7:length(n)]),
-                     limits = c(10000, 300000))+
-  #ylab("% variance explained by IVs")+
-  labs(title = "PVE with simulation added",
-       col='', 
-       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
-       ) +
-  scale_y_continuous(
-    # Features of the first axis
-    name = "% variance explained by IVs",
-    # Add a second axis and specify its features
-    sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
-    limits = c(0,10)
-  ) + 
-  #geom_boxplot(data=boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered))
-  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, # *100 to get percent values
-                                group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[3,2][[1]],
-               alpha=0.2, size=0.2)+
-  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_Y*100, # *100 to get percent values
-                                group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[4,2][[1]],
-               alpha=0.2, size=0.2)+
-  theme_few()+
-  #scale_colour_few() +
-  #scale_color_manual(name = "", values = c("% var(U)" = "red", 
-  #                                         "% var(X)" = "blue", 
-  #                                         "% var(Y)" = "darkblue", 
-  #                                         "Number of IVs" = "black"
-  #                                         ))
-  #
-  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
-                                           "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
-                                           "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
-                                           "Number of IVs" = "black"),
-                     # order
-                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
-  ) -> plot_pve_simulated
-plot_pve_simulated
-
-filename_pveplot_sim <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve.png")
-ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
-       width = 10, height = 6, 
-       units = "in"  # default
-       )
-```
-
-```{r simulated-pves-raincloud-plot, fig.height=6, fig.width=10, warning=FALSE}
-ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section Simlating on empirical data (PVE)
-  geom_point(alpha=0.6)+
-  geom_line(alpha=0.6)+
-  geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
-  scale_x_continuous(name = paste0("Size of sample ", as.roman(1)),  # 2-sample-MR or label "Study Size"
-                     labels = comma, 
-                     breaks = N_annotation, #c( 10000, n[7:length(n)]),
-                     #limits = c(10000, 300000)  # throws an error when used with ggdist -> use coord_cartesian() instead!
-                     )+
-  #ylab("% variance explained by IVs")+
-  labs(title = "PVE with simulation added",
-       col='', 
-       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
-  ) +
-  scale_y_continuous(
-    # Features of the first axis
-    name = "% variance explained by IVs",
-    # Add a second axis and specify its features
-    sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
-    limits = c(0,10)
-  ) + 
-  ## Rainclouds
-  # https://z3tt.github.io/Rainclouds/
-  # exposure simulation
-  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, # *100 to get percent values
-                                               group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[3,2][[1]],
-               alpha=0.2, size=0.2, outlier.shape = NA)+
-  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered), 
-                       inherit.aes = FALSE, 
-                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
-                       geom = "slabinterval",
-                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
-  gghalves::geom_half_point(
-    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_X*100, group=sample_size_filtered), 
-    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
-    side = "l", range_scale = .4, alpha = .2)+
-  # outcome simulation
-  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_Y*100, # *100 to get percent values
-                                               group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[4,2][[1]],
-               alpha=0.2, size=0.2, outlier.shape = NA)+
-  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_Y*100, group=sample_size_filtered), 
-                       inherit.aes = FALSE, 
-                       slab_fill=ggthemes_data$few$colors$Dark[4,2][[1]], slab_alpha = 0.2,
-                       geom = "slabinterval",
-                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
-  gghalves::geom_half_point(
-    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_Y*100, group=sample_size_filtered), 
-    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[4,2][[1]],
-    side = "l", range_scale = .4, alpha = .2)+
-  coord_cartesian(xlim=c(10000, 300000))+
-  theme_few()+
-  #scale_colour_few() +
-  #scale_color_manual(name = "", values = c("% var(U)" = "red", 
-  #                                         "% var(X)" = "blue", 
-  #                                         "% var(Y)" = "darkblue", 
-  #                                         "Number of IVs" = "black"
-  #                                         ))
-  #
-  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
-                                           "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
-                                           "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
-                                           "Number of IVs" = "black"),
-                     # order
-                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
-  ) -> plot_pve_simulated.raincloud
-plot_pve_simulated.raincloud
-
-filename_pveplot_sim.raincloud <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve_raincloud.png")
-ggsave(filename = filename_pveplot_sim.raincloud, plot = plot_pve_simulated.raincloud, 
-       width = 10, height = 6, 
-       units = "in"  # default
-       )
-```
 
 
 

@@ -53,7 +53,7 @@ n.orig <- 334487
 ###
 set.seed(1234)
 ## initialize
-nsim <- 25
+nsim <- 50
 est_sim <- tibble(no_sim = 1:nsim)
 
 ## START SIM
@@ -248,6 +248,7 @@ if (runSimulation==TRUE) {
       
       rm(conmix.res.gbc, mode.res.gbc, mode.res.gsd, ivw.res.gbc, ivw.res.gsd)
     }
+    
     #rm(se_update_BMI, se_update_GBC)
     print(paste0("|||-----------------------Run finished for sample size: ", format(n[i], scientific=FALSE), " -----------------------|||"))
   }  ## END OF SIMULATION
