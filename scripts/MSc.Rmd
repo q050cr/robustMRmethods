@@ -1126,23 +1126,48 @@ saveRDS(sim_vars, paste0("../output/Rdata/", Sys.Date(), "_sim_vars.rds"))
 
 # read dat from "simstudy.R"  #------------------------------------------------
 est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_est_sim_NSIM_", full.names = TRUE)))
+nsim <- nrow(est_sim)
 ```
 
 
 ## PVE with simulated data Plot
 
 ```{r simulated-pves, fig.height=6, fig.width=10, warning=FALSE}
+# retrieve PVE colnames
+colname_pve_X <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_X_sim")]
+colname_pve_U <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_U_sim")]
+colname_pve_Y <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_Y_sim")]
+
+## for performance measures later
+# retrieve IVW/ MODE/ CONMIX cols for BMI -> GSD 
+colname_IVW_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GSD_")]
+colname_IVW_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GSD_")]
+colname_MODE_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GSD_")]
+colname_MODE_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GSD_")]
+colname_CONMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GSD_")]
+colname_CONMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GSD_")]
+# retrieve IVW/ MODE/ CONMIX cols for BMI -> GBC
+colname_IVW_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GBC_")]
+colname_IVW_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GBC_")]
+colname_MODE_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GBC_")]
+colname_MODE_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GBC_")]
+colname_CONMIX_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GBC_")]
+colname_CONMIX_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GBC_")]
+
+# filter out sample sizes (IVW only used as example, could be any other col)
+sample_size_filtered <- as.numeric(str_extract(colname_IVW_theta_sim_BMI_GSD, pattern = "(\\d)+"))
+
 # EXPOSURE PVE
 est_sim %>% 
   select(!!!(colname_pve_X)) %>% 
   pivot_longer(everything(), names_to = "PVE_X", values_to = "value_X") %>% 
   cbind(sample_size_filtered) %>% as_tibble() -> pve_X_sim
-
+# CONFOUNDER PVE
 est_sim %>% 
   select(!!!(colname_pve_U)) %>% 
   pivot_longer(everything(), names_to = "PVE_U", values_to = "value_U") %>% 
   cbind(sample_size_filtered) %>% as_tibble() -> pve_U_sim
-
+# OUTCOME PVE
 est_sim %>% 
   select(!!!(colname_pve_Y)) %>% 
   pivot_longer(everything(), names_to = "PVE_Y", values_to = "value_Y") %>% 
@@ -1310,27 +1335,6 @@ bias <- function(thetaobs,theta, ...) mean(thetaobs)- theta
 mse <- function(thetaobs, theta, ...) mean((thetaobs-theta)^2)
 emp_se <- function(nsim, thetaobs, theta, ...) sqrt( 1/(nsim-1) * sum((thetaobs-mean(thetaobs))^2) )  # == sd (with ...)
 
-# retrieve PVE colnames
-colname_pve_X <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_X_sim")]
-colname_pve_U <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_U_sim")]
-colname_pve_Y <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_Y_sim")]
-# retrieve IVW/ MODE/ CONMIX cols for BMI -> GSD
-colname_IVW_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GSD_")]
-colname_IVW_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GSD_")]
-colname_MODE_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GSD_")]
-colname_MODE_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GSD_")]
-colname_CONMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GSD_")]
-colname_CONMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GSD_")]
-# retrieve IVW/ MODE/ CONMIX cols for BMI -> GBC
-colname_IVW_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GBC_")]
-colname_IVW_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GBC_")]
-colname_MODE_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GBC_")]
-colname_MODE_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GBC_")]
-colname_CONMIX_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GBC_")]
-colname_CONMIX_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GBC_")]
-
-# filter out sample sizes (IVW only used as example, could be any other col)
-sample_size_filtered <- as.numeric(str_extract(colname_IVW_theta_sim_BMI_GSD, pattern = "(\\d)+"))
 
 ## get performance metrics    # https://stackoverflow.com/questions/47415072/pass-multiple-functions-to-purrrmap
 funs <- c(mean = mean, emp_se=emp_se, bias = bias, mse = mse)
@@ -1591,92 +1595,483 @@ write.csv2(x = CONMIX_GBC_performance_metrics, file = filename_CONMIX_GBC_perfor
 
 ## Performance Plots
 
-```{r boxplot-theta-sim-distribution, fig.height=6, fig.width=10}
-# compare distribution of simulated thetas against theta_324000
-boxplot_dat <- est_sim %>% 
-  select(!!!(colname_theta)) %>% 
+### GSD simulated theta distribution
+
+```{r theta-sim-distribution-GSD-old, eval=FALSE, fig.height=6, fig.width=10, include=FALSE}
+### OLD
+# # compare distribution of simulated thetas against theta_324000
+# boxplot_dat <- est_sim %>% 
+#   select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
+#   pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+#   mutate(theta_sim_numeric = format(as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")), scientific=FALSE))
+# 
+# ggplot(boxplot_dat, aes(x=forcats::fct_rev( as.factor(theta_sim_numeric)), y=value)) +
+#   geom_boxplot()+
+#   geom_jitter(width=0.1,alpha=0.2)+
+#   geom_hline(yintercept=  args.gsd.ivw$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+#   annotate(geom = "text", x = "300000", y = args$theta+0.5,
+#            label= expression( paste("ref: ", theta[X] ))  , 
+#            color= ggthemes_data$few$colors$Dark[9,2][[1]]
+#              )+
+#   scale_x_discrete(name = paste0("Size of sample ", as.roman(1)),  breaks = c(" 50000", "100000", "150000", "200000", "250000", "300000"), )+ 
+#   ylab(expression(paste(theta[sim], " with ", n[sim]== 25 ) )  ) +
+#   labs(title = "Estimates from beta simulation",
+#        caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
+#        )+
+#   coord_flip()+
+#   theme_few() -> simplot_thetas
+# simplot_thetas
+```
+
+
+```{r theta-sim-distribution-GSD, fig.height=6, fig.width=10, warning=FALSE}
+## IVW
+IVW_BMI_GSD_geom_point_dat <- est_sim %>% 
+  select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
   pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
-  mutate(theta_sim_numeric = format(as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")), scientific=FALSE))
-           
+  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
 
-ggplot(boxplot_dat, aes(x=forcats::fct_rev( as.factor(theta_sim_numeric)), y=value)) +
-  geom_boxplot()+
-  geom_jitter(width=0.1,alpha=0.2)+
-  geom_hline(yintercept=  args$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  annotate(geom = "text", x = "300000", y = args$theta+0.5,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
-  scale_x_discrete(name = paste0("Size of sample ", as.roman(1)),  breaks = c(" 50000", "100000", "150000", "200000", "250000", "300000"), )+ 
-  ylab(expression(paste(theta[sim], " with ", n[sim]== 25 ) )  ) +
-  labs(title = "Estimates from beta simulation",
-       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
-       )+
-  coord_flip()+
-  theme_few() -> simplot_thetas
-simplot_thetas
-
-### same plot as above, but from already calculated performance metrics theta_mean + theta_sd
-ggplot(performance_metrics, aes(x=N, y=mean))+ 
+ggplot(IVW_GSD_performance_metrics, aes(x=N, y=mean))+ 
   geom_point()+
-  geom_hline(yintercept=  args$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  annotate(geom = "text", x = 300000, y = args$theta+0.25,
+  geom_hline(yintercept=  args.gsd.ivw$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = 50000, y = args.gsd.ivw$theta+0.05,
          label= expression( paste("ref: ", theta[X] ))  , 
          color= ggthemes_data$few$colors$Dark[9,2][[1]]
            )+
   geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
                 width=3000, # x-axis dimension
                 position = "dodge")+
+  ## ADD rainbow plots
+  geom_boxplot(data = IVW_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = IVW_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = IVW_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  ## FINISH rainbow
   scale_x_continuous(labels = comma)+
   xlab("Size of Sample I")+
   ylab("Mean thetas")+
-  labs(title = "Simulated Thetas with Empirical Standard Error")+
-  theme_few() -> simplot_thetas2
-simplot_thetas2
+  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "IVW estimate: BMI -> GSD")+
+  theme_few() -> IVW_GSD_simplot_thetas
+IVW_GSD_simplot_thetas
 
-filename_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_thetas.png")
-ggsave(filename = filename_simplot_thetas, plot = simplot_thetas, 
-       width = 10, height = 6, 
+## MODE
+MODE_BMI_GSD_geom_point_dat <- est_sim %>% 
+  select(!!!(colname_MODE_theta_sim_BMI_GSD)) %>% 
+  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+
+ggplot(MODE_GSD_performance_metrics, aes(x=N, y=mean))+ 
+  geom_point()+
+  geom_hline(yintercept=  args.gsd.mode$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = 50000, y = args.gsd.mode$theta+0.05,
+         label= expression( paste("ref: ", theta[X] ))  , 
+         color= ggthemes_data$few$colors$Dark[9,2][[1]]
+           )+
+  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
+                width=3000, # x-axis dimension
+                position = "dodge")+
+  ## ADD rainbow plots
+  geom_boxplot(data = MODE_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = MODE_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = MODE_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  ## FINISH rainbow
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("Mean thetas")+
+  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "MODE estimate: BMI -> GSD")+
+  theme_few() -> MODE_GSD_simplot_thetas
+MODE_GSD_simplot_thetas
+
+## CONMIX
+CONMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
+  select(!!!(colname_CONMIX_theta_sim_BMI_GSD)) %>% 
+  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+
+ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=mean))+ 
+  geom_point()+
+  geom_hline(yintercept=  args.gsd.conmix$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = 50000, y = args.gsd.conmix$theta+0.05,
+         label= expression( paste("ref: ", theta[X] ))  , 
+         color= ggthemes_data$few$colors$Dark[9,2][[1]]
+           )+
+  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
+                width=3000, # x-axis dimension
+                position = "dodge")+
+  ## ADD rainbow plots
+  geom_boxplot(data = CONMIX_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = CONMIX_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = CONMIX_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  ## FINISH rainbow
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("Mean thetas")+
+  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "CONMIX estimate: BMI -> GSD")+
+  theme_few() -> CONMIX_GSD_simplot_thetas
+CONMIX_GSD_simplot_thetas
+
+# SAVE
+filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
+       width = 15, height = 6, 
        units = "in"  # default
        )
-filename_simplot_thetas2 <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_thetas2.png")
-ggsave(filename = filename_simplot_thetas2, plot = simplot_thetas2, 
-       width = 10, height = 6, 
+filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
+       width = 15, height = 6, 
+       units = "in"  # default
+       )
+filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
+       width = 15, height = 6, 
+       units = "in"  # default
+       )
+```
+```{r theta-sim-distribution-GSD-arrange, fig.height=18, fig.width=10, warning=FALSE}
+IVW_GSD_simplot_thetas$labels$title <- ""
+MODE_GSD_simplot_thetas$labels$title <- ""
+CONMIX_GSD_simplot_thetas$labels$title <- ""
+ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thetas, 
+          ncol = 1, nrow = 3) -> GSD_simplot_thetas_arrange
+
+filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
+       width = 10, height = 18, 
        units = "in"  # default
        )
 ```
 
-```{r plot-performance-metrics-bias-mse, fig.height=6, fig.width=14}
+
+### GSD Bias & MSE
+
+```{r plot-performance-metrics-bias-mse-GSD, fig.height=10, fig.width=5}
+## IVW
 #BIAS
-ggplot(performance_metrics, aes(x=N, y=bias))+ 
+ggplot(IVW_GSD_performance_metrics, aes(x=N, y=bias))+ 
   geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
   scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(-1.5,1.5))+
   xlab("Size of Sample I")+
   ylab("Bias")+
-  labs(title = "Bias with Empirical Standard Error")+
-  theme_few() -> biasplot
-
+  labs(title = "IVW estimate: BMI -> GSD")+
+  theme_few() -> biasplot_IVW_GSD
 #MSE
-ggplot(performance_metrics, aes(x=N, y=mse))+ 
+ggplot(IVW_GSD_performance_metrics, aes(x=N, y=mse))+ 
   geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(0,1.8))+
+  xlab("Size of Sample I")+
+  ylab("MSE")+
+  labs(title = "IVW estimate: BMI -> GSD")+
+  theme_few() -> mseplot_IVW_GSD
+ggarrange(biasplot_IVW_GSD, mseplot_IVW_GSD) -> bias_mse_plot_IVW_GSD
+
+## MODE
+ggplot(MODE_GSD_performance_metrics, aes(x=N, y=bias))+ 
+  geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(-1.5,1.5))+
+  xlab("Size of Sample I")+
+  ylab("Bias")+
+  labs(title = "MODE estimate: BMI -> GSD")+
+  theme_few() -> biasplot_MODE_GSD
+ggplot(MODE_GSD_performance_metrics, aes(x=N, y=mse))+ 
+  geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(0,1.8))+
+  xlab("Size of Sample I")+
+  ylab("MSE")+
+  labs(title = "MODE estimate: BMI -> GSD")+
+  theme_few() -> mseplot_MODE_GSD
+ggarrange(biasplot_MODE_GSD, mseplot_MODE_GSD) -> bias_mse_plot_MODE_GSD
+
+## CONMIX
+ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=bias))+ 
+  geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(-1.5,1.5))+
+  xlab("Size of Sample I")+
+  ylab("Bias")+
+  labs(title = "CONMIX estimate: BMI -> GSD")+
+  theme_few() -> biasplot_CONMIX_GSD
+ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=mse))+ 
+  geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(0,1.8))+
+  xlab("Size of Sample I")+
+  ylab("MSE")+
+  labs(title = "CONMIX estimate: BMI -> GSD")+
+  theme_few() -> mseplot_CONMIX_GSD
+ggarrange(biasplot_CONMIX_GSD, mseplot_CONMIX_GSD) -> bias_mse_plot_CONMIX_GSD
+
+ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GSD,
+          ncol = 1, nrow = 3, common.legend = TRUE) -> bias_mse_plot_GSD
+bias_mse_plot_GSD
+
+filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_NSIM_", nsim, ".png")
+ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
+       width = 7, height = 10, 
+       units = "in"  # default
+       )
+```
+
+
+### GBC simulated theta distribution
+
+```{r theta-sim-distribution-GBC, fig.height=6, fig.width=10, warning=FALSE}
+## IVW
+IVW_BMI_GBC_geom_point_dat <- est_sim %>% 
+  select(!!!(colname_IVW_theta_sim_BMI_GBC)) %>% 
+  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+
+ggplot(IVW_GBC_performance_metrics, aes(x=N, y=mean))+ 
+  geom_point()+
+  geom_hline(yintercept=  args.gbc.ivw$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = 50000, y = args.gbc.ivw$theta+0.05,
+         label= expression( paste("ref: ", theta[X] ))  , 
+         color= ggthemes_data$few$colors$Dark[9,2][[1]]
+           )+
+  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
+                width=3000, # x-axis dimension
+                position = "dodge")+
+  ## ADD rainbow plots
+  geom_boxplot(data = IVW_BMI_GBC_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = IVW_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = IVW_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  ## FINISH rainbow
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("Mean thetas")+
+  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "IVW estimate: BMI -> GBC")+
+  theme_few() -> IVW_GBC_simplot_thetas
+IVW_GBC_simplot_thetas
+
+## MODE
+MODE_BMI_GBC_geom_point_dat <- est_sim %>% 
+  select(!!!(colname_MODE_theta_sim_BMI_GBC)) %>% 
+  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+
+ggplot(MODE_GBC_performance_metrics, aes(x=N, y=mean))+ 
+  geom_point()+
+  geom_hline(yintercept=  args.gbc.mode$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = 50000, y = args.gbc.mode$theta+0.05,
+         label= expression( paste("ref: ", theta[X] ))  , 
+         color= ggthemes_data$few$colors$Dark[9,2][[1]]
+           )+
+  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
+                width=3000, # x-axis dimension
+                position = "dodge")+
+  ## ADD rainbow plots
+  geom_boxplot(data = MODE_BMI_GBC_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = MODE_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = MODE_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  ## FINISH rainbow
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("Mean thetas")+
+  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "MODE estimate: BMI -> GBC")+
+  theme_few() -> MODE_GBC_simplot_thetas
+MODE_GBC_simplot_thetas
+
+## CONMIX
+CONMIX_BMI_GBC_geom_point_dat <- est_sim %>% 
+  select(!!!(colname_CONMIX_theta_sim_BMI_GBC)) %>% 
+  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+
+ggplot(CONMIX_GBC_performance_metrics, aes(x=N, y=mean))+ 
+  geom_point()+
+  geom_hline(yintercept=  args.gbc.conmix$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = 50000, y = args.gbc.conmix$theta+0.05,
+         label= expression( paste("ref: ", theta[X] ))  , 
+         color= ggthemes_data$few$colors$Dark[9,2][[1]]
+           )+
+  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
+                width=3000, # x-axis dimension
+                position = "dodge")+
+  ## ADD rainbow plots
+  geom_boxplot(data = CONMIX_BMI_GBC_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = CONMIX_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = CONMIX_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  ## FINISH rainbow
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("Mean thetas")+
+  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "CONMIX estimate: BMI -> GBC")+
+  theme_few() -> CONMIX_GBC_simplot_thetas
+CONMIX_GBC_simplot_thetas
+
+# SAVE
+filename_IVW_GBC_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GBC_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_IVW_GBC_simplot_thetas, plot = IVW_GBC_simplot_thetas, 
+       width = 15, height = 6, 
+       units = "in"  # default
+       )
+filename_MODE_GBC_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GBC_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_MODE_GBC_simplot_thetas, plot = MODE_GBC_simplot_thetas, 
+       width = 15, height = 6, 
+       units = "in"  # default
+       )
+filename_CONMIX_GBC_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GBC_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_CONMIX_GBC_simplot_thetas, plot = CONMIX_GBC_simplot_thetas, 
+       width = 15, height = 6, 
+       units = "in"  # default
+       )
+```
+
+```{r theta-sim-distribution-GBC-arrange, fig.height=18, fig.width=10, warning=FALSE}
+IVW_GBC_simplot_thetas$labels$title <- ""
+MODE_GBC_simplot_thetas$labels$title <- ""
+CONMIX_GBC_simplot_thetas$labels$title <- ""
+ggarrange(IVW_GBC_simplot_thetas,MODE_GBC_simplot_thetas,CONMIX_GBC_simplot_thetas, 
+          ncol = 1, nrow = 3) -> GBC_simplot_thetas_arrange
+
+filename_GBC_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GBC_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_GBC_simplot_thetas_arrange, plot = GBC_simplot_thetas_arrange, 
+       width = 10, height = 18, 
+       units = "in"  # default
+       )
+```
+
+### GBC Bias & MSE
+
+```{r plot-performance-metrics-bias-mse-GBC, fig.height=10, fig.width=5}
+## IVW
+#BIAS
+ggplot(IVW_GBC_performance_metrics, aes(x=N, y=bias))+ 
+  geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(-1.5,1.5))+
+  xlab("Size of Sample I")+
+  ylab("Bias")+
+  labs(title = "IVW estimate: BMI -> GBC")+
+  theme_few() -> biasplot_IVW_GBC
+#MSE
+ggplot(IVW_GBC_performance_metrics, aes(x=N, y=mse))+ 
+  geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_y_continuous(limits = c(0,1.8))+
   scale_x_continuous(labels = comma)+
   xlab("Size of Sample I")+
   ylab("MSE")+
-  labs(title = "MSE")+
-  theme_few() -> mseplot
+  labs(title = "IVW estimate: BMI -> GBC")+
+  theme_few() -> mseplot_IVW_GBC
+ggarrange(biasplot_IVW_GBC, mseplot_IVW_GBC) -> bias_mse_plot_IVW_GBC
 
-ggarrange(biasplot, mseplot) ->bias_mse_plot
-bias_mse_plot
+## MODE
+ggplot(MODE_GBC_performance_metrics, aes(x=N, y=bias))+ 
+  geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(-1.5,1.5))+
+  xlab("Size of Sample I")+
+  ylab("Bias")+
+  labs(title = "MODE estimate: BMI -> GBC")+
+  theme_few() -> biasplot_MODE_GBC
+ggplot(MODE_GBC_performance_metrics, aes(x=N, y=mse))+ 
+  geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(0,1.8))+
+  xlab("Size of Sample I")+
+  ylab("MSE")+
+  labs(title = "MODE estimate: BMI -> GBC")+
+  theme_few() -> mseplot_MODE_GBC
+ggarrange(biasplot_MODE_GBC, mseplot_MODE_GBC) -> bias_mse_plot_MODE_GBC
 
-filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_bias_mse.png")
-ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot, 
-       width = 14, height = 6, 
+## CONMIX
+ggplot(CONMIX_GBC_performance_metrics, aes(x=N, y=bias))+ 
+  geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(-1.5,1.5))+
+  xlab("Size of Sample I")+
+  ylab("Bias")+
+  labs(title = "CONMIX estimate: BMI -> GBC")+
+  theme_few() -> biasplot_CONMIX_GBC
+ggplot(CONMIX_GBC_performance_metrics, aes(x=N, y=mse))+ 
+  geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(0,1.8))+
+  xlab("Size of Sample I")+
+  ylab("MSE")+
+  labs(title = "CONMIX estimate: BMI -> GBC")+
+  theme_few() -> mseplot_CONMIX_GBC
+ggarrange(biasplot_CONMIX_GBC, mseplot_CONMIX_GBC) -> bias_mse_plot_CONMIX_GBC
+
+ggarrange(bias_mse_plot_IVW_GBC, bias_mse_plot_MODE_GBC, bias_mse_plot_CONMIX_GBC,
+          ncol = 1, nrow = 3, common.legend = TRUE) -> bias_mse_plot_GBC
+bias_mse_plot_GBC
+
+filename_GBC_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GBC_simplot_bias_mse_NSIM_", nsim, ".png")
+ggsave(filename = filename_GBC_simplot_bias_mse, plot = bias_mse_plot_GBC, 
+       width = 7, height = 10, 
        units = "in"  # default
        )
 ```
-
-
-
 
 
 
