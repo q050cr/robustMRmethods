@@ -300,7 +300,13 @@ for (i in 1:nrow(my_data_harm)) {
 pvals_df %>% 
   summarize(across(.cols = everything(), function(x) sum(x < 5*10^(-6)))) %>% 
   t() %>% 
-  kable(caption = "Count of significant SNPs depending on sample size")
+  cbind(n) %>% 
+  base::as.data.frame() %>% 
+  tibble::rownames_to_column() %>% 
+  rename(sample_size = n, No_of_IVs=V1) %>% 
+  select(sample_size, No_of_IVs) %>% 
+  kable(caption = "Count of significant SNPs depending on sample size") %>% 
+  kable_styling(font_size=10)
 
 # pvals_df %>%
 #   filter(p_value_exp_sample_100000< 5*10^(-6)) %>% 
@@ -387,7 +393,7 @@ ggplot(data = my_data_harm,
        ) +
   theme_few()+
   scale_colour_few() -> fig00
-fig00
+# fig00   # we use the sample size dependent formula
 
 # second formula variance explained2
 ggplot(data = my_data_harm, 
@@ -405,13 +411,13 @@ ggplot(data = my_data_harm,
   scale_colour_few() -> fig00_b
 fig00_b
 
-filenamefig00_a <- paste0("../output/plots/", Sys.Date(), "_figure00_a.png")
+filenamefig00_a <- paste0("../output/plots/", Sys.Date(), "_explained_var_X_old_formula.png")
 ggsave(filename = filenamefig00_a, plot = fig00, 
        width = 10, height = 6, 
        units = "in"  # default
        )
 
-filenamefig00_b <- paste0("../output/plots/", Sys.Date(), "_figure00_b.png")
+filenamefig00_b <- paste0("../output/plots/", Sys.Date(), "_explained_var_X_new_sample_size_dep.png")
 ggsave(filename = filenamefig00_b, plot = fig00_b, 
        width = 10, height = 6, 
        units = "in"  # default
@@ -510,7 +516,8 @@ ggplot(plot_data1, aes(x=n, y=value, col=name))+
                      breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
   ) -> fig01.update
 
-fig01.update
+# fig01.update   # old formula for PVE exposure X (without sample size adjusting)
+# 
 # scale_color_manual(name = "Y series", values = c("Y1" = "darkblue", "Y2" = "red"))
 
 plot_data1b <- df_cum_expl_var %>% 
@@ -557,8 +564,8 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
 fig01b.update  # USE THIS
 
 # SAVE
-filenamefig01_a <- paste0("../output/plots/", Sys.Date(), "_figure01_a.png")
-filenamefig01_b <- paste0("../output/plots/", Sys.Date(), "_figure01_b.png")
+filenamefig01_a <- paste0("../output/plots/", Sys.Date(), "_figure01_old_PVE_X_formula.png")
+filenamefig01_b <- paste0("../output/plots/", Sys.Date(), "_figure01_new_PVE_X_formula.png")
 ggsave(filename = filenamefig01_a, plot = fig01.update, 
        width = 10, height = 6, 
        units = "in"  # default
@@ -629,7 +636,7 @@ ggplot(data = plot_data_2, aes(x=maf.bmi, y=abs(beta.bmi)))+
   #          size=6, col="red")+
   xlab("Minor allele frequency")+
   ylab("Exposure effect size")+  # abs(beta_BMI)
-  labs(title = "Figure 2-update",
+  labs(title = "",
        subtitle = "Define different genetic architectures",
        #col='', 
        #caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
@@ -724,7 +731,7 @@ plotfigure01 <- function(data, effect_size="strong", maf="rare"){
                        breaks = N_annotation, #c( 10000, n[7:length(n)]),
                        limits = c(10000, 300000))+
     #ylab("% variance explained by IVs")+
-    labs(title = "Figure 1", subtitle = plotsubtitle,
+    labs(title = "", subtitle = plotsubtitle,
          col='', 
          caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits   explained by the IVs"
          ) +
@@ -784,7 +791,7 @@ for (i in 1:nrow(all_quadrants)) {
 
 ## FINAL PLOT
 
-```{r fig.height=10, fig.width=14, warning=FALSE}
+```{r FINAL-PLOT-1-huray, fig.height=10, fig.width=14, message=FALSE, warning=FALSE}
 fig01b.update + 
   labs(title= "", caption = "") -> fig01b.update.arrange
 
@@ -845,11 +852,11 @@ ggpubr::ggarrange(ggarrange(fig02.update.arrange, fig01b.update.arrange, ncol=2,
                   #legend = "bottom", common.legend = TRUE, align = "hv"
                   ) -> final_plot1.arrange2
 
-final_plot1.arrange
-final_plot1.arrange2
+# final_plot1.arrange   # OLD
+final_plot1.arrange2   # use this!
 
-filename_final_plot1 <- paste0("../output/plots/", Sys.Date(), "_final_plot1.arrange.png")
-filename_final_plot1b <- paste0("../output/plots/", Sys.Date(), "_final_plot1b.arrange.png")
+filename_final_plot1 <- paste0("../output/plots/", Sys.Date(), "_final_plot1.arrange_OLD.png")
+filename_final_plot1b <- paste0("../output/plots/", Sys.Date(), "_final_plot1b.arrange_NEW.png")
 
 ggsave(filename = filename_final_plot1, plot = final_plot1.arrange, 
          width = 14, height = 10, 
@@ -954,7 +961,7 @@ ggsave(filename = filename.mr.scatter.gsd, plot = p1.gsd,
 
 ### Forest Plot
 
-```{r forestplot-MendelianRandomization-GSD, fig.width=5, fig.height=24, warning=FALSE}
+```{r forestplot-MendelianRandomization-GSD, fig.width=5, fig.height=27, warning=FALSE}
 p2.gsd <- mr_forest(
   mr.obj,
   alpha = 0.05,
@@ -965,7 +972,7 @@ p2.gsd <- mr_forest(
   ggthemes::theme_few()
 
 #SAVE
-filename.mr.forest.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_gsd.png")
+filename.mr.forest.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_GSD.png")
 ggsave(filename = filename.mr.forest.gsd, plot = p2.gsd, 
        width = 5, 
        height = 24, 
@@ -976,8 +983,7 @@ ggsave(filename = filename.mr.forest.gsd, plot = p2.gsd,
 ### Funnel Plot
 
 ```{r funnel-plot-GSD, fig.height=3, fig.width=5}
-p4.gsd <- mr_funnel(mr.obj, CI=TRUE)+
-  ggthemes::theme_few()
+p4.gsd <- mr_funnel(mr.obj, CI=TRUE)
 
 p4.gsd$layers[[1]]$aes_params$size <- 1
 p4.gsd$layers[[1]]$aes_params$alpha <- 0.8
@@ -989,6 +995,8 @@ p4.gsd$layers[[4]]$aes_params$colour <- ggthemes_data$few$colors$Dark[9,2][[1]]
 p4.gsd$layers <- p4.gsd$layers[-2]  
 
 # plot
+p4.gsd <- p4.gsd+
+  ggthemes::theme_few()
 p4.gsd
 
 #SAVE
@@ -1045,13 +1053,13 @@ ggsave(filename = filename.mr.scatter, plot = p1[[1]],
 
 ### Forest Plot
 
-```{r forestplot-TwoSampleMR, fig.width=5, fig.height=24, warning=FALSE}
+```{r forestplot-TwoSampleMR-GBC, fig.width=5, fig.height=24, warning=FALSE}
 res_single <- TwoSampleMR::mr_singlesnp(harmonised_dat4TwoSampleMR, all_method = c("mr_egger_regression", "mr_ivw"))
 p2 <- mr_forest_plot(res_single,  exponentiate = FALSE)
 p2[[1]]
 
 #SAVE
-filename.mr.forest <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest.png")
+filename.mr.forest <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_GBC.png")
 ggsave(filename = filename.mr.forest, plot = p2[[1]], 
        width = 5, 
        height = 24, 
@@ -1197,7 +1205,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
     name = "% variance explained by IVs",
     # Add a second axis and specify its features
     sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
-    limits = c(0,10)
+    limits = c(0,7.5)
   ) + 
   #geom_boxplot(data=boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, group=sample_size_filtered))
   geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_X*100, # *100 to get percent values
@@ -1227,7 +1235,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
                      # order
                      breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
   ) -> plot_pve_simulated
-plot_pve_simulated
+#plot_pve_simulated
 
 filename_pveplot_sim <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve.png")
 ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
@@ -1256,7 +1264,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
     name = "% variance explained by IVs",
     # Add a second axis and specify its features
     sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
-    limits = c(0,10)
+    limits = c(0,7.5)
   ) + 
   ## Rainclouds
   # https://z3tt.github.io/Rainclouds/
@@ -1327,7 +1335,9 @@ ggsave(filename = filename_pveplot_sim.raincloud, plot = plot_pve_simulated.rain
        )
 ```
 
-## Performance Metrics BIAS, MSE, MEAN, EMP_SE
+## Performance Metrics
+
+### Calculate BIAS, MSE, MEAN, EMP_SE
 
 ```{r calculate-performance-metrics}
 # fns
@@ -1411,7 +1421,7 @@ CONMIX_GBC_performance_metrics <- est_sim %>%
   rename(N = sample_size_filtered)
 ```
 
-## Performance Metrics COVERAGE, COVERAGE-BIAS-ELIMINATED, TYPE1ERROR
+### Calculate COVERAGE, COVERAGE-BIAS-ELIMINATED, TYPE1ERROR
 
 ```{r further-metrics}
 # coverage
@@ -1520,8 +1530,11 @@ for (i in 1:length(sample_size_filtered)) {
 }
 ```
 
-```{r add-additional-metrics-to-df}
-## GSD
+
+### GSD Performance Metrics
+
+```{r add-additional-metrics-to-df-and-print-GSD}
+## GSD --------------------------
 IVW_GSD_performance_metrics <- IVW_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
   cbind(data.frame(IVW_GSD_coverage_calc, IVW_GSD_coverage_bias_eliminated_calc, IVW_GSD_type1error_calc)) %>% 
@@ -1529,43 +1542,80 @@ IVW_GSD_performance_metrics <- IVW_GSD_performance_metrics %>%
          coverage_bias_eliminated = IVW_GSD_coverage_bias_eliminated_calc, 
          type1error = IVW_GSD_type1error_calc) %>% 
   as_tibble()
+IVW_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "IVW method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+
 MODE_GSD_performance_metrics <- MODE_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
-  cbind(data.frame(MODE_GSD_coverage_calc, MODE_GSD_coverage_bias_eliminated_calc, MODE_GSD_type1error_calc)) %>% 
+  cbind(data.frame(MODE_GSD_coverage_calc, 
+                   MODE_GSD_coverage_bias_eliminated_calc, MODE_GSD_type1error_calc)) %>% 
   rename(coverage = MODE_GSD_coverage_calc, 
          coverage_bias_eliminated = MODE_GSD_coverage_bias_eliminated_calc, 
          type1error = MODE_GSD_type1error_calc) %>% 
   as_tibble()
+
+MODE_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "MODE method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+
 CONMIX_GSD_performance_metrics <- CONMIX_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
-  cbind(data.frame(CONMIX_GSD_coverage_calc, CONMIX_GSD_coverage_bias_eliminated_calc, CONMIX_GSD_type1error_calc)) %>% 
+  cbind(data.frame(CONMIX_GSD_coverage_calc, 
+                   CONMIX_GSD_coverage_bias_eliminated_calc, CONMIX_GSD_type1error_calc)) %>% 
   rename(coverage = CONMIX_GSD_coverage_calc, 
          coverage_bias_eliminated = CONMIX_GSD_coverage_bias_eliminated_calc, 
          type1error = CONMIX_GSD_type1error_calc) %>% 
   as_tibble()
+CONMIX_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "CONMIX method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+```
 
-## GBC
+### GBC Performance Metrics
+
+```{r add-additional-metrics-to-df-and-print-GBC}
+## GBC --------------------------
 IVW_GBC_performance_metrics <- IVW_GBC_performance_metrics %>% 
   select(N, everything()) %>% 
-  cbind(data.frame(IVW_GBC_coverage_calc, IVW_GBC_coverage_bias_eliminated_calc, IVW_GBC_type1error_calc)) %>% 
+  cbind(data.frame(IVW_GBC_coverage_calc, 
+                   IVW_GBC_coverage_bias_eliminated_calc, IVW_GBC_type1error_calc)) %>% 
   rename(coverage = IVW_GBC_coverage_calc, 
          coverage_bias_eliminated = IVW_GBC_coverage_bias_eliminated_calc, 
          type1error = IVW_GBC_type1error_calc) %>% 
   as_tibble()
+IVW_GBC_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "IVW method on BMI -> GBC performance metrics") %>% 
+  kable_styling(font_size=10)
+
 MODE_GBC_performance_metrics <- MODE_GBC_performance_metrics %>% 
   select(N, everything()) %>% 
-  cbind(data.frame(MODE_GBC_coverage_calc, MODE_GBC_coverage_bias_eliminated_calc, MODE_GBC_type1error_calc)) %>% 
+  cbind(data.frame(MODE_GBC_coverage_calc, 
+                   MODE_GBC_coverage_bias_eliminated_calc, MODE_GBC_type1error_calc)) %>% 
   rename(coverage = MODE_GBC_coverage_calc, 
          coverage_bias_eliminated = MODE_GBC_coverage_bias_eliminated_calc, 
          type1error = MODE_GBC_type1error_calc) %>% 
   as_tibble()
+MODE_GBC_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "MODE method on BMI -> GBC performance metrics") %>% 
+  kable_styling(font_size=10)
 CONMIX_GBC_performance_metrics <- CONMIX_GBC_performance_metrics %>% 
   select(N, everything()) %>% 
-  cbind(data.frame(CONMIX_GBC_coverage_calc, CONMIX_GBC_coverage_bias_eliminated_calc, CONMIX_GBC_type1error_calc)) %>% 
+  cbind(data.frame(CONMIX_GBC_coverage_calc, 
+                   CONMIX_GBC_coverage_bias_eliminated_calc, CONMIX_GBC_type1error_calc)) %>% 
   rename(coverage = CONMIX_GBC_coverage_calc, 
          coverage_bias_eliminated = CONMIX_GBC_coverage_bias_eliminated_calc, 
          type1error = CONMIX_GBC_type1error_calc) %>% 
   as_tibble()
+CONMIX_GBC_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "CONMIX method on BMI -> GBC performance metrics") %>% 
+  kable_styling(font_size=10)
 ```
 
 ```{r store-performance-metrics-csv}
@@ -1770,7 +1820,7 @@ ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas
 
 ### GSD Bias & MSE
 
-```{r plot-performance-metrics-bias-mse-GSD, fig.height=10, fig.width=5}
+```{r plot-performance-metrics-bias-mse-GSD, fig.height=10, fig.width=8}
 ## IVW
 #BIAS
 ggplot(IVW_GSD_performance_metrics, aes(x=N, y=bias))+ 
@@ -1996,7 +2046,7 @@ ggsave(filename = filename_GBC_simplot_thetas_arrange, plot = GBC_simplot_thetas
 
 ### GBC Bias & MSE
 
-```{r plot-performance-metrics-bias-mse-GBC, fig.height=10, fig.width=5}
+```{r plot-performance-metrics-bias-mse-GBC, fig.height=10, fig.width=8}
 ## IVW
 #BIAS
 ggplot(IVW_GBC_performance_metrics, aes(x=N, y=bias))+ 
