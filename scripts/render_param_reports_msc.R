@@ -4,7 +4,7 @@
 
 ## render report and mail results
 library(dplyr)
-library(gmailr)
+# library(gmailr)
 rm(list=ls())  # not in rmd doc, otherwise params deleted
 #gm_auth_configure(path = "/Users/christophreich/Library/CloudStorage/OneDrive-bwedu/credentials.json")
 #gm_auth()
