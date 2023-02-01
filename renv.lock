@@ -72,6 +72,14 @@
       "Hash": "37348ee784e82c0a6b650146275b459d",
       "Requirements": []
     },
+    "BiocManager": {
+      "Package": "BiocManager",
+      "Version": "1.30.19",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "726b3bc83ff8e0c35c7efdb74a462b0d",
+      "Requirements": []
+    },
     "Biostrings": {
       "Package": "Biostrings",
       "Version": "2.64.1",
@@ -1089,24 +1097,6 @@
       "Hash": "4f2596dfb05dac67b9dc558e5c6fba2e",
       "Requirements": []
     },
-    "gmailr": {
-      "Package": "gmailr",
-      "Version": "1.0.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "185e047cb2392acf320b8bc657a55c92",
-      "Requirements": [
-        "base64enc",
-        "crayon",
-        "gargle",
-        "httr",
-        "jsonlite",
-        "lifecycle",
-        "magrittr",
-        "mime",
-        "rematch2"
-      ]
-    },
     "gmp": {
       "Package": "gmp",
       "Version": "0.6-8",
@@ -1787,13 +1777,16 @@
     },
     "purrr": {
       "Package": "purrr",
-      "Version": "0.3.5",
+      "Version": "1.0.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "54842a2443c76267152eface28d9e90a",
+      "Hash": "d71c815267c640f17ddbf7f16144b4bb",
       "Requirements": [
+        "cli",
+        "lifecycle",
         "magrittr",
-        "rlang"
+        "rlang",
+        "vctrs"
       ]
     },
     "quantreg": {
