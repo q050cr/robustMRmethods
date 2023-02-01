@@ -24,7 +24,7 @@ library(MRMix)
 library(MRPRESSO)
 library(mr.raps)
 library(penalized)
-source("./scripts/MR_lasso.R")
+source("./scripts/helper/MR_lasso.R")
 
 ## load data created in MSc.rmd
 my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "my_data_harm.rds", full.names = TRUE)))

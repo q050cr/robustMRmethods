@@ -5,6 +5,7 @@
 .RData
 .Ruserdata
 .DS_Store
+.Renviron
 # folders
 analysis-justo/
 bw-cluster/
@@ -18,6 +19,7 @@ output/
 paper-backup/
 reports/
 SchwedaMSc/
+scripts/test/
 templates/
 Vorlagen/
 # subdirectories

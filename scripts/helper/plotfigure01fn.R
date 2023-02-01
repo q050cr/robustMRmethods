@@ -1,8 +1,9 @@
 
 
+library(tibble)
+library(ggplot2)
 
-
-plotfigure01 <- function(data, effect_size="all", maf="all"){
+plotfigure01 <- function(data, effect_size="all", maf="all", n){
   ## data: my_data_harm
   # effect size: "all", "strong" or "weak"
   # maf: "all", "rare" or "common
@@ -162,5 +163,3 @@ plotfigure01 <- function(data, effect_size="all", maf="all"){
   #list2env(assign(plotname, figure01.quadrant), envir = .GlobalEnv)
 }
 
-
-plotfigure01(my_data_harm)
