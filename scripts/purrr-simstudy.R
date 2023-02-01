@@ -26,7 +26,7 @@
 # set to TRUE if simulation should run when script is sourced
 rm(list=ls())
 runSimulation <- TRUE
-nsim <- 5
+nsim <- 100
 
 library(dplyr)
 library(purrr)
@@ -61,9 +61,7 @@ threshold <- 5 * 10^-6
 n.orig_sqrt <- sqrt(n.orig)
 
 # space to populate
-est_sim_temp <- tibble(no_sim = 1:nsim)
 est_sim <- tibble(no_sim = 1:nsim)
-
 # create dataframes for each specified sample size ------------------------
 gen_dfs <- map(1:length(colnames_pval), ~{
   threshold <- 5*10^-6
@@ -80,16 +78,19 @@ gen_dfs <- map(1:length(colnames_pval), ~{
 # run simulation ----------------------------------------------------------
 T0 <- proc.time()[3]
 for (dataset in 1:length(gen_dfs)) {
+  # initialize in loop/ discard at the end
+  est_sim_temp <- tibble(no_sim = 1:nsim)
   nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs[[dataset]], index = dataset))  # returns nsim* results for MR simulations PER sample size 
   est_sim_temp <- populate_est_sim(nsim_list = nsim_list_dataset, nsim = nsim, no_cases = n[dataset])
   if(is.null(est_sim_temp)) next
   est_sim <- est_sim %>% cbind(est_sim_temp[-1])
-  rm(est_sim_temp)
+  rm(est_sim_temp, nsim_list_dataset)
   #
   print(paste0("|||-----------------------Run finished for sample size: ", format(n[dataset], scientific = FALSE), " -----------------------|||"))
 }
 T1 <- proc.time()[3]
 timediff_purrr <- T1 - T0
+print(paste0("!!!!!--------------------------- ", round(timediff_purrr/60,2), " minutes passed for the simulation scenario! --------------------------------------!!!!!"))
 
 saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_purrr_NSIM_", nsim, ".rds"))
 

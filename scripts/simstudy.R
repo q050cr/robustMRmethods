@@ -24,6 +24,7 @@
 
 # set to TRUE if simulation should run when script is sourced
 runSimulation <- TRUE
+nsim <- 5
 
 library(dplyr)
 library(purrr)
@@ -57,7 +58,6 @@ n.orig <- 334487
 ###
 set.seed(1234)
 ## initialize
-nsim <- 50
 threshold <- 5 * 10^-6
 n.orig_sqrt <- sqrt(n.orig)
 
@@ -191,7 +191,7 @@ if (runSimulation == TRUE) {
 
   T1 <- proc.time()[3]
   timediff <- T1 - T0
+  print(paste0("!!!!!--------------------------- ", round(timediff/60,2), " minutes passed for the simulation scenario! --------------------------------------!!!!!"))
 
-  saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_NSIM_", nsim, ".rds"))
-  print(timediff)
+  saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_forloop_NSIM_", nsim, ".rds"))
 }

@@ -447,17 +447,16 @@ for (i in 1:length(colnames_pval) ) {
 }
 
 # for the numeric traits we have to map over sample size and recalculate se_updated
-n.orig_sqrt <- sqrt(n.orig)
 explained_variance_BMI2_sample_size <- map(n, ~explained_variance_numeric2(maf = my_data_harm$eaf.bmi, beta = my_data_harm$beta.bmi, 
-                                                                           se_beta = abs(my_data_harm$beta.bmi / -qnorm(p=(my_data_harm$p.value.bmi / 2), mean = 0) * n.orig_sqrt / sqrt(.x)), 
+                                                                           se_beta = abs(my_data_harm$beta.bmi / -qnorm(p=(my_data_harm$p.value.bmi / 2), mean = 0) * sqrt(n.orig) / sqrt(.x)), 
                                                                            samplesize = .x))
 
 cum_expl_varX2_sample_size <- c()
 for (mysamples in 1:length(colnames_pval)) {
   temp_dat <- my_data_harm %>% 
     select(all_of(colnames_pval[mysamples])) %>% 
-    mutate(explained_variance_BMI2_sample_size = explained_variance_BMI2_sample_size[[mysamples]]) %>% 
-    filter(!!sym(colnames_pval[mysamples]) < threshold)
+    filter(!!sym(colnames_pval[mysamples]) < threshold) %>% 
+    mutate(explained_variance_BMI2_sample_size = explained_variance_BMI2_sample_size[[mysamples]])
   #print(temp_dat)
   cum_expl_varX2_sample_size <- append(cum_expl_varX2_sample_size, sum(temp_dat$explained_variance_BMI2_sample_size))
 }
@@ -1847,9 +1846,7 @@ for (true_method in 1:length(selected_true_methods)) {
     mutate(across(cols = where(is.numeric), round(3))) %>% 
     kable(caption = "MRMIX method on BMI -> GSD performance metrics") %>% 
     kable_styling(font_size=10)
-  
-  
-  
+
 }
 
 

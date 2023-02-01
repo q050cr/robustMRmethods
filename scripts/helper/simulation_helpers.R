@@ -18,6 +18,10 @@ conflict_prefer("filter", "dplyr")
 
 sim_function <- function(dat, index) {
   if(any(is.na(dat))) return(NULL)
+  
+  sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
+  n <- sim_vars$n
+  
   return_vector <- c()
   dat <- dat %>% 
     mutate(beta.bmi_sim_norm = purrr::map2_dbl(.x = beta.bmi, .y = se_update_BMI, .f = ~rnorm(n = 1, mean = .x, sd = .y))) %>% 
@@ -105,27 +109,31 @@ sim_function <- function(dat, index) {
   return(return_vector)
 }
 
+
+
+# POPULATE est_sim_temp --------------------------------------------------------
 populate_est_sim <- function(nsim_list, nsim, no_cases) {
   if(is.null(unlist(nsim_list))) return(NULL)
+  est_sim_temp <- tibble(no_sim = 1:nsim)
   for (nsims in 1:length(nsim_list)) {
     # cum_PVE_X
-    est_sim[nsims, paste0("pve_X_sim_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][1] 
+    est_sim_temp[nsims, paste0("pve_X_sim_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][1] 
     # 1. random IVW
-    est_sim[nsims, paste0("IVW_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][2] 
-    est_sim[nsims, paste0("IVW_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][3] 
-    est_sim[nsims, paste0("IVW_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][4] 
+    est_sim_temp[nsims, paste0("IVW_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][2] 
+    est_sim_temp[nsims, paste0("IVW_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][3] 
+    est_sim_temp[nsims, paste0("IVW_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][4] 
     # 2. weighted mode
-    est_sim[nsims, paste0("MODE_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][5] 
-    est_sim[nsims, paste0("MODE_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][6] 
-    est_sim[nsims, paste0("MODE_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][7] 
+    est_sim_temp[nsims, paste0("MODE_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][5] 
+    est_sim_temp[nsims, paste0("MODE_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][6] 
+    est_sim_temp[nsims, paste0("MODE_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][7] 
     # 3. CONMIX 
-    est_sim[nsims, paste0("CONMIX_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][8] 
-    est_sim[nsims, paste0("CONMIX_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][9] 
-    est_sim[nsims, paste0("CONMIX_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][10] 
+    est_sim_temp[nsims, paste0("CONMIX_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][8] 
+    est_sim_temp[nsims, paste0("CONMIX_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][9] 
+    est_sim_temp[nsims, paste0("CONMIX_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][10] 
     # 4. MRMix 
-    est_sim[nsims, paste0("MRMIX_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][11] 
-    est_sim[nsims, paste0("MRMIX_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][12] 
-    est_sim[nsims, paste0("MRMIX_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][13] 
+    est_sim_temp[nsims, paste0("MRMIX_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][11] 
+    est_sim_temp[nsims, paste0("MRMIX_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][12] 
+    est_sim_temp[nsims, paste0("MRMIX_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][13] 
   }
-  return(est_sim)
+  return(est_sim_temp)
 }
