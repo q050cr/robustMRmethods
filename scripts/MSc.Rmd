@@ -48,50 +48,31 @@ library(MRMix)
 library(MRPRESSO)
 library(penalized)
 library(conflicted)
-source("MR_lasso.R")  # Slob&Burgess 2020
-source("PVE_calculation_fns.R") 
+source("helper/MR_lasso.R")  # Slob&Burgess 2020
+source("helper/PVE_calculation_fns.R") 
+source("helper/plotfigure01fn.R") 
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 ```
 
 # Discussion
 
--   2022-11-12:
-    -   8 SNPs removed after data harmonization, one SNP associated with FTO gene (none left)
-    -   in new formula for proportion of variance in phenotype explained by given SNP (PVE) we need the MAF not the EAF
-        - calculate: if $eaf>0.5$ -> $maf = 1-eaf$
-        - need to change betas as well? +-
-    -   We discussed $K=0.05$ in our last meeting for the "prevalence" of GBC after looking at [Cancer Today](https://gco.iarc.fr/today/home) 
-        - If done this way we yield a 20% proportion of variance explained in PVE. Switch back to ASR used last week!
-
--   2022-11-15: 
-    1. Check if formula PVE numeric can be used for binary traits as well. Can the $\%var(X)$ – numeric – be compared with $\%var(U)$ $\%var(Y)$ – binary?
-    2. How is $\%var$ calculated in the MRbase package in the `mr_steiger` function (Steiger filtering)?
-    3. Prefer new formula for $\%var(X)$ calculation
-    4. FTO gene: Add SNP associated with FTO gene to analysis that was considered ambiguous. Check the beta estimate from UK Biobank (provide rsID to Felix: `rs1558902`)
-    5. Try also $K_{GBC}= 0.05/100$ for $\%var(Y)$ (before used $ASR=1.2/100.000$)
-    6. Update „Figure 1“ to 6 parts
-    7. Also run BMI -> GSD, FTO -> GSD + BMI -> GBC, FTO->GBC: How different are the MR methods in estimating the causal estimate?
-    8. Reference estimates for simulation: Wald estimate (FTO variant) + IVW total sample + conmix total sample
-    9. Plot PVE from all simulated variants as boxplots on each dot of Figure 01
-
-
--   2022-12-05
-    1. How did the large CI for the simulated PVEs arise? The simulated beta coefficients were drawn from given betas **AND** sample-size adjusted standard errors `*get simulated se_{sample size}*`. Therefore, for small sample sizes we yielded large variance for the beta coefficients. I changed the simulation and only used the given standard errors for our simulation scenarios in "scripts/simstudy.R".
+-   NA
 
 # Version Update
 
 The new report version includes: 
 
-- Issues from discussion mentioned above
-- Interchanged panel A and panel B in the first version of Figure 1, used the same colours in panel B and in the legends
-- Added five estimates for "BMI -> GSD": Wald estimate (FTO), Wald estimate (MC4R variant), random IVW, MRMix, weighted mode
+-   All genetic associations with BMI > 0 (for association statistics < 0, sign of the association statistic with GSD changed respectively)
 
 
 ```{r load-data}
 my_data <- as_tibble(read.delim("../data-boekstegers_felix/GST_BMI_association_results.txt"))
 # GBC: new data 2022-11-04
 GBC_dat <- as_tibble(read.delim("../data-boekstegers_felix/C23C24_BMI_association_results.txt"))
+
+# FTO data
+FTO_dat <- as_tibble(read.delim("../data-boekstegers_felix/2023-01-19_FTO/FTO_association_results.txt"))
 ```
 
 # Data Harmonization
@@ -224,7 +205,17 @@ dropped_data <- my_data_harm %>%
   filter(mr_keep==FALSE)
 
 my_data_harm <- my_data_harm %>% 
-  filter(mr_keep==TRUE | SNP == "rs1558902")  # also include FTO SNP
+  filter(mr_keep==TRUE | SNP == "rs1558902") %>%  # also include FTO SNP 
+  # change sign of beta after checking consistency of data (see mail felix 2023-01-19)
+  mutate(beta.bmi = ifelse(SNP == "rs1558902", -beta.bmi, beta.bmi)) 
+
+my_data_harm <- my_data_harm %>% 
+  mutate(
+    beta.gsd = ifelse(beta.bmi<0, -beta.gsd, beta.gsd),
+    beta.gbc = ifelse(beta.bmi<0, -beta.gbc, beta.gbc),
+    # change last beta.bmi, otherwise not negative any more ;)
+    beta.bmi = ifelse(beta.bmi<0, -beta.bmi, beta.bmi)
+  )
 ```
 
 
@@ -281,13 +272,11 @@ colnames(pvals_df) <- colnames_pval
 for (i in 1:nrow(my_data_harm)) {
   # 1) Calculate more accurates SEs using the provided betas and Pvals 
   se_update[i] <- my_data_harm[["beta.bmi"]][i]/-qnorm(p=(my_data_harm[["p.value.bmi"]][i]/2),mean=0)
-  
   # 2) Calculate the approximate SEs for decreasing samples sizes
   ### approximation of sd (single value)
   sd <- se_update[i] * sqrt(n.orig)
   #### approximation of standard error simulating different sample size
   se_n <- sd/(sqrt(n))
-  
   # 3) Calculate the probability values considering the estimated betas and the corresponding SEs
   for (j in 1:length(n)) {
     pvals_n <- 2*(1-pnorm(abs(my_data_harm[["beta.bmi"]][i])/abs(se_n[j]), mean=0, 
@@ -311,7 +300,6 @@ pvals_df %>%
 # pvals_df %>%
 #   filter(p_value_exp_sample_100000< 5*10^(-6)) %>% 
 #   count()
-
 my_data_harm <- as_tibble(cbind(my_data_harm, pvals_df))
 ```
 
@@ -331,28 +319,30 @@ We added a second formula to calculate the explained variance for numeric traits
 ```{r calculate-explained-variance}
 # outsourced to "./scripts/PVE_calculation_fns.R"
 
-## CALCULATE explained variance
-my_data_harm <- my_data_harm %>% 
-  mutate(explained_variance_BMI = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi), 
-         # USE THIS !
-         explained_variance_BMI2 = explained_variance_numeric2(maf=eaf.bmi, 
-                                                           beta=beta.bmi, 
-                                                           se_beta=se.bmi, 
-                                                           samplesize=n[length(n)]
-           
-         ),
-         explained_variance_GSD = explained_variance_binary(PA = eaf.gsd, 
-                                                            RR1 = exp(beta.gsd), 
-                                                            RR2 = 1+(2*(exp(beta.gsd)-1)), 
-                                                            K = 0.1  # assumed prevalence in population
-                                                            )$Vg,
-         explained_variance_GBC = explained_variance_binary(PA = eaf.gbc, 
-                                                            RR1 = exp(beta.gbc), 
-                                                            RR2 = 1+(2*(exp(beta.gbc)-1)), # exp(beta.gbc)^2, 
-                                                            K =1.2/100000  # assumed prevalence in population
-                                                            )$Vg
-         
-         )
+## CALCULATE explained variance for total sample size
+my_data_harm <- my_data_harm %>%
+  mutate(
+    explained_variance_BMI = explained_variance_numeric(eaf = eaf.bmi, beta = beta.bmi),
+    # USE THIS !
+    explained_variance_BMI2 = explained_variance_numeric2(
+      maf = eaf.bmi, beta = beta.bmi,
+      se_beta = se.bmi,
+      samplesize = n[length(n)]
+    ),
+    explained_variance_GSD = explained_variance_binary(
+      PA = eaf.gsd,
+      RR1 = exp(beta.gsd),
+      RR2 = 1 + (2 * (exp(beta.gsd) - 1)),
+      K = 0.1 # assumed prevalence in population
+    )$Vg,
+    explained_variance_GBC = explained_variance_binary(
+      PA = eaf.gbc,
+      RR1 = exp(beta.gbc),
+      RR2 = 1 + (2 * (exp(beta.gbc) - 1)), # exp(beta.gbc)^2,
+      K = 1.2 / 100000 # assumed prevalence in population
+    )$Vg
+  )
+
 # sum(my_data_harm$explained_variance_GBC)
 ```
 
@@ -411,11 +401,11 @@ ggplot(data = my_data_harm,
   scale_colour_few() -> fig00_b
 fig00_b
 
-filenamefig00_a <- paste0("../output/plots/", Sys.Date(), "_explained_var_X_old_formula.png")
-ggsave(filename = filenamefig00_a, plot = fig00, 
-       width = 10, height = 6, 
-       units = "in"  # default
-       )
+# filenamefig00_a <- paste0("../output/plots/", Sys.Date(), "_explained_var_X_old_formula.png")
+# ggsave(filename = filenamefig00_a, plot = fig00, 
+#        width = 10, height = 6, 
+#        units = "in"  # default
+#        )
 
 filenamefig00_b <- paste0("../output/plots/", Sys.Date(), "_explained_var_X_new_sample_size_dep.png")
 ggsave(filename = filenamefig00_b, plot = fig00_b, 
@@ -438,8 +428,8 @@ df_cum_expl_var <- tibble(n=n,
                           count_IVs = rep(NA, length(n))
 )
 
+threshold <- 5*10^(-6)
 for (i in 1:length(colnames_pval) ) {
-  threshold <- 5*10^(-6)
   select_col <- colnames_pval[i]
   # calculate cum explained variance and count of IVs
   summarydat <- my_data_harm %>% 
@@ -455,6 +445,30 @@ for (i in 1:length(colnames_pval) ) {
   df_cum_expl_var[i, 5] <- summarydat$expl_variances[4]
   df_cum_expl_var[i, 6] <- summarydat$count_IVs
 }
+
+# for the numeric traits we have to map over sample size and recalculate se_updated
+n.orig_sqrt <- sqrt(n.orig)
+explained_variance_BMI2_sample_size <- map(n, ~explained_variance_numeric2(maf = my_data_harm$eaf.bmi, beta = my_data_harm$beta.bmi, 
+                                                                           se_beta = abs(my_data_harm$beta.bmi / -qnorm(p=(my_data_harm$p.value.bmi / 2), mean = 0) * n.orig_sqrt / sqrt(.x)), 
+                                                                           samplesize = .x))
+
+cum_expl_varX2_sample_size <- c()
+for (mysamples in 1:length(colnames_pval)) {
+  temp_dat <- my_data_harm %>% 
+    select(all_of(colnames_pval[mysamples])) %>% 
+    mutate(explained_variance_BMI2_sample_size = explained_variance_BMI2_sample_size[[mysamples]]) %>% 
+    filter(!!sym(colnames_pval[mysamples]) < threshold)
+  #print(temp_dat)
+  cum_expl_varX2_sample_size <- append(cum_expl_varX2_sample_size, sum(temp_dat$explained_variance_BMI2_sample_size))
+}
+
+df_cum_expl_var <- df_cum_expl_var %>% 
+  cbind(cum_expl_varX2_sample_size) %>% 
+  relocate(cum_expl_varX2_sample_size, .before = cum_expl_varU)
+
+ggplot(df_cum_expl_var, aes(x=n))+
+  geom_line(aes(y=cum_expl_varX2_sample_size*100), col="red")+
+  geom_line(aes(y=cum_expl_varX2*100))
 ```
 
 
@@ -468,57 +482,10 @@ scale_factor <- 4.5/284
 df_cum_expl_var <- df_cum_expl_var %>% 
   mutate(
     cum_expl_varX = cum_expl_varX *100, # in percent 
-    cum_expl_varX2 = cum_expl_varX2 *100,
+    cum_expl_varX2 = cum_expl_varX2_sample_size *100,  #  CAVE CHANGED HERE TO INCLUDE SAMPLE SIZE DEPENDENT SE and PVE CALC!
     cum_expl_varU = cum_expl_varU *100,
     cum_expl_varY = cum_expl_varY *100,
     count_IVs_scaled = count_IVs*scale_factor)
-
-plot_data1 <- df_cum_expl_var %>% 
-  pivot_longer(cols = c(cum_expl_varX, cum_expl_varU, cum_expl_varY)) %>% 
-  mutate(name = factor(name, labels = c("% var(U)", "% var(X)", "% var(Y)")),
-         name = factor(name, levels = c("% var(X)", "% var(Y)", "% var(U)") )
-         )
-
-N_annotation <- c(10000, 100000, 200000, 300000)
-## plot
-ggplot(plot_data1, aes(x=n, y=value, col=name))+
-  geom_point(alpha=0.6)+
-  geom_line(alpha=0.6)+
-  geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
-  scale_x_continuous(name = paste0("Size of sample ", as.roman(1)),  # 2-sample-MR or label "Study Size"
-                     labels = comma, 
-                     breaks = N_annotation, #c( 10000, n[7:length(n)]),
-                     limits = c(10000, 300000))+
-  #ylab("% variance explained by IVs")+
-  labs(title = "Figure 1",
-       col='', 
-       caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
-       ) +
-  scale_y_continuous(
-    # Features of the first axis
-    name = "% variance explained by IVs",
-    # Add a second axis and specify its features
-    sec.axis = sec_axis(~./scale_factor, name="Number of IVs")
-  ) + 
-  theme_few()+
-  #scale_colour_few() +
-  #scale_color_manual(name = "", values = c("% var(U)" = "red", 
-  #                                         "% var(X)" = "blue", 
-  #                                         "% var(Y)" = "darkblue", 
-  #                                         "Number of IVs" = "black"
-  #                                         ))
-  #
-  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
-                                           "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
-                                           "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
-                                           "Number of IVs" = "black"),
-                     # order
-                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
-  ) -> fig01.update
-
-# fig01.update   # old formula for PVE exposure X (without sample size adjusting)
-# 
-# scale_color_manual(name = "Y series", values = c("Y1" = "darkblue", "Y2" = "red"))
 
 plot_data1b <- df_cum_expl_var %>% 
   pivot_longer(cols = c(cum_expl_varX2, cum_expl_varU, cum_expl_varY)) %>% 
@@ -563,14 +530,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
   ) -> fig01b.update
 fig01b.update  # USE THIS
 
-# SAVE
-filenamefig01_a <- paste0("../output/plots/", Sys.Date(), "_figure01_old_PVE_X_formula.png")
 filenamefig01_b <- paste0("../output/plots/", Sys.Date(), "_figure01_new_PVE_X_formula.png")
-ggsave(filename = filenamefig01_a, plot = fig01.update, 
-       width = 10, height = 6, 
-       units = "in"  # default
-       )
-
 ggsave(filename = filenamefig01_b, plot = fig01b.update, 
        width = 10, height = 6, 
        units = "in"  # default
@@ -610,10 +570,13 @@ fig02
 ```{r mafVSbetas}
 plot_data_2 <- my_data_harm %>% 
   mutate(maf.bmi = ifelse(eaf.bmi >0.5, 1-eaf.bmi, eaf.bmi)) %>% 
-  select(maf.bmi, beta.bmi)
+  select(maf.bmi, beta.bmi, gene_label, fto_col_annot)
 
-ggplot(data = plot_data_2, aes(x=maf.bmi, y=abs(beta.bmi)))+
+
+ggplot(data = plot_data_2, aes(x=maf.bmi, y=abs(beta.bmi), 
+                               col=fto_col_annot, label=gene_label))+
   geom_point(alpha=0.6)+
+  ggrepel::geom_text_repel(show.legend = FALSE)+
   geom_hline(yintercept=median(abs(plot_data_2$beta.bmi)), 
              col=ggthemes_data$few$colors$Dark[6,2][[1]], alpha=0.6, linetype=2)+
   geom_vline(xintercept=median(plot_data_2$maf.bmi), 
@@ -638,7 +601,7 @@ ggplot(data = plot_data_2, aes(x=maf.bmi, y=abs(beta.bmi)))+
   ylab("Exposure effect size")+  # abs(beta_BMI)
   labs(title = "",
        subtitle = "Define different genetic architectures",
-       #col='', 
+       col='SNP', 
        #caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits explained by the IVs"
        ) +
   theme_few()+
@@ -654,127 +617,7 @@ ggsave(filename = filenamefig02, plot = fig02.update)
 We want to repeat Figure 01 for each of the 4 defined quadrants in the MAF vs beta plot above. 
 
 ```{r figure1quadrants, fig.show="hold", out.width="50%", warning=FALSE}
-
-plotfigure01 <- function(data, effect_size="strong", maf="rare"){
-  ## data: my_data_harm
-  # effect size: "strong" or "weak"
-  # maf: "rare" or "common
-  df_cum_expl_var <- tibble(n=n, 
-                            cum_expl_varX = rep(NA, length(n)), 
-                            cum_expl_varX2 = rep(NA, length(n)), 
-                            cum_expl_varU = rep(NA, length(n)), 
-                            cum_expl_varY = rep(NA, length(n)),
-                            count_IVs = rep(NA, length(n))
-  )
-  # create maf col
-  data <- data %>% 
-      mutate(maf.bmi = ifelse(eaf.bmi >0.5, 1-eaf.bmi, eaf.bmi))
-  
-  ## filter for quadrant
-  if (effect_size=="strong" & maf == "rare") {
-    data <- data %>% 
-      filter(abs(beta.bmi) > median(abs(beta.bmi)) &  maf.bmi < median(maf.bmi))
-  } else if (effect_size=="strong" & maf == "common") {
-    data <- data %>% 
-      filter(abs(beta.bmi) > median(abs(beta.bmi)) &  maf.bmi > median(maf.bmi))
-  } else if (effect_size=="weak" & maf == "common") {
-    data <- data %>% 
-      filter(abs(beta.bmi) < median(abs(beta.bmi)) &  maf.bmi > median(maf.bmi))
-  } else if (effect_size=="weak" & maf == "rare") {
-    data <- data %>% 
-      filter(abs(beta.bmi) < median(abs(beta.bmi)) &  maf.bmi < median(maf.bmi))
-  }
-
-  # create data for plot
-  for (i in 1:length(colnames_pval) ) {
-    threshold <- 5*10^(-6)
-    select_col <- colnames_pval[i]
-    # calculate cum explained variance and count of IVs
-    summarydat <- data %>% 
-      filter(!!sym(select_col) < threshold) %>% 
-      select(explained_variance_BMI, explained_variance_BMI2, explained_variance_GSD, explained_variance_GBC) %>% 
-      summarise(expl_variances =across(.cols = everything(), function(x) sum(x)),
-                count_IVs = n())
-    # fill up df
-    df_cum_expl_var[i, 2] <- summarydat$expl_variances[1]
-    df_cum_expl_var[i, 3] <- summarydat$expl_variances[2]
-    df_cum_expl_var[i, 4] <- summarydat$expl_variances[3]
-    df_cum_expl_var[i, 5] <- summarydat$expl_variances[4]
-    df_cum_expl_var[i, 6] <- summarydat$count_IVs
-  }
-  
-  ## plot fig 01 
-  scale_factor <- 4.5/284
-  df_cum_expl_var <- df_cum_expl_var %>% 
-    mutate(
-      cum_expl_varX = cum_expl_varX *100, # in percent 
-      cum_expl_varX2 = cum_expl_varX2 *100,
-      cum_expl_varU = cum_expl_varU *100,
-      cum_expl_varY = cum_expl_varY *100,
-      count_IVs_scaled = count_IVs*scale_factor)
-  
-  plot_data1 <- df_cum_expl_var %>% 
-    pivot_longer(cols = c(cum_expl_varX, cum_expl_varU, cum_expl_varY)) %>% 
-    mutate(name = factor(name, labels = c("% var(U)", "% var(X)", "% var(Y)")),
-           name = factor(name, levels = c("% var(X)", "% var(Y)", "% var(U)") )
-           )
-  
-  N_annotation <- c(10000, 100000, 200000, 300000)
-  ## plot
-  plotsubtitle <- paste0("relatively ", maf ,", relatively ", effect_size)
-  ggplot(plot_data1, aes(x=n, y=value, col=name))+
-    geom_point(alpha=0.6)+
-    geom_line(alpha=0.6)+
-    geom_line(aes(x=n, y=count_IVs_scaled, col="Number of IVs"), linetype="dotdash")+
-    scale_x_continuous(name = paste0("Size of sample ", as.roman(1)),  # 2-sample-MR or label "Study Size"
-                       labels = comma, 
-                       breaks = N_annotation, #c( 10000, n[7:length(n)]),
-                       limits = c(10000, 300000))+
-    #ylab("% variance explained by IVs")+
-    labs(title = "", subtitle = plotsubtitle,
-         col='', 
-         caption = "Relationship between sample size, average number of instrumental variables (IVs) and variance of traits   explained by the IVs"
-         ) +
-    scale_y_continuous(
-      # Features of the first axis
-      name = "% variance explained by IVs",
-      # Add a second axis and specify its features
-      sec.axis = sec_axis(~./scale_factor, name="Number of IVs"),
-      limits = c(0,2)
-    ) + 
-    theme_few()+
-    #scale_colour_few() +
-    #scale_color_manual(name = "", values = c("% var(U)" = "red", 
-    #                                         "% var(X)" = "blue", 
-    #                                         "% var(Y)" = "darkblue", 
-    #                                         "Number of IVs" = "black"
-    #                                         ))
-    #
-    scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
-                                             "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
-                                             "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
-                                             "Number of IVs" = "black"),
-                       # order
-                       breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
-    ) -> figure01.quadrant
-  print(figure01.quadrant)
-  
-  filenamefig01_quadrant <- paste0("../output/plots/", Sys.Date(), "_figure01_", 
-                                   "EFFECT_SIZE_", effect_size,
-                                   "_VARIANTS_", maf,
-                                   ".png")
-  ggsave(filename = filenamefig01_quadrant, plot = figure01.quadrant, 
-         width = 10, height = 6, 
-         units = "in"  # default
-         )
-  
-  # store plot in global environment
-  plotname <<- paste0("figure01_EFFECT_SIZE_", effect_size, "_VARIANTS_", maf)
-  assign(plotname, figure01.quadrant, envir = .GlobalEnv)
-  #list2env(assign(plotname, figure01.quadrant), envir = .GlobalEnv)
-  
-}
-
+## plotfigure sourced from helper functions ----------------------------------
 # create all combis
 effect_size <- c("strong", "weak")
 maf <- c("rare", "common")
@@ -784,7 +627,9 @@ all_quadrants <- tidyr::crossing(effect_size, maf)
 for (i in 1:nrow(all_quadrants)) {
   plotfigure01(data = my_data_harm, 
                effect_size = all_quadrants$effect_size[i], 
-               maf = all_quadrants$maf[i])
+               maf = all_quadrants$maf[i], 
+               n=n
+               )
 }
 
 ```
@@ -882,8 +727,8 @@ ggsave(filename = filename_final_plot1b, plot = final_plot1.arrange2,
 # data FOR estimates in `perform_mr.R` script and simulation in `simstudy.R` script
 saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
 
-## load results
-est.bmi.gsd <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est_BMI_GSD.rds", full.names = TRUE)))
+## load results from script `perform_mr.R`
+est.bmi.gsd <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est_BMI_GSD.rds", full.names = TRUE))) 
 
 # biology plausibility FTO & MC4R
 # ## The mr_ivw function implements the inverse-variance method, informally 
@@ -895,6 +740,21 @@ fto_wald <- mr_wald_ratio(
   my_data_harm$se.bmi[my_data_harm$SNP == "rs1558902"], 
   my_data_harm$se.gsd[my_data_harm$SNP == "rs1558902"]
 )
+
+fto_wald_ukbiobank <- mr_wald_ratio(
+  b_exp = exp(FTO_dat$beta[3])-1, # BMI UK Biobank log-transformed  (before Hoffmann GERA + GIANT)
+  b_out = FTO_dat$beta[2], # GSD UKB as before
+  se_exp = exp(FTO_dat$se[3])-1, 
+  se_out = FTO_dat$se[2]
+  )
+
+fto_wald_ukbiobank_noexp <- mr_wald_ratio(
+  b_exp = (FTO_dat$beta[3]), # BMI UK Biobank log-transformed  (before Hoffmann GERA + GIANT)
+  b_out = FTO_dat$beta[2], # GSD UKB as before
+  se_exp = (FTO_dat$se[3]), 
+  se_out = FTO_dat$se[2]
+  )
+
 mc4r_wald <- mr_wald_ratio(
   my_data_harm$beta.bmi[my_data_harm$SNP == "rs6567160"], 
   my_data_harm$beta.gsd[my_data_harm$SNP == "rs6567160"], 
@@ -904,7 +764,8 @@ mc4r_wald <- mr_wald_ratio(
 # add rows
 est.bmi.gsd <- est.bmi.gsd %>% 
   add_row(mr_methods = "FTO_Wald", estimate = fto_wald$b, se.estimate=fto_wald$se) %>% 
-  add_row(mr_methods = "MC4R_Wald", estimate = mc4r_wald$b, se.estimate=mc4r_wald$se)
+  add_row(mr_methods = "MC4R_Wald", estimate = mc4r_wald$b, se.estimate=mc4r_wald$se) %>% 
+  arrange(desc(estimate))
 
 est.bmi.gsd %>% 
   mutate(OR=exp(estimate), CI.lower=exp(estimate-se.estimate),CI.upper=exp(estimate+se.estimate)) %>%  
@@ -1024,7 +885,8 @@ harmonised_dat4TwoSampleMR <- harmonised_dat %>%
   mutate(id.exposure = "BMI", id.outcome = "GBC")  # https://mrcieu.github.io/TwoSampleMR/articles/perform_mr.html
 
 res <- TwoSampleMR::mr(harmonised_dat4TwoSampleMR)
-res <- res %>% mutate(OR = exp(b), CI.lower= exp(b-se), CI.upper=exp(b+se))
+res <- res %>% mutate(OR = exp(b), CI.lower= exp(b-se), CI.upper=exp(b+se)) %>% 
+  arrange(desc(b))
 
 res %>% 
   kable(digits = 3, 
@@ -1116,6 +978,7 @@ est <- est %>%
 
 est %>% 
   mutate(OR=exp(estimate), CI.lower=exp(estimate-se.estimate),CI.upper=exp(estimate+se.estimate)) %>%  
+  arrange(desc(estimate)) %>% 
   kable(digits=3, caption = "MR Results for GBC (outcome) using genetic variants as instrumental variables for BMI") %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
@@ -1143,8 +1006,7 @@ nsim <- nrow(est_sim)
 ```{r simulated-pves, fig.height=6, fig.width=10, warning=FALSE}
 # retrieve PVE colnames
 colname_pve_X <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_X_sim")]
-colname_pve_U <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_U_sim")]
-colname_pve_Y <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve_Y_sim")]
+# PVE_Y, PVE_U removed on 2023-01-24 (see github)
 
 ## for performance measures later
 # retrieve IVW/ MODE/ CONMIX cols for BMI -> GSD 
@@ -1154,13 +1016,10 @@ colname_MODE_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim)
 colname_MODE_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GSD_")]
 colname_CONMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GSD_")]
 colname_CONMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GSD_")]
+colname_MRMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MRMIX_theta_sim_BMI_GSD_")]
+colname_MRMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MRMIX_theta_se_sim_BMI_GSD_")]
 # retrieve IVW/ MODE/ CONMIX cols for BMI -> GBC
-colname_IVW_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GBC_")]
-colname_IVW_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GBC_")]
-colname_MODE_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GBC_")]
-colname_MODE_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GBC_")]
-colname_CONMIX_theta_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GBC_")]
-colname_CONMIX_theta_se_sim_BMI_GBC <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GBC_")]
+# removed on 2023-01-24 (see github)
 
 # filter out sample sizes (IVW only used as example, could be any other col)
 sample_size_filtered <- as.numeric(str_extract(colname_IVW_theta_sim_BMI_GSD, pattern = "(\\d)+"))
@@ -1170,20 +1029,20 @@ est_sim %>%
   select(!!!(colname_pve_X)) %>% 
   pivot_longer(everything(), names_to = "PVE_X", values_to = "value_X") %>% 
   cbind(sample_size_filtered) %>% as_tibble() -> pve_X_sim
-# CONFOUNDER PVE
-est_sim %>% 
-  select(!!!(colname_pve_U)) %>% 
-  pivot_longer(everything(), names_to = "PVE_U", values_to = "value_U") %>% 
-  cbind(sample_size_filtered) %>% as_tibble() -> pve_U_sim
-# OUTCOME PVE
-est_sim %>% 
-  select(!!!(colname_pve_Y)) %>% 
-  pivot_longer(everything(), names_to = "PVE_Y", values_to = "value_Y") %>% 
-  cbind(sample_size_filtered) %>% as_tibble() -> pve_Y_sim
+# # CONFOUNDER PVE
+# est_sim %>% 
+#   select(!!!(colname_pve_U)) %>% 
+#   pivot_longer(everything(), names_to = "PVE_U", values_to = "value_U") %>% 
+#   cbind(sample_size_filtered) %>% as_tibble() -> pve_U_sim
+# # OUTCOME PVE
+# est_sim %>% 
+#   select(!!!(colname_pve_Y)) %>% 
+#   pivot_longer(everything(), names_to = "PVE_Y", values_to = "value_Y") %>% 
+#   cbind(sample_size_filtered) %>% as_tibble() -> pve_Y_sim
 
 boxplot_overlay_dat <- pve_X_sim %>% 
-  cbind(pve_U_sim %>% select(-sample_size_filtered)) %>% 
-  cbind(pve_Y_sim %>% select(-sample_size_filtered)) %>% 
+  # cbind(pve_U_sim %>% select(-sample_size_filtered)) %>% 
+  # cbind(pve_Y_sim %>% select(-sample_size_filtered)) %>% 
   as_tibble()
 
 ## plot
@@ -1212,14 +1071,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
                                 group=sample_size_filtered), 
                col=ggthemes_data$few$colors$Dark[3,2][[1]],
                alpha=0.2, size=0.2)+
-  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_U*100, # *100 to get percent values
-                                group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[2,2][[1]],
-               alpha=0.2, size=0.2)+
-  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_Y*100, # *100 to get percent values
-                                group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[4,2][[1]],
-               alpha=0.2, size=0.2)+
+  # U/Y removed on 2023-01-24 (see github)
   theme_few()+
   #scale_colour_few() +
   #scale_color_manual(name = "", values = c("% var(U)" = "red", 
@@ -1282,34 +1134,6 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
     data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_X*100, group=sample_size_filtered), 
     inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
     side = "l", range_scale = .4, alpha = .2)+
-  # confounder simulation
-  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_U*100, # *100 to get percent values
-                                               group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[2,2][[1]],
-               alpha=0.2, size=0.2, outlier.shape = NA)+
-  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_U*100, group=sample_size_filtered), 
-                       inherit.aes = FALSE, 
-                       slab_fill=ggthemes_data$few$colors$Dark[2,2][[1]], slab_alpha = 0.2,
-                       geom = "slabinterval",
-                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
-  gghalves::geom_half_point(
-    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_U*100, group=sample_size_filtered), 
-    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[2,2][[1]],
-    side = "l", range_scale = .4, alpha = .2)+
-  # outcome simulation
-  geom_boxplot(data = boxplot_overlay_dat, aes(x=sample_size_filtered, y=value_Y*100, # *100 to get percent values
-                                               group=sample_size_filtered), 
-               col=ggthemes_data$few$colors$Dark[4,2][[1]],
-               alpha=0.2, size=0.2, outlier.shape = NA)+
-  ggdist::stat_halfeye(data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered, y=value_Y*100, group=sample_size_filtered), 
-                       inherit.aes = FALSE, 
-                       slab_fill=ggthemes_data$few$colors$Dark[4,2][[1]], slab_alpha = 0.2,
-                       geom = "slabinterval",
-                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
-  gghalves::geom_half_point(
-    data = boxplot_overlay_dat, mapping=aes(x=sample_size_filtered-2000, y=value_Y*100, group=sample_size_filtered), 
-    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[4,2][[1]],
-    side = "l", range_scale = .4, alpha = .2)+
   coord_cartesian(xlim=c(10000, 300000))+
   theme_few()+
   #scale_colour_few() +
@@ -1358,16 +1182,12 @@ args.gsd.mode <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "mo
 args.gsd.conmix <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "conmix"], 
                      nsim=nrow(est_sim)
                      )
+args.gsd.mrmix <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "MRMix"], 
+                     nsim=nrow(est_sim)
+                     )
 ## args gbc
-args.gbc.ivw <- list(theta = est$estimate[est$mr_methods == "IVW"], 
-                     nsim=nrow(est_sim)
-                     ) 
-args.gbc.mode <- list(theta = est$estimate[est$mr_methods == "mode"], 
-                     nsim=nrow(est_sim)
-                     )
-args.gbc.conmix <- list(theta = est$estimate[est$mr_methods == "conmix"], 
-                     nsim=nrow(est_sim)
-                     )
+#deleted 2023-01-29
+
 ## Standard Deviation
 # est_sim %>%    # equivalent to `emp_se()` function, but `sd()` misses dotdotdot argument 
 #   select(!!!(colname_theta)) %>% 
@@ -1396,29 +1216,17 @@ CONMIX_GSD_performance_metrics <- est_sim %>%
            map(exec, .x, !!!args.gsd.conmix), .id = "var") %>% 
   cbind(sample_size_filtered) %>% 
   rename(N = sample_size_filtered)
+
+MRMIX_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_MRMIX_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.conmix), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
 ```
 
 ```{r CALC-perf-metrics-GBC}
-IVW_GBC_performance_metrics <- est_sim %>% 
-  select(!!!(colname_IVW_theta_sim_BMI_GBC)) %>% 
-  map_df(.f = ~ funs %>% 
-           map(exec, .x, !!!args.gbc.ivw), .id = "var") %>% 
-  cbind(sample_size_filtered) %>% 
-  rename(N = sample_size_filtered)
-
-MODE_GBC_performance_metrics <- est_sim %>% 
-  select(!!!(colname_MODE_theta_sim_BMI_GBC)) %>% 
-  map_df(.f = ~ funs %>% 
-           map(exec, .x, !!!args.gbc.mode), .id = "var") %>% 
-  cbind(sample_size_filtered) %>% 
-  rename(N = sample_size_filtered)
-
-CONMIX_GBC_performance_metrics <- est_sim %>% 
-  select(!!!(colname_CONMIX_theta_sim_BMI_GBC)) %>% 
-  map_df(.f = ~ funs %>% 
-           map(exec, .x, !!!args.gbc.conmix), .id = "var") %>% 
-  cbind(sample_size_filtered) %>% 
-  rename(N = sample_size_filtered)
+# deleted 2023-01-29
 ```
 
 ### Calculate COVERAGE, COVERAGE-BIAS-ELIMINATED, TYPE1ERROR
@@ -1452,20 +1260,15 @@ MODE_GSD_type1error_calc <- c()
 CONMIX_GSD_coverage_calc <- c()
 CONMIX_GSD_coverage_bias_eliminated_calc <- c()
 CONMIX_GSD_type1error_calc <- c()
+MRMIX_GSD_coverage_calc <- c()
+MRMIX_GSD_coverage_bias_eliminated_calc <- c()
+MRMIX_GSD_type1error_calc <- c()
 # GBC
-IVW_GBC_coverage_calc <- c()
-IVW_GBC_coverage_bias_eliminated_calc <- c()
-IVW_GBC_type1error_calc <- c()
-MODE_GBC_coverage_calc <- c()
-MODE_GBC_coverage_bias_eliminated_calc <- c()
-MODE_GBC_type1error_calc <- c()
-CONMIX_GBC_coverage_calc <- c()
-CONMIX_GBC_coverage_bias_eliminated_calc <- c()
-CONMIX_GBC_type1error_calc <- c()
+## deleted 2023-01-29
 for (i in 1:length(sample_size_filtered)) {
   sample_size <- sample_size_filtered[i]
-  ## GSD additional metrics ----------------------------------------------------
-  # IVW
+  # GSD additional metrics ----------------------------------------------------
+  ## 1/ IVW
   col_IVW_GSD_theta <- paste0("IVW_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
   col_IVW_GSD_theta_se <- paste0("IVW_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
   col_IVW_GSD_mr_pval <- paste0("IVW_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
@@ -1473,7 +1276,7 @@ for (i in 1:length(sample_size_filtered)) {
   IVW_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_IVW_GSD_theta], thetaobs_se = est_sim[col_IVW_GSD_theta_se], theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "IVW"])
   IVW_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_IVW_GSD_theta]], thetaobs_se = est_sim[[col_IVW_GSD_theta_se]])
   IVW_GSD_type1error_calc[i] <- type1error(est_sim[[col_IVW_GSD_mr_pval]])
-  # MODE
+  ## 2/ MODE
   col_MODE_GSD_theta <- paste0("MODE_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
   col_MODE_GSD_theta_se <- paste0("MODE_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
   col_MODE_GSD_mr_pval <- paste0("MODE_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
@@ -1484,7 +1287,7 @@ for (i in 1:length(sample_size_filtered)) {
   MODE_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MODE_GSD_theta]], 
                                                                        thetaobs_se = est_sim[[col_MODE_GSD_theta_se]])
   MODE_GSD_type1error_calc[i] <- type1error(est_sim[[col_MODE_GSD_mr_pval]])
-  # CONMIX
+  ## 3/ CONMIX
   col_CONMIX_GSD_theta <- paste0("CONMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
   col_CONMIX_GSD_theta_se <- paste0("CONMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
   col_CONMIX_GSD_mr_pval <- paste0("CONMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
@@ -1495,38 +1298,20 @@ for (i in 1:length(sample_size_filtered)) {
   CONMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_CONMIX_GSD_theta]], 
                                                                        thetaobs_se = est_sim[[col_CONMIX_GSD_theta_se]])
   CONMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_CONMIX_GSD_mr_pval]])  
+    ## 4/ MRMIX
+  col_MRMIX_GSD_theta <- paste0("MRMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_MRMIX_GSD_theta_se <- paste0("MRMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_MRMIX_GSD_mr_pval <- paste0("MRMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  MRMIX_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MRMIX_GSD_theta], 
+                                       thetaobs_se = est_sim[col_MRMIX_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "MRMix"])
+  MRMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MRMIX_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_MRMIX_GSD_theta_se]])
+  MRMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_MRMIX_GSD_mr_pval]])  
   
   ## GBC additional metrics ----------------------------------------------------
-  # IVW
-  col_IVW_GBC_theta <- paste0("IVW_theta_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
-  col_IVW_GBC_theta_se <- paste0("IVW_theta_se_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
-  col_IVW_GBC_mr_pval <- paste0("IVW_mr_pval_BMI_GBC_", format(sample_size, scientific = FALSE))
-  # calc
-  IVW_GBC_coverage_calc[i] <- coverage(thetaobs = est_sim[col_IVW_GBC_theta], thetaobs_se = est_sim[col_IVW_GBC_theta_se], theta = est$estimate[est$mr_methods == "IVW"])
-  IVW_GBC_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_IVW_GBC_theta]], thetaobs_se = est_sim[[col_IVW_GSD_theta_se]])
-  IVW_GBC_type1error_calc[i] <- type1error(est_sim[[col_IVW_GBC_mr_pval]])
-  # MODE
-  col_MODE_GBC_theta <- paste0("MODE_theta_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
-  col_MODE_GBC_theta_se <- paste0("MODE_theta_se_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
-  col_MODE_GBC_mr_pval <- paste0("MODE_mr_pval_BMI_GBC_", format(sample_size, scientific = FALSE))
-  # calc
-  MODE_GBC_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MODE_GBC_theta], 
-                                       thetaobs_se = est_sim[col_MODE_GBC_theta_se], 
-                                       theta = est$estimate[est$mr_methods == "mode"])
-  MODE_GBC_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MODE_GBC_theta]], 
-                                                                       thetaobs_se = est_sim[[col_MODE_GBC_theta_se]])
-  MODE_GBC_type1error_calc[i] <- type1error(est_sim[[col_MODE_GBC_mr_pval]])
-  # CONMIX
-  col_CONMIX_GBC_theta <- paste0("CONMIX_theta_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
-  col_CONMIX_GBC_theta_se <- paste0("CONMIX_theta_se_sim_BMI_GBC_", format(sample_size, scientific = FALSE))
-  col_CONMIX_GBC_mr_pval <- paste0("CONMIX_mr_pval_BMI_GBC_", format(sample_size, scientific = FALSE))
-  # calc
-  CONMIX_GBC_coverage_calc[i] <- coverage(thetaobs = est_sim[col_CONMIX_GBC_theta], 
-                                       thetaobs_se = est_sim[col_CONMIX_GBC_theta_se], 
-                                       theta = est$estimate[est$mr_methods == "conmix"])
-  CONMIX_GBC_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_CONMIX_GBC_theta]], 
-                                                                       thetaobs_se = est_sim[[col_CONMIX_GBC_theta_se]])
-  CONMIX_GBC_type1error_calc[i] <- type1error(est_sim[[col_CONMIX_GBC_mr_pval]])  
+  # deleted 2023-01-29
 }
 ```
 
@@ -1555,7 +1340,6 @@ MODE_GSD_performance_metrics <- MODE_GSD_performance_metrics %>%
          coverage_bias_eliminated = MODE_GSD_coverage_bias_eliminated_calc, 
          type1error = MODE_GSD_type1error_calc) %>% 
   as_tibble()
-
 MODE_GSD_performance_metrics %>% 
   mutate(across(cols = where(is.numeric), round(3))) %>% 
   kable(caption = "MODE method on BMI -> GSD performance metrics") %>% 
@@ -1573,50 +1357,22 @@ CONMIX_GSD_performance_metrics %>%
   mutate(across(cols = where(is.numeric), round(3))) %>% 
   kable(caption = "CONMIX method on BMI -> GSD performance metrics") %>% 
   kable_styling(font_size=10)
-```
 
-### GBC Performance Metrics
-
-```{r add-additional-metrics-to-df-and-print-GBC}
-## GBC --------------------------
-IVW_GBC_performance_metrics <- IVW_GBC_performance_metrics %>% 
+MRMIX_GSD_performance_metrics <- MRMIX_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
-  cbind(data.frame(IVW_GBC_coverage_calc, 
-                   IVW_GBC_coverage_bias_eliminated_calc, IVW_GBC_type1error_calc)) %>% 
-  rename(coverage = IVW_GBC_coverage_calc, 
-         coverage_bias_eliminated = IVW_GBC_coverage_bias_eliminated_calc, 
-         type1error = IVW_GBC_type1error_calc) %>% 
+  cbind(data.frame(MRMIX_GSD_coverage_calc, 
+                   MRMIX_GSD_coverage_bias_eliminated_calc, MRMIX_GSD_type1error_calc)) %>% 
+  rename(coverage = MRMIX_GSD_coverage_calc, 
+         coverage_bias_eliminated = MRMIX_GSD_coverage_bias_eliminated_calc, 
+         type1error = MRMIX_GSD_type1error_calc) %>% 
   as_tibble()
-IVW_GBC_performance_metrics %>% 
+MRMIX_GSD_performance_metrics %>% 
   mutate(across(cols = where(is.numeric), round(3))) %>% 
-  kable(caption = "IVW method on BMI -> GBC performance metrics") %>% 
-  kable_styling(font_size=10)
-
-MODE_GBC_performance_metrics <- MODE_GBC_performance_metrics %>% 
-  select(N, everything()) %>% 
-  cbind(data.frame(MODE_GBC_coverage_calc, 
-                   MODE_GBC_coverage_bias_eliminated_calc, MODE_GBC_type1error_calc)) %>% 
-  rename(coverage = MODE_GBC_coverage_calc, 
-         coverage_bias_eliminated = MODE_GBC_coverage_bias_eliminated_calc, 
-         type1error = MODE_GBC_type1error_calc) %>% 
-  as_tibble()
-MODE_GBC_performance_metrics %>% 
-  mutate(across(cols = where(is.numeric), round(3))) %>% 
-  kable(caption = "MODE method on BMI -> GBC performance metrics") %>% 
-  kable_styling(font_size=10)
-CONMIX_GBC_performance_metrics <- CONMIX_GBC_performance_metrics %>% 
-  select(N, everything()) %>% 
-  cbind(data.frame(CONMIX_GBC_coverage_calc, 
-                   CONMIX_GBC_coverage_bias_eliminated_calc, CONMIX_GBC_type1error_calc)) %>% 
-  rename(coverage = CONMIX_GBC_coverage_calc, 
-         coverage_bias_eliminated = CONMIX_GBC_coverage_bias_eliminated_calc, 
-         type1error = CONMIX_GBC_type1error_calc) %>% 
-  as_tibble()
-CONMIX_GBC_performance_metrics %>% 
-  mutate(across(cols = where(is.numeric), round(3))) %>% 
-  kable(caption = "CONMIX method on BMI -> GBC performance metrics") %>% 
+  kable(caption = "MRMIX method on BMI -> GSD performance metrics") %>% 
   kable_styling(font_size=10)
 ```
+
+
 
 ```{r store-performance-metrics-csv}
 ## GSD
@@ -1626,20 +1382,12 @@ filename_MODE_GSD_performance_metrics <- paste0("../output/performance_metrics/"
                                                Sys.Date(), "_MODE_GSD_performance_metrics_NSIM_", nsim, ".csv")
 filename_CONMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
                                                Sys.Date(), "_CONMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
+filename_MRMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_MRMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
 write.csv2(x = IVW_GSD_performance_metrics, file = filename_IVW_GSD_performance_metrics)
 write.csv2(x = MODE_GSD_performance_metrics, file = filename_MODE_GSD_performance_metrics)
 write.csv2(x = CONMIX_GSD_performance_metrics, file = filename_CONMIX_GSD_performance_metrics)
-
-## GBC
-filename_IVW_GBC_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_IVW_GBC_performance_metrics_NSIM_", nsim, ".csv")
-filename_MODE_GBC_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_MODE_GBC_performance_metrics_NSIM_", nsim, ".csv")
-filename_CONMIX_GBC_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_CONMIX_GBC_performance_metrics_NSIM_", nsim, ".csv")
-write.csv2(x = IVW_GBC_performance_metrics, file = filename_IVW_GBC_performance_metrics)
-write.csv2(x = MODE_GBC_performance_metrics, file = filename_MODE_GBC_performance_metrics)
-write.csv2(x = CONMIX_GBC_performance_metrics, file = filename_CONMIX_GBC_performance_metrics)
+write.csv2(x = MRMIX_GSD_performance_metrics, file = filename_MRMIX_GSD_performance_metrics)
 ```
 
 
@@ -1786,6 +1534,43 @@ ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=mean))+
   theme_few() -> CONMIX_GSD_simplot_thetas
 CONMIX_GSD_simplot_thetas
 
+## MRMIX
+MRMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
+  select(!!!(colname_MRMIX_theta_sim_BMI_GSD)) %>% 
+  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+
+ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=mean))+ 
+  geom_point()+
+  geom_hline(yintercept=  args.gsd.mrmix$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  annotate(geom = "text", x = 50000, y = args.gsd.mrmix$theta+0.05,
+         label= expression( paste("ref: ", theta[X] ))  , 
+         color= ggthemes_data$few$colors$Dark[9,2][[1]]
+           )+
+  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
+                width=3000, # x-axis dimension
+                position = "dodge")+
+  ## ADD rainbow plots
+  geom_boxplot(data = MRMIX_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+               col=ggthemes_data$few$colors$Dark[3,2][[1]],
+               alpha=0.2, size=0.2, outlier.shape = NA)+
+  ggdist::stat_halfeye(data = MRMIX_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                       inherit.aes = FALSE, 
+                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                       geom = "slabinterval",
+                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+  gghalves::geom_half_point(
+    data = MRMIX_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+    side = "l", range_scale = .4, alpha = .2)+
+  ## FINISH rainbow
+  scale_x_continuous(labels = comma)+
+  xlab("Size of Sample I")+
+  ylab("Mean thetas")+
+  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "MRMIX estimate: BMI -> GSD")+
+  theme_few() -> MRMIX_GSD_simplot_thetas
+MRMIX_GSD_simplot_thetas
+
 # SAVE
 filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_NSIM_", nsim,".png")
 ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
@@ -1802,17 +1587,23 @@ ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_
        width = 15, height = 6, 
        units = "in"  # default
        )
+filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_NSIM_", nsim,".png")
+ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
+       width = 15, height = 6, 
+       units = "in"  # default
+       )
 ```
 ```{r theta-sim-distribution-GSD-arrange, fig.height=18, fig.width=10, warning=FALSE}
 IVW_GSD_simplot_thetas$labels$title <- ""
 MODE_GSD_simplot_thetas$labels$title <- ""
 CONMIX_GSD_simplot_thetas$labels$title <- ""
-ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thetas, 
-          ncol = 1, nrow = 3) -> GSD_simplot_thetas_arrange
+MRMIX_GSD_simplot_thetas$labels$title <- ""
+ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thetas, MRMIX_GSD_simplot_thetas,
+          ncol = 1, nrow = 4) -> GSD_simplot_thetas_arrange
 
 filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_NSIM_", nsim,".png")
 ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
-       width = 10, height = 18, 
+       width = 10, height = 22, 
        units = "in"  # default
        )
 ```
@@ -1886,242 +1677,187 @@ ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=mse))+
   theme_few() -> mseplot_CONMIX_GSD
 ggarrange(biasplot_CONMIX_GSD, mseplot_CONMIX_GSD) -> bias_mse_plot_CONMIX_GSD
 
-ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GSD,
-          ncol = 1, nrow = 3, common.legend = TRUE) -> bias_mse_plot_GSD
+## MRMIX
+ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=bias))+ 
+  geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(-1.5,1.5))+
+  xlab("Size of Sample I")+
+  ylab("Bias")+
+  labs(title = "MRMIX estimate: BMI -> GSD")+
+  theme_few() -> biasplot_MRMIX_GSD
+ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=mse))+ 
+  geom_point()+
+  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+  scale_x_continuous(labels = comma)+
+  scale_y_continuous(limits = c(0,1.8))+
+  xlab("Size of Sample I")+
+  ylab("MSE")+
+  labs(title = "MRMIX estimate: BMI -> GSD")+
+  theme_few() -> mseplot_MRMIX_GSD
+ggarrange(biasplot_MRMIX_GSD, mseplot_MRMIX_GSD) -> bias_mse_plot_MRMIX_GSD
+
+ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GSD, bias_mse_plot_MRMIX_GSD
+          ncol = 1, nrow = 4, common.legend = TRUE) -> bias_mse_plot_GSD
 bias_mse_plot_GSD
 
 filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_NSIM_", nsim, ".png")
 ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
-       width = 7, height = 10, 
+       width = 7, height = 12, 
        units = "in"  # default
        )
 ```
 
 
-### GBC simulated theta distribution
+**Deleted all code for GBC simulation downstream analysis since no longer needed for thesis.**
 
-```{r theta-sim-distribution-GBC, fig.height=6, fig.width=10, warning=FALSE}
-## IVW
-IVW_BMI_GBC_geom_point_dat <- est_sim %>% 
-  select(!!!(colname_IVW_theta_sim_BMI_GBC)) %>% 
-  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
-  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
 
-ggplot(IVW_GBC_performance_metrics, aes(x=N, y=mean))+ 
-  geom_point()+
-  geom_hline(yintercept=  args.gbc.ivw$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  annotate(geom = "text", x = 50000, y = args.gbc.ivw$theta+0.05,
-         label= expression( paste("ref: ", theta[X] ))  , 
-         color= ggthemes_data$few$colors$Dark[9,2][[1]]
-           )+
-  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
-                width=3000, # x-axis dimension
-                position = "dodge")+
-  ## ADD rainbow plots
-  geom_boxplot(data = IVW_BMI_GBC_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
-               col=ggthemes_data$few$colors$Dark[3,2][[1]],
-               alpha=0.2, size=0.2, outlier.shape = NA)+
-  ggdist::stat_halfeye(data = IVW_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
-                       inherit.aes = FALSE, 
-                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
-                       geom = "slabinterval",
-                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
-  gghalves::geom_half_point(
-    data = IVW_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
-    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
-    side = "l", range_scale = .4, alpha = .2)+
-  ## FINISH rainbow
-  scale_x_continuous(labels = comma)+
-  xlab("Size of Sample I")+
-  ylab("Mean thetas")+
-  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "IVW estimate: BMI -> GBC")+
-  theme_few() -> IVW_GBC_simplot_thetas
-IVW_GBC_simplot_thetas
+# Parallelize performance estimates for different "TRUE" estimates
 
-## MODE
-MODE_BMI_GBC_geom_point_dat <- est_sim %>% 
-  select(!!!(colname_MODE_theta_sim_BMI_GBC)) %>% 
-  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
-  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+We use 5 BMI -> GSD reference estimates: IVW random model, MRMix, weighted median, Wald estimate MC4R variant, Wald estimate FTO variant
 
-ggplot(MODE_GBC_performance_metrics, aes(x=N, y=mean))+ 
-  geom_point()+
-  geom_hline(yintercept=  args.gbc.mode$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  annotate(geom = "text", x = 50000, y = args.gbc.mode$theta+0.05,
-         label= expression( paste("ref: ", theta[X] ))  , 
-         color= ggthemes_data$few$colors$Dark[9,2][[1]]
-           )+
-  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
-                width=3000, # x-axis dimension
-                position = "dodge")+
-  ## ADD rainbow plots
-  geom_boxplot(data = MODE_BMI_GBC_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
-               col=ggthemes_data$few$colors$Dark[3,2][[1]],
-               alpha=0.2, size=0.2, outlier.shape = NA)+
-  ggdist::stat_halfeye(data = MODE_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
-                       inherit.aes = FALSE, 
-                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
-                       geom = "slabinterval",
-                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
-  gghalves::geom_half_point(
-    data = MODE_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
-    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
-    side = "l", range_scale = .4, alpha = .2)+
-  ## FINISH rainbow
-  scale_x_continuous(labels = comma)+
-  xlab("Size of Sample I")+
-  ylab("Mean thetas")+
-  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "MODE estimate: BMI -> GBC")+
-  theme_few() -> MODE_GBC_simplot_thetas
-MODE_GBC_simplot_thetas
-
-## CONMIX
-CONMIX_BMI_GBC_geom_point_dat <- est_sim %>% 
-  select(!!!(colname_CONMIX_theta_sim_BMI_GBC)) %>% 
-  pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
-  mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
-
-ggplot(CONMIX_GBC_performance_metrics, aes(x=N, y=mean))+ 
-  geom_point()+
-  geom_hline(yintercept=  args.gbc.conmix$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  annotate(geom = "text", x = 50000, y = args.gbc.conmix$theta+0.05,
-         label= expression( paste("ref: ", theta[X] ))  , 
-         color= ggthemes_data$few$colors$Dark[9,2][[1]]
-           )+
-  geom_errorbar(aes(ymin=mean-emp_se, ymax=mean+emp_se), 
-                width=3000, # x-axis dimension
-                position = "dodge")+
-  ## ADD rainbow plots
-  geom_boxplot(data = CONMIX_BMI_GBC_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
-               col=ggthemes_data$few$colors$Dark[3,2][[1]],
-               alpha=0.2, size=0.2, outlier.shape = NA)+
-  ggdist::stat_halfeye(data = CONMIX_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
-                       inherit.aes = FALSE, 
-                       slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
-                       geom = "slabinterval",
-                       na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
-  gghalves::geom_half_point(
-    data = CONMIX_BMI_GBC_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
-    inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
-    side = "l", range_scale = .4, alpha = .2)+
-  ## FINISH rainbow
-  scale_x_continuous(labels = comma)+
-  xlab("Size of Sample I")+
-  ylab("Mean thetas")+
-  labs(title = "Simulated Thetas with Empirical Standard Error", subtitle = "CONMIX estimate: BMI -> GBC")+
-  theme_few() -> CONMIX_GBC_simplot_thetas
-CONMIX_GBC_simplot_thetas
-
-# SAVE
-filename_IVW_GBC_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GBC_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_IVW_GBC_simplot_thetas, plot = IVW_GBC_simplot_thetas, 
-       width = 15, height = 6, 
-       units = "in"  # default
-       )
-filename_MODE_GBC_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GBC_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_MODE_GBC_simplot_thetas, plot = MODE_GBC_simplot_thetas, 
-       width = 15, height = 6, 
-       units = "in"  # default
-       )
-filename_CONMIX_GBC_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GBC_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_CONMIX_GBC_simplot_thetas, plot = CONMIX_GBC_simplot_thetas, 
-       width = 15, height = 6, 
-       units = "in"  # default
-       )
+```{r}
+selected_true_methods <- c("IVW", "MRMix", "median", "MC4R_Wald", "FTO_Wald")
+true_estimates <- est.bmi.gsd %>% 
+  filter(mr_methods %in% selected_true_methods)
 ```
 
-```{r theta-sim-distribution-GBC-arrange, fig.height=18, fig.width=10, warning=FALSE}
-IVW_GBC_simplot_thetas$labels$title <- ""
-MODE_GBC_simplot_thetas$labels$title <- ""
-CONMIX_GBC_simplot_thetas$labels$title <- ""
-ggarrange(IVW_GBC_simplot_thetas,MODE_GBC_simplot_thetas,CONMIX_GBC_simplot_thetas, 
-          ncol = 1, nrow = 3) -> GBC_simplot_thetas_arrange
+```{r parallel-performance}
 
-filename_GBC_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GBC_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_GBC_simplot_thetas_arrange, plot = GBC_simplot_thetas_arrange, 
-       width = 10, height = 18, 
-       units = "in"  # default
-       )
+funs <- c(mean = mean, emp_se=emp_se, bias = bias, mse = mse)  # as above
+
+for (true_method in 1:length(selected_true_methods)) {
+  print(true_method)
+  
+  # define reference estimate for all 5 chosen methods in loop 
+  args.gsd.method <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]], 
+                          nsim=nrow(est_sim)
+  )
+  
+  IVW_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, IVW_GSD_mean=mean, IVW_GSD_emp_se=emp_se, IVW_GSD_bias=bias, IVW_GSD_mse=mse)
+
+  MODE_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_MODE_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, MODE_GSD_mean=mean, MODE_GSD_emp_se=emp_se, MODE_GSD_bias=bias, MODE_GSD_mse=mse)
+  
+  CONMIX_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_CONMIX_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, CONMIX_GSD_mean=mean, CONMIX_GSD_emp_se=emp_se, CONMIX_GSD_bias=bias, CONMIX_GSD_mse=mse)
+  
+  MRMIX_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_MRMIX_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, MRMIX_GSD_mean=mean, MRMIX_GSD_emp_se=emp_se, MRMIX_GSD_bias=bias, MRMIX_GSD_mse=mse)
+  
+  ## further metrics
+  IVW_GSD_coverage_calc <- c()
+  IVW_GSD_coverage_bias_eliminated_calc <- c()
+  IVW_GSD_type1error_calc <- c()
+  MODE_GSD_coverage_calc <- c()
+  MODE_GSD_coverage_bias_eliminated_calc <- c()
+  MODE_GSD_type1error_calc <- c()
+  CONMIX_GSD_coverage_calc <- c()
+  CONMIX_GSD_coverage_bias_eliminated_calc <- c()
+  CONMIX_GSD_type1error_calc <- c()
+  MRMIX_GSD_coverage_calc <- c()
+  MRMIX_GSD_coverage_bias_eliminated_calc <- c()
+  MRMIX_GSD_type1error_calc <- c()
+
+  for (i in 1:length(sample_size_filtered)) {
+    sample_size <- sample_size_filtered[i]
+    # GSD additional metrics ----------------------------------------------------
+    ## 1/ IVW
+    col_IVW_GSD_theta <- paste0("IVW_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_IVW_GSD_theta_se <- paste0("IVW_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_IVW_GSD_mr_pval <- paste0("IVW_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    IVW_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_IVW_GSD_theta], thetaobs_se = est_sim[col_IVW_GSD_theta_se], theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    IVW_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_IVW_GSD_theta]], thetaobs_se = est_sim[[col_IVW_GSD_theta_se]])
+    IVW_GSD_type1error_calc[i] <- type1error(est_sim[[col_IVW_GSD_mr_pval]])
+    ## 2/ MODE
+    col_MODE_GSD_theta <- paste0("MODE_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_MODE_GSD_theta_se <- paste0("MODE_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_MODE_GSD_mr_pval <- paste0("MODE_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    MODE_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MODE_GSD_theta], 
+                                         thetaobs_se = est_sim[col_MODE_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    MODE_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MODE_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_MODE_GSD_theta_se]])
+    MODE_GSD_type1error_calc[i] <- type1error(est_sim[[col_MODE_GSD_mr_pval]])
+    ## 3/ CONMIX
+    col_CONMIX_GSD_theta <- paste0("CONMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_CONMIX_GSD_theta_se <- paste0("CONMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_CONMIX_GSD_mr_pval <- paste0("CONMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    CONMIX_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_CONMIX_GSD_theta], 
+                                         thetaobs_se = est_sim[col_CONMIX_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    CONMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_CONMIX_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_CONMIX_GSD_theta_se]])
+    CONMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_CONMIX_GSD_mr_pval]])  
+      ## 4/ MRMIX
+    col_MRMIX_GSD_theta <- paste0("MRMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_MRMIX_GSD_theta_se <- paste0("MRMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_MRMIX_GSD_mr_pval <- paste0("MRMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    MRMIX_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MRMIX_GSD_theta], 
+                                         thetaobs_se = est_sim[col_MRMIX_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    MRMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MRMIX_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_MRMIX_GSD_theta_se]])
+    MRMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_MRMIX_GSD_mr_pval]])  
+  }
+  
+  ## combine metrics
+  IVW_GSD_performance_metrics <- IVW_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(IVW_GSD_coverage_calc, IVW_GSD_coverage_bias_eliminated_calc, IVW_GSD_type1error_calc)) %>% 
+    as_tibble()
+  MODE_GSD_performance_metrics <- MODE_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(MODE_GSD_coverage_calc, 
+                     MODE_GSD_coverage_bias_eliminated_calc, MODE_GSD_type1error_calc)) %>% 
+    as_tibble()
+  CONMIX_GSD_performance_metrics <- CONMIX_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(CONMIX_GSD_coverage_calc, 
+                     CONMIX_GSD_coverage_bias_eliminated_calc, CONMIX_GSD_type1error_calc)) %>% 
+    as_tibble()
+  MRMIX_GSD_performance_metrics <- MRMIX_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(MRMIX_GSD_coverage_calc, 
+                     MRMIX_GSD_coverage_bias_eliminated_calc, MRMIX_GSD_type1error_calc)) %>% 
+    as_tibble()
+  MRMIX_GSD_performance_metrics %>% 
+    mutate(across(cols = where(is.numeric), round(3))) %>% 
+    kable(caption = "MRMIX method on BMI -> GSD performance metrics") %>% 
+    kable_styling(font_size=10)
+  
+  
+  
+}
+
+
+
 ```
 
-### GBC Bias & MSE
 
-```{r plot-performance-metrics-bias-mse-GBC, fig.height=10, fig.width=8}
-## IVW
-#BIAS
-ggplot(IVW_GBC_performance_metrics, aes(x=N, y=bias))+ 
-  geom_point()+
-  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  scale_x_continuous(labels = comma)+
-  scale_y_continuous(limits = c(-1.5,1.5))+
-  xlab("Size of Sample I")+
-  ylab("Bias")+
-  labs(title = "IVW estimate: BMI -> GBC")+
-  theme_few() -> biasplot_IVW_GBC
-#MSE
-ggplot(IVW_GBC_performance_metrics, aes(x=N, y=mse))+ 
-  geom_point()+
-    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  scale_y_continuous(limits = c(0,1.8))+
-  scale_x_continuous(labels = comma)+
-  xlab("Size of Sample I")+
-  ylab("MSE")+
-  labs(title = "IVW estimate: BMI -> GBC")+
-  theme_few() -> mseplot_IVW_GBC
-ggarrange(biasplot_IVW_GBC, mseplot_IVW_GBC) -> bias_mse_plot_IVW_GBC
 
-## MODE
-ggplot(MODE_GBC_performance_metrics, aes(x=N, y=bias))+ 
-  geom_point()+
-  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  scale_x_continuous(labels = comma)+
-  scale_y_continuous(limits = c(-1.5,1.5))+
-  xlab("Size of Sample I")+
-  ylab("Bias")+
-  labs(title = "MODE estimate: BMI -> GBC")+
-  theme_few() -> biasplot_MODE_GBC
-ggplot(MODE_GBC_performance_metrics, aes(x=N, y=mse))+ 
-  geom_point()+
-    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  scale_x_continuous(labels = comma)+
-    scale_y_continuous(limits = c(0,1.8))+
-  xlab("Size of Sample I")+
-  ylab("MSE")+
-  labs(title = "MODE estimate: BMI -> GBC")+
-  theme_few() -> mseplot_MODE_GBC
-ggarrange(biasplot_MODE_GBC, mseplot_MODE_GBC) -> bias_mse_plot_MODE_GBC
-
-## CONMIX
-ggplot(CONMIX_GBC_performance_metrics, aes(x=N, y=bias))+ 
-  geom_point()+
-  geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  scale_x_continuous(labels = comma)+
-  scale_y_continuous(limits = c(-1.5,1.5))+
-  xlab("Size of Sample I")+
-  ylab("Bias")+
-  labs(title = "CONMIX estimate: BMI -> GBC")+
-  theme_few() -> biasplot_CONMIX_GBC
-ggplot(CONMIX_GBC_performance_metrics, aes(x=N, y=mse))+ 
-  geom_point()+
-    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-  scale_x_continuous(labels = comma)+
-  scale_y_continuous(limits = c(0,1.8))+
-  xlab("Size of Sample I")+
-  ylab("MSE")+
-  labs(title = "CONMIX estimate: BMI -> GBC")+
-  theme_few() -> mseplot_CONMIX_GBC
-ggarrange(biasplot_CONMIX_GBC, mseplot_CONMIX_GBC) -> bias_mse_plot_CONMIX_GBC
-
-ggarrange(bias_mse_plot_IVW_GBC, bias_mse_plot_MODE_GBC, bias_mse_plot_CONMIX_GBC,
-          ncol = 1, nrow = 3, common.legend = TRUE) -> bias_mse_plot_GBC
-bias_mse_plot_GBC
-
-filename_GBC_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GBC_simplot_bias_mse_NSIM_", nsim, ".png")
-ggsave(filename = filename_GBC_simplot_bias_mse, plot = bias_mse_plot_GBC, 
-       width = 7, height = 10, 
-       units = "in"  # default
-       )
-```
 
 
 
