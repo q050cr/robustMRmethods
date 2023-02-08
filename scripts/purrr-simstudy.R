@@ -80,7 +80,12 @@ T0 <- proc.time()[3]
 for (dataset in 1:length(gen_dfs)) {
   # initialize in loop/ discard at the end
   est_sim_temp <- tibble(no_sim = 1:nsim)
-  nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs[[dataset]], index = dataset))  # returns nsim* results for MR simulations PER sample size 
+  ## now purrr
+  # returns nsim* results for MR simulations PER sample size
+  nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs[[dataset]], index = dataset), 
+                           .progress=list(clear=FALSE, 
+                                          name=paste0("Progress of simulation of sample size: ", format(n[dataset], scientific = FALSE)))
+  )
   est_sim_temp <- populate_est_sim(nsim_list = nsim_list_dataset, nsim = nsim, no_cases = n[dataset])
   if(is.null(est_sim_temp)) next
   est_sim <- est_sim %>% cbind(est_sim_temp[-1])
@@ -94,3 +99,5 @@ print(paste0("!!!!!--------------------------- ", round(timediff_purrr/60,2), " 
 
 saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_purrr_NSIM_", nsim, ".rds"))
 
+## with nsim=100 and the purrr script on the M1 Mac ∞ 5h
+#[1] "!!!!!--------------------------- 299.61 minutes passed for the simulation scenario! --------------------------------------!!!!!"
