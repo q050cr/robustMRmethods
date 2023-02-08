@@ -6,6 +6,7 @@
 .Ruserdata
 .DS_Store
 .Renviron
+oxforddown-master.zip
 # folders
 analysis-justo/
 bw-cluster/
@@ -16,10 +17,12 @@ Expose/
 img/
 meetings/
 output/
+oxforddown-master/
 paper-backup/
 reports/
 SchwedaMSc/
 scripts/test/
+sent/
 templates/
 Vorlagen/
 # subdirectories
@@ -30,3 +33,5 @@ presentation/old/
 # files in subdirs
 presentation/robustMR.html
 .secret
+.Rdata
+.httr-oauth
