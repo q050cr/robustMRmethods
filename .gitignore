@@ -6,6 +6,7 @@
 .Ruserdata
 .DS_Store
 .Renviron
+.Rprofile
 oxforddown-master.zip
 renv.lock
 # folders
