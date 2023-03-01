@@ -40,7 +40,6 @@ library(MRMix)
 library(MRPRESSO)
 library(penalized)
 library(conflicted)
-source("scripts/helper/MR_lasso.R") # Slob&Burgess 2020
 source("scripts/helper/PVE_calculation_fns.R")
 source("scripts/helper/simulation_helpers.R")
 conflict_prefer("select", "dplyr")

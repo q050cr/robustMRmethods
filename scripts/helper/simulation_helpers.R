@@ -11,7 +11,7 @@ library(MRMix)
 library(MRPRESSO)
 library(penalized)
 library(conflicted)
-source("scripts/helper/MR_lasso.R") # Slob&Burgess 2020
+# source("scripts/helper/MR_lasso.R") # Slob&Burgess 2020, now implemented in `MendelianRandomization`
 source("scripts/helper/PVE_calculation_fns.R")
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
@@ -106,6 +106,53 @@ sim_function <- function(dat, index) {
   return_vector <- append(return_vector, mrmix.res_se.gsd)
   return_vector <- append(return_vector, mrmix.res.gsd$pvalue_theta)
   
+  ## updated 2023-03-01
+  # 5. weighted median
+  median.res.gsd = MendelianRandomization::mr_median(mr.obj.gsd)
+  return_vector <- append(return_vector, median.res.gsd$Estimate)
+  return_vector <- append(return_vector, median.res.gsd$StdError)
+  return_vector <- append(return_vector, median.res.gsd$Pvalue)
+  
+  # 6. Egger regression
+  egger.res.gsd <- MendelianRandomization::mr_egger(mr.obj.gsd)
+  return_vector <- append(return_vector,egger.res.gsd$Estimate)
+  return_vector <- append(return_vector, egger.res.gsd$StdError.Est)
+  return_vector <- append(return_vector, egger.res.gsd$Pvalue.Est)
+  
+  # 7. MR-robust
+  robust.res.gsd <- MendelianRandomization::mr_ivw(mr.obj.gsd, "random", robust = TRUE) 
+  return_vector <- append(return_vector,robust.res.gsd$Estimate)
+  return_vector <- append(return_vector, robust.res.gsd$StdError)
+  return_vector <- append(return_vector, robust.res.gsd$Pvalue)
+  
+  # 8. MR-PRESSO
+  presso.df = data.frame(bx = dat$beta.bmi_sim_norm, by = dat$beta.gsd, bxse = dat$se_update_BMI, byse = dat$se.gsd)
+  presso.res.gsd = MRPRESSO::mr_presso(BetaOutcome = "by", BetaExposure = "bx", SdOutcome = "byse", SdExposure = "bxse", 
+                  OUTLIERtest = TRUE, DISTORTIONtest = TRUE, data = presso.df, NbDistribution = 500, SignifThreshold = 0.05)
+  if (!is.na(presso.res.gsd$`Main MR results`[2,"Causal Estimate"]) & !is.na(presso.res.gsd$`Main MR results`[2,"Sd"])){
+    return_vector <-  append(return_vector, presso.res.gsd$`Main MR results`[2,"Causal Estimate"])
+    return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[2,"Sd"])
+    return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[2,"P-value"])
+  } else{  # if no outlier-corrected analysis was calculated
+    return_vector <-  append(return_vector, presso.res.gsd$`Main MR results`[1,"Causal Estimate"])
+    return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[1,"Sd"])
+    return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[1,"P-value"])
+  }
+
+  # 9. MR-RAPS
+  raps.res.gsd = mr.raps::mr.raps.overdispersed.robust(presso.df$bx, presso.df$by, presso.df$bxse, presso.df$byse,
+                                     loss.function = "huber", k = 1.345, initialization = c("l2"), 
+                                     suppress.warning = FALSE, diagnosis = FALSE, niter = 20, tol = .Machine$double.eps^0.5)
+  return_vector <-  append(return_vector, raps.res.gsd$beta.hat)
+  return_vector <-  append(return_vector, raps.res.gsd$beta.se)
+  return_vector <-  append(return_vector, raps.res.gsd$beta.p.value)
+  
+  # 10. MR-Lasso
+  lasso.res.gsd <- MendelianRandomization::mr_lasso(object = mr.obj.gsd)
+  return_vector <- append(return_vector, lasso.res.gsd$Estimate)
+  return_vector <- append(return_vector, lasso.res.gsd$StdError)
+  return_vector <- append(return_vector, lasso.res.gsd$Pvalue)
+  
   return(return_vector)
 }
 
@@ -134,6 +181,30 @@ populate_est_sim <- function(nsim_list, nsim, no_cases) {
     est_sim_temp[nsims, paste0("MRMIX_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][11] 
     est_sim_temp[nsims, paste0("MRMIX_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][12] 
     est_sim_temp[nsims, paste0("MRMIX_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][13] 
+    # 5. Median
+    est_sim_temp[nsims, paste0("MEDIAN_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][14] 
+    est_sim_temp[nsims, paste0("MEDIAN_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][15] 
+    est_sim_temp[nsims, paste0("MEDIAN_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][16] 
+    # 6. Egger 
+    est_sim_temp[nsims, paste0("EGGER_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][17] 
+    est_sim_temp[nsims, paste0("EGGER_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][18] 
+    est_sim_temp[nsims, paste0("EGGER_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][19] 
+    # 7. Robust 
+    est_sim_temp[nsims, paste0("ROBUST_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][20] 
+    est_sim_temp[nsims, paste0("ROBUST_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][21] 
+    est_sim_temp[nsims, paste0("ROBUST_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][22] 
+    # 8. Presso 
+    est_sim_temp[nsims, paste0("PRESSO_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][23] 
+    est_sim_temp[nsims, paste0("PRESSO_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][24] 
+    est_sim_temp[nsims, paste0("PRESSO_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][25] 
+    # 9. RAPS 
+    est_sim_temp[nsims, paste0("RAPS_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][26] 
+    est_sim_temp[nsims, paste0("RAPS_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][27] 
+    est_sim_temp[nsims, paste0("RAPS_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][28] 
+    # 10. lasso 
+    est_sim_temp[nsims, paste0("LASSO_theta_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][26] 
+    est_sim_temp[nsims, paste0("LASSO_theta_se_sim_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][27] 
+    est_sim_temp[nsims, paste0("LASSO_mr_pval_BMI_GSD_", format(no_cases, scientific = FALSE))] <- nsim_list[[nsims]][28] 
   }
   return(est_sim_temp)
 }
