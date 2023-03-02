@@ -109,6 +109,7 @@ saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_purrr_NSIM_", n
 
 safe_filter <- safely(dplyr::filter, otherwise = NA, quiet = TRUE)  # needed because also NAs in `gen_dfs`
 est_sim_architectures <- list()
+T0_architecture <- proc.time()[3]
 if (runGeneticArchitectures == TRUE) {
   for (architecture in 1:nrow(all_quadrants)) {
     effect_size <- all_quadrants[[architecture, 1]]
@@ -148,8 +149,11 @@ if (runGeneticArchitectures == TRUE) {
   }
 }
 
-est_sim_temp <- populate_est_sim(nsim_list = nsim_list_dataset, nsim = nsim, no_cases = n[dataset])
-if(is.null(est_sim_temp)) next
-est_sim <- est_sim %>% cbind(est_sim_temp[-1])
+T1_architecture <- proc.time()[3]
+timediff_purrr_archi <- T1_architecture - T0_architecture
+print(paste0("!!!!!--------------------------- ", round(timediff_purrr_archi/60,2), " minutes passed for the simulation scenario! --------------------------------------!!!!!"))
+
+saveRDS(est_sim_architectures, paste0("./output/Rdata/", Sys.Date(), "_est_sim_architectures_purrr_NSIM_", nsim, ".rds"))
+
 
 
