@@ -1013,15 +1013,38 @@ colname_pve_X <-  colnames(est_sim)[str_detect(colnames(est_sim), pattern = "pve
 # PVE_Y, PVE_U removed on 2023-01-24 (see github)
 
 ## for performance measures later
-# retrieve IVW/ MODE/ CONMIX cols for BMI -> GSD 
+# retrieve IVW/ MODE/ CONMIX/... cols for BMI -> GSD 
+#1
 colname_IVW_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GSD_")]
 colname_IVW_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GSD_")]
+#2
 colname_MODE_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GSD_")]
 colname_MODE_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GSD_")]
+#3
 colname_CONMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GSD_")]
 colname_CONMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GSD_")]
+#4
 colname_MRMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MRMIX_theta_sim_BMI_GSD_")]
 colname_MRMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MRMIX_theta_se_sim_BMI_GSD_")]
+#5
+colname_MEDIAN_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MEDIAN_theta_sim_BMI_GSD_")]
+colname_MEDIAN_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MEDIAN_theta_se_sim_BMI_GSD_")]
+#6
+colname_EGGER_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "EGGER_theta_sim_BMI_GSD_")]
+colname_EGGER_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "EGGER_theta_se_sim_BMI_GSD_")]
+#7
+colname_ROBUST_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "ROBUST_theta_sim_BMI_GSD_")]
+colname_ROBUST_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "ROBUST_theta_se_sim_BMI_GSD_")]
+#8
+colname_PRESSO_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "PRESSO_theta_sim_BMI_GSD_")]
+colname_PRESSO_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "PRESSO_theta_se_sim_BMI_GSD_")]
+#9
+colname_RAPS_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "RAPS_theta_sim_BMI_GSD_")]
+colname_RAPS_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "RAPS_theta_se_sim_BMI_GSD_")]
+#10
+colname_LASSO_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "LASSO_theta_sim_BMI_GSD_")]
+colname_LASSO_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "LASSO_theta_se_sim_BMI_GSD_")]
+
 # retrieve IVW/ MODE/ CONMIX cols for BMI -> GBC
 # removed on 2023-01-24 (see github)
 
@@ -1039,8 +1062,6 @@ est_sim %>%
   select(!!!(colname_pve_X)) %>% 
   map(~mean(.x)) %>% 
   unlist() -> PVE_X_sim_mean
-
-
 
 boxplot_overlay_dat <- pve_X_sim %>% 
   # cbind(pve_U_sim %>% select(-sample_size_filtered)) %>% 
@@ -1175,16 +1196,44 @@ emp_se <- function(nsim, thetaobs, theta, ...) sqrt( 1/(nsim-1) * sum((thetaobs-
 ## get performance metrics    # https://stackoverflow.com/questions/47415072/pass-multiple-functions-to-purrrmap
 funs <- c(mean = mean, emp_se=emp_se, bias = bias, mse = mse)
 ## args gsd
+#1
 args.gsd.ivw <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "IVW"], 
                      nsim=nrow(est_sim)
                      ) # trim argument non-matching and ignored for median
+#2
 args.gsd.mode <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "mode"], 
                      nsim=nrow(est_sim)
                      )
+#3
 args.gsd.conmix <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "conmix"], 
                      nsim=nrow(est_sim)
                      )
+#4
 args.gsd.mrmix <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "MRMix"], 
+                     nsim=nrow(est_sim)
+                     )
+#5
+args.gsd.median <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "median"], 
+                     nsim=nrow(est_sim)
+                     )
+#6
+args.gsd.egger <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "egger"], 
+                     nsim=nrow(est_sim)
+                     )
+#7
+args.gsd.robust <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "Robust"], 
+                     nsim=nrow(est_sim)
+                     )
+#8
+args.gsd.presso <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "PRESSO"], 
+                     nsim=nrow(est_sim)
+                     )
+#9
+args.gsd.raps <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "RAPS"], 
+                     nsim=nrow(est_sim)
+                     )
+#10
+args.gsd.lasso <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "Lasso"], 
                      nsim=nrow(est_sim)
                      )
 ## args gbc
@@ -1198,31 +1247,74 @@ args.gsd.mrmix <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "M
 
 
 ```{r CALC-perf-metrics-GSD}
+#1
 IVW_GSD_performance_metrics <- est_sim %>% 
   select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
   map_df(.f = ~ funs %>% 
            map(exec, .x, !!!args.gsd.ivw), .id = "var") %>% 
   cbind(sample_size_filtered) %>% 
   rename(N = sample_size_filtered)
-
+#2
 MODE_GSD_performance_metrics <- est_sim %>% 
   select(!!!(colname_MODE_theta_sim_BMI_GSD)) %>% 
   map_df(.f = ~ funs %>% 
            map(exec, .x, !!!args.gsd.mode), .id = "var") %>% 
   cbind(sample_size_filtered) %>% 
   rename(N = sample_size_filtered)
-
+#3
 CONMIX_GSD_performance_metrics <- est_sim %>% 
   select(!!!(colname_CONMIX_theta_sim_BMI_GSD)) %>% 
   map_df(.f = ~ funs %>% 
            map(exec, .x, !!!args.gsd.conmix), .id = "var") %>% 
   cbind(sample_size_filtered) %>% 
   rename(N = sample_size_filtered)
-
+#4
 MRMIX_GSD_performance_metrics <- est_sim %>% 
   select(!!!(colname_MRMIX_theta_sim_BMI_GSD)) %>% 
   map_df(.f = ~ funs %>% 
-           map(exec, .x, !!!args.gsd.conmix), .id = "var") %>% 
+           map(exec, .x, !!!args.gsd.mrmix), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+#5
+MEDIAN_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_MEDIAN_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.median), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+#6
+EGGER_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_EGGER_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.egger), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+#7
+ROBUST_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_ROBUST_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.robust), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+#8
+PRESSO_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_PRESSO_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.presso), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+#9
+RAPS_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_RAPS_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.raps), .id = "var") %>% 
+  cbind(sample_size_filtered) %>% 
+  rename(N = sample_size_filtered)
+#10
+LASSO_GSD_performance_metrics <- est_sim %>% 
+  select(!!!(colname_LASSO_theta_sim_BMI_GSD)) %>% 
+  map_df(.f = ~ funs %>% 
+           map(exec, .x, !!!args.gsd.lasso), .id = "var") %>% 
   cbind(sample_size_filtered) %>% 
   rename(N = sample_size_filtered)
 ```
@@ -1260,20 +1352,47 @@ coverage_bias_eliminated <- function(thetaobs, thetaobs_se, ...) {
 type1error <- function(pvals) sum(pvals<=0.05)/length(pvals)  # no causal_effect
 
 # GSD
+#1
 IVW_GSD_coverage_calc <- c()
 IVW_GSD_coverage_bias_eliminated_calc <- c()
 IVW_GSD_type1error_calc <- c()
+#2
 MODE_GSD_coverage_calc <- c()
 MODE_GSD_coverage_bias_eliminated_calc <- c()
 MODE_GSD_type1error_calc <- c()
+#3
 CONMIX_GSD_coverage_calc <- c()
 CONMIX_GSD_coverage_bias_eliminated_calc <- c()
 CONMIX_GSD_type1error_calc <- c()
+#4
 MRMIX_GSD_coverage_calc <- c()
 MRMIX_GSD_coverage_bias_eliminated_calc <- c()
 MRMIX_GSD_type1error_calc <- c()
-# GBC
-## deleted 2023-01-29
+#5
+MEDIAN_GSD_coverage_calc <- c()
+MEDIAN_GSD_coverage_bias_eliminated_calc <- c()
+MEDIAN_GSD_type1error_calc <- c()
+#6
+EGGER_GSD_coverage_calc <- c()
+EGGER_GSD_coverage_bias_eliminated_calc <- c()
+EGGER_GSD_type1error_calc <- c()
+#7
+ROBUST_GSD_coverage_calc <- c()
+ROBUST_GSD_coverage_bias_eliminated_calc <- c()
+ROBUST_GSD_type1error_calc <- c()
+#8
+PRESSO_GSD_coverage_calc <- c()
+PRESSO_GSD_coverage_bias_eliminated_calc <- c()
+PRESSO_GSD_type1error_calc <- c()
+#9
+RAPS_GSD_coverage_calc <- c()
+RAPS_GSD_coverage_bias_eliminated_calc <- c()
+RAPS_GSD_type1error_calc <- c()
+#10
+LASSO_GSD_coverage_calc <- c()
+LASSO_GSD_coverage_bias_eliminated_calc <- c()
+LASSO_GSD_type1error_calc <- c()
+
 for (i in 1:length(sample_size_filtered)) {
   sample_size <- sample_size_filtered[i]
   # GSD additional metrics ----------------------------------------------------
@@ -1307,7 +1426,7 @@ for (i in 1:length(sample_size_filtered)) {
   CONMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_CONMIX_GSD_theta]], 
                                                                        thetaobs_se = est_sim[[col_CONMIX_GSD_theta_se]])
   CONMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_CONMIX_GSD_mr_pval]])  
-    ## 4/ MRMIX
+  ## 4/ MRMIX
   col_MRMIX_GSD_theta <- paste0("MRMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
   col_MRMIX_GSD_theta_se <- paste0("MRMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
   col_MRMIX_GSD_mr_pval <- paste0("MRMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
@@ -1317,7 +1436,73 @@ for (i in 1:length(sample_size_filtered)) {
                                        theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "MRMix"])
   MRMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MRMIX_GSD_theta]], 
                                                                        thetaobs_se = est_sim[[col_MRMIX_GSD_theta_se]])
-  MRMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_MRMIX_GSD_mr_pval]])  
+  MRMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_MRMIX_GSD_mr_pval]])
+  ## 5/ MEDIAN
+  col_MEDIAN_GSD_theta <- paste0("MEDIAN_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_MEDIAN_GSD_theta_se <- paste0("MEDIAN_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_MEDIAN_GSD_mr_pval <- paste0("MEDIAN_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  MEDIAN_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MEDIAN_GSD_theta], 
+                                       thetaobs_se = est_sim[col_MEDIAN_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "median"])
+  MEDIAN_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MEDIAN_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_MEDIAN_GSD_theta_se]])
+  MEDIAN_GSD_type1error_calc[i] <- type1error(est_sim[[col_MEDIAN_GSD_mr_pval]])
+  ## 6/ EGGER
+  col_EGGER_GSD_theta <- paste0("EGGER_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_EGGER_GSD_theta_se <- paste0("EGGER_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_EGGER_GSD_mr_pval <- paste0("EGGER_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  EGGER_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_EGGER_GSD_theta], 
+                                       thetaobs_se = est_sim[col_EGGER_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "egger"])
+  EGGER_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_EGGER_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_EGGER_GSD_theta_se]])
+  EGGER_GSD_type1error_calc[i] <- type1error(est_sim[[col_EGGER_GSD_mr_pval]])  
+  ## 7/ ROBUST
+  col_ROBUST_GSD_theta <- paste0("ROBUST_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_ROBUST_GSD_theta_se <- paste0("ROBUST_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_ROBUST_GSD_mr_pval <- paste0("ROBUST_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  ROBUST_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_ROBUST_GSD_theta], 
+                                       thetaobs_se = est_sim[col_ROBUST_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "Robust"])
+  ROBUST_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_ROBUST_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_ROBUST_GSD_theta_se]])
+  ROBUST_GSD_type1error_calc[i] <- type1error(est_sim[[col_ROBUST_GSD_mr_pval]])  
+  ## 8/ PRESSO
+  col_PRESSO_GSD_theta <- paste0("PRESSO_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_PRESSO_GSD_theta_se <- paste0("PRESSO_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_PRESSO_GSD_mr_pval <- paste0("PRESSO_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  PRESSO_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_PRESSO_GSD_theta], 
+                                       thetaobs_se = est_sim[col_PRESSO_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "PRESSO"])
+  PRESSO_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_PRESSO_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_PRESSO_GSD_theta_se]])
+  PRESSO_GSD_type1error_calc[i] <- type1error(est_sim[[col_PRESSO_GSD_mr_pval]])
+  ## 9/ RAPS
+  col_RAPS_GSD_theta <- paste0("RAPS_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_RAPS_GSD_theta_se <- paste0("RAPS_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_RAPS_GSD_mr_pval <- paste0("RAPS_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  RAPS_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_RAPS_GSD_theta], 
+                                       thetaobs_se = est_sim[col_RAPS_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "RAPS"])
+  RAPS_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_RAPS_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_RAPS_GSD_theta_se]])
+  RAPS_GSD_type1error_calc[i] <- type1error(est_sim[[col_RAPS_GSD_mr_pval]])  
+  ## 10/ LASSO
+  col_LASSO_GSD_theta <- paste0("LASSO_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_LASSO_GSD_theta_se <- paste0("LASSO_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+  col_LASSO_GSD_mr_pval <- paste0("LASSO_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+  # calc
+  LASSO_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_LASSO_GSD_theta], 
+                                       thetaobs_se = est_sim[col_LASSO_GSD_theta_se], 
+                                       theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "Lasso"])
+  LASSO_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_LASSO_GSD_theta]], 
+                                                                       thetaobs_se = est_sim[[col_LASSO_GSD_theta_se]])
+  LASSO_GSD_type1error_calc[i] <- type1error(est_sim[[col_LASSO_GSD_mr_pval]])  
 }
 ```
 
@@ -1326,6 +1511,7 @@ for (i in 1:length(sample_size_filtered)) {
 
 ```{r add-additional-metrics-to-df-and-print-GSD}
 ## GSD --------------------------
+#1
 IVW_GSD_performance_metrics <- IVW_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
   cbind(data.frame(IVW_GSD_coverage_calc, IVW_GSD_coverage_bias_eliminated_calc, IVW_GSD_type1error_calc)) %>% 
@@ -1337,7 +1523,7 @@ IVW_GSD_performance_metrics %>%
   mutate(across(cols = where(is.numeric), round(3))) %>% 
   kable(caption = "IVW method on BMI -> GSD performance metrics") %>% 
   kable_styling(font_size=10)
-
+#2
 MODE_GSD_performance_metrics <- MODE_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
   cbind(data.frame(MODE_GSD_coverage_calc, 
@@ -1350,7 +1536,7 @@ MODE_GSD_performance_metrics %>%
   mutate(across(cols = where(is.numeric), round(3))) %>% 
   kable(caption = "MODE method on BMI -> GSD performance metrics") %>% 
   kable_styling(font_size=10)
-
+#3
 CONMIX_GSD_performance_metrics <- CONMIX_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
   cbind(data.frame(CONMIX_GSD_coverage_calc, 
@@ -1363,7 +1549,7 @@ CONMIX_GSD_performance_metrics %>%
   mutate(across(cols = where(is.numeric), round(3))) %>% 
   kable(caption = "CONMIX method on BMI -> GSD performance metrics") %>% 
   kable_styling(font_size=10)
-
+#4
 MRMIX_GSD_performance_metrics <- MRMIX_GSD_performance_metrics %>% 
   select(N, everything()) %>% 
   cbind(data.frame(MRMIX_GSD_coverage_calc, 
@@ -1375,6 +1561,84 @@ MRMIX_GSD_performance_metrics <- MRMIX_GSD_performance_metrics %>%
 MRMIX_GSD_performance_metrics %>% 
   mutate(across(cols = where(is.numeric), round(3))) %>% 
   kable(caption = "MRMIX method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+#5
+MEDIAN_GSD_performance_metrics <- MEDIAN_GSD_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(MEDIAN_GSD_coverage_calc, 
+                   MEDIAN_GSD_coverage_bias_eliminated_calc, MEDIAN_GSD_type1error_calc)) %>% 
+  rename(coverage = MEDIAN_GSD_coverage_calc, 
+         coverage_bias_eliminated = MEDIAN_GSD_coverage_bias_eliminated_calc, 
+         type1error = MEDIAN_GSD_type1error_calc) %>% 
+  as_tibble()
+MEDIAN_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "MEDIAN method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+#6
+EGGER_GSD_performance_metrics <- EGGER_GSD_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(EGGER_GSD_coverage_calc, 
+                   EGGER_GSD_coverage_bias_eliminated_calc, EGGER_GSD_type1error_calc)) %>% 
+  rename(coverage = EGGER_GSD_coverage_calc, 
+         coverage_bias_eliminated = EGGER_GSD_coverage_bias_eliminated_calc, 
+         type1error = EGGER_GSD_type1error_calc) %>% 
+  as_tibble()
+EGGER_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "EGGER method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+#7
+ROBUST_GSD_performance_metrics <- ROBUST_GSD_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(ROBUST_GSD_coverage_calc, 
+                   ROBUST_GSD_coverage_bias_eliminated_calc, ROBUST_GSD_type1error_calc)) %>% 
+  rename(coverage = ROBUST_GSD_coverage_calc, 
+         coverage_bias_eliminated = ROBUST_GSD_coverage_bias_eliminated_calc, 
+         type1error = ROBUST_GSD_type1error_calc) %>% 
+  as_tibble()
+ROBUST_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "ROBUST method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+#8
+PRESSO_GSD_performance_metrics <- PRESSO_GSD_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(PRESSO_GSD_coverage_calc, 
+                   PRESSO_GSD_coverage_bias_eliminated_calc, PRESSO_GSD_type1error_calc)) %>% 
+  rename(coverage = PRESSO_GSD_coverage_calc, 
+         coverage_bias_eliminated = PRESSO_GSD_coverage_bias_eliminated_calc, 
+         type1error = PRESSO_GSD_type1error_calc) %>% 
+  as_tibble()
+PRESSO_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "PRESSO method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+#9
+RAPS_GSD_performance_metrics <- RAPS_GSD_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(RAPS_GSD_coverage_calc, 
+                   RAPS_GSD_coverage_bias_eliminated_calc, RAPS_GSD_type1error_calc)) %>% 
+  rename(coverage = RAPS_GSD_coverage_calc, 
+         coverage_bias_eliminated = RAPS_GSD_coverage_bias_eliminated_calc, 
+         type1error = RAPS_GSD_type1error_calc) %>% 
+  as_tibble()
+RAPS_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "RAPS method on BMI -> GSD performance metrics") %>% 
+  kable_styling(font_size=10)
+#10
+LASSO_GSD_performance_metrics <- LASSO_GSD_performance_metrics %>% 
+  select(N, everything()) %>% 
+  cbind(data.frame(LASSO_GSD_coverage_calc, 
+                   LASSO_GSD_coverage_bias_eliminated_calc, LASSO_GSD_type1error_calc)) %>% 
+  rename(coverage = LASSO_GSD_coverage_calc, 
+         coverage_bias_eliminated = LASSO_GSD_coverage_bias_eliminated_calc, 
+         type1error = LASSO_GSD_type1error_calc) %>% 
+  as_tibble()
+LASSO_GSD_performance_metrics %>% 
+  mutate(across(cols = where(is.numeric), round(3))) %>% 
+  kable(caption = "LASSO method on BMI -> GSD performance metrics") %>% 
   kable_styling(font_size=10)
 ```
 
@@ -1390,10 +1654,40 @@ filename_CONMIX_GSD_performance_metrics <- paste0("../output/performance_metrics
                                                Sys.Date(), "_CONMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
 filename_MRMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
                                                Sys.Date(), "_MRMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
+#5
+filename_MEDIAN_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_MEDIAN_GSD_performance_metrics_NSIM_", nsim, ".csv")
+#6
+filename_EGGER_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_EGGER_GSD_performance_metrics_NSIM_", nsim, ".csv")
+#7
+filename_ROBUST_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_ROBUST_GSD_performance_metrics_NSIM_", nsim, ".csv")
+#8
+filename_PRESSO_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_PRESSO_GSD_performance_metrics_NSIM_", nsim, ".csv")
+#9
+filename_RAPS_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_RAPS_GSD_performance_metrics_NSIM_", nsim, ".csv")
+#10
+filename_LASSO_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+                                               Sys.Date(), "_LASSO_GSD_performance_metrics_NSIM_", nsim, ".csv")
 write.csv2(x = IVW_GSD_performance_metrics, file = filename_IVW_GSD_performance_metrics)
 write.csv2(x = MODE_GSD_performance_metrics, file = filename_MODE_GSD_performance_metrics)
 write.csv2(x = CONMIX_GSD_performance_metrics, file = filename_CONMIX_GSD_performance_metrics)
 write.csv2(x = MRMIX_GSD_performance_metrics, file = filename_MRMIX_GSD_performance_metrics)
+#5
+write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename_MEDIAN_GSD_performance_metrics)
+#6
+write.csv2(x = EGGER_GSD_performance_metrics, file = filename_EGGER_GSD_performance_metrics)
+#7
+write.csv2(x = ROBUST_GSD_performance_metrics, file = filename_ROBUST_GSD_performance_metrics)
+#8
+write.csv2(x = PRESSO_GSD_performance_metrics, file = filename_PRESSO_GSD_performance_metrics)
+#9
+write.csv2(x = RAPS_GSD_performance_metrics, file = filename_RAPS_GSD_performance_metrics)
+#10
+write.csv2(x = LASSO_GSD_performance_metrics, file = filename_LASSO_GSD_performance_metrics)
 ```
 
 
@@ -1597,6 +1891,7 @@ ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_th
        units = "in"  # default
        )
 ```
+
 ```{r theta-sim-distribution-GSD-arrange, fig.height=18, fig.width=10, warning=FALSE}
 IVW_GSD_simplot_thetas$labels$title <- ""
 MODE_GSD_simplot_thetas$labels$title <- ""
@@ -1736,34 +2031,76 @@ for (true_method in 1:length(selected_true_methods)) {
   args.gsd.method <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]], 
                           nsim=nrow(est_sim)
   )
-  
+  #1
   IVW_GSD_performance_metrics <- est_sim %>% 
     select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
     map_df(.f = ~ funs %>% 
              map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
     cbind(sample_size_filtered) %>% 
     rename(N = sample_size_filtered, IVW_GSD_mean=mean, IVW_GSD_emp_se=emp_se, IVW_GSD_bias=bias, IVW_GSD_mse=mse)
-
+  #2
   MODE_GSD_performance_metrics <- est_sim %>% 
     select(!!!(colname_MODE_theta_sim_BMI_GSD)) %>% 
     map_df(.f = ~ funs %>% 
              map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
     cbind(sample_size_filtered) %>% 
     rename(N = sample_size_filtered, MODE_GSD_mean=mean, MODE_GSD_emp_se=emp_se, MODE_GSD_bias=bias, MODE_GSD_mse=mse)
-  
+  #3
   CONMIX_GSD_performance_metrics <- est_sim %>% 
     select(!!!(colname_CONMIX_theta_sim_BMI_GSD)) %>% 
     map_df(.f = ~ funs %>% 
              map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
     cbind(sample_size_filtered) %>% 
     rename(N = sample_size_filtered, CONMIX_GSD_mean=mean, CONMIX_GSD_emp_se=emp_se, CONMIX_GSD_bias=bias, CONMIX_GSD_mse=mse)
-  
+  #4
   MRMIX_GSD_performance_metrics <- est_sim %>% 
     select(!!!(colname_MRMIX_theta_sim_BMI_GSD)) %>% 
     map_df(.f = ~ funs %>% 
              map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
     cbind(sample_size_filtered) %>% 
     rename(N = sample_size_filtered, MRMIX_GSD_mean=mean, MRMIX_GSD_emp_se=emp_se, MRMIX_GSD_bias=bias, MRMIX_GSD_mse=mse)
+  #5
+  MEDIAN_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_MEDIAN_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, MEDIAN_GSD_mean=mean, MEDIAN_GSD_emp_se=emp_se, MEDIAN_GSD_bias=bias, MEDIAN_GSD_mse=mse)
+  #6
+  EGGER_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_EGGER_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, EGGER_GSD_mean=mean, EGGER_GSD_emp_se=emp_se, EGGER_GSD_bias=bias, EGGER_GSD_mse=mse)
+  #7
+  ROBUST_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_ROBUST_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, ROBUST_GSD_mean=mean, ROBUST_GSD_emp_se=emp_se, ROBUST_GSD_bias=bias, ROBUST_GSD_mse=mse)
+  #8
+  PRESSO_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_PRESSO_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, PRESSO_GSD_mean=mean, PRESSO_GSD_emp_se=emp_se, PRESSO_GSD_bias=bias, PRESSO_GSD_mse=mse)
+  #9
+  RAPS_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_RAPS_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, RAPS_GSD_mean=mean, RAPS_GSD_emp_se=emp_se, RAPS_GSD_bias=bias, RAPS_GSD_mse=mse)
+  #10
+  LASSO_GSD_performance_metrics <- est_sim %>% 
+    select(!!!(colname_LASSO_theta_sim_BMI_GSD)) %>% 
+    map_df(.f = ~ funs %>% 
+             map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+    cbind(sample_size_filtered) %>% 
+    rename(N = sample_size_filtered, LASSO_GSD_mean=mean, LASSO_GSD_emp_se=emp_se, LASSO_GSD_bias=bias, LASSO_GSD_mse=mse)
   
   ## further metrics
   IVW_GSD_coverage_calc <- c()
@@ -1778,6 +2115,30 @@ for (true_method in 1:length(selected_true_methods)) {
   MRMIX_GSD_coverage_calc <- c()
   MRMIX_GSD_coverage_bias_eliminated_calc <- c()
   MRMIX_GSD_type1error_calc <- c()
+  #5
+  MEDIAN_GSD_coverage_calc <- c()
+  MEDIAN_GSD_coverage_bias_eliminated_calc <- c()
+  MEDIAN_GSD_type1error_calc <- c()
+  #6
+  EGGER_GSD_coverage_calc <- c()
+  EGGER_GSD_coverage_bias_eliminated_calc <- c()
+  EGGER_GSD_type1error_calc <- c()
+  #7
+  ROBUST_GSD_coverage_calc <- c()
+  ROBUST_GSD_coverage_bias_eliminated_calc <- c()
+  ROBUST_GSD_type1error_calc <- c()
+  #8
+  PRESSO_GSD_coverage_calc <- c()
+  PRESSO_GSD_coverage_bias_eliminated_calc <- c()
+  PRESSO_GSD_type1error_calc <- c()
+  #9
+  RAPS_GSD_coverage_calc <- c()
+  RAPS_GSD_coverage_bias_eliminated_calc <- c()
+  RAPS_GSD_type1error_calc <- c()
+  #10
+  LASSO_GSD_coverage_calc <- c()
+  LASSO_GSD_coverage_bias_eliminated_calc <- c()
+  LASSO_GSD_type1error_calc <- c()
 
   for (i in 1:length(sample_size_filtered)) {
     sample_size <- sample_size_filtered[i]
@@ -1812,7 +2173,7 @@ for (true_method in 1:length(selected_true_methods)) {
     CONMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_CONMIX_GSD_theta]], 
                                                                          thetaobs_se = est_sim[[col_CONMIX_GSD_theta_se]])
     CONMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_CONMIX_GSD_mr_pval]])  
-      ## 4/ MRMIX
+    ## 4/ MRMIX
     col_MRMIX_GSD_theta <- paste0("MRMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
     col_MRMIX_GSD_theta_se <- paste0("MRMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
     col_MRMIX_GSD_mr_pval <- paste0("MRMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
@@ -1823,6 +2184,73 @@ for (true_method in 1:length(selected_true_methods)) {
     MRMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MRMIX_GSD_theta]], 
                                                                          thetaobs_se = est_sim[[col_MRMIX_GSD_theta_se]])
     MRMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_MRMIX_GSD_mr_pval]])  
+    ## 5/ MEDIAN
+    col_MEDIAN_GSD_theta <- paste0("MEDIAN_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_MEDIAN_GSD_theta_se <- paste0("MEDIAN_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_MEDIAN_GSD_mr_pval <- paste0("MEDIAN_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    MEDIAN_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MEDIAN_GSD_theta], 
+                                         thetaobs_se = est_sim[col_MEDIAN_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    MEDIAN_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MEDIAN_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_MEDIAN_GSD_theta_se]])
+    MEDIAN_GSD_type1error_calc[i] <- type1error(est_sim[[col_MEDIAN_GSD_mr_pval]])  
+    ## 6/ EGGER
+    col_EGGER_GSD_theta <- paste0("EGGER_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_EGGER_GSD_theta_se <- paste0("EGGER_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_EGGER_GSD_mr_pval <- paste0("EGGER_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    EGGER_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_EGGER_GSD_theta], 
+                                         thetaobs_se = est_sim[col_EGGER_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    EGGER_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_EGGER_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_EGGER_GSD_theta_se]])
+    EGGER_GSD_type1error_calc[i] <- type1error(est_sim[[col_EGGER_GSD_mr_pval]])
+    ## 7/ ROBUST
+    col_ROBUST_GSD_theta <- paste0("ROBUST_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_ROBUST_GSD_theta_se <- paste0("ROBUST_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_ROBUST_GSD_mr_pval <- paste0("ROBUST_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    ROBUST_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_ROBUST_GSD_theta], 
+                                         thetaobs_se = est_sim[col_ROBUST_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    ROBUST_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_ROBUST_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_ROBUST_GSD_theta_se]])
+    ROBUST_GSD_type1error_calc[i] <- type1error(est_sim[[col_ROBUST_GSD_mr_pval]])
+    ## 8/ PRESSO
+    col_PRESSO_GSD_theta <- paste0("PRESSO_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_PRESSO_GSD_theta_se <- paste0("PRESSO_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_PRESSO_GSD_mr_pval <- paste0("PRESSO_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    PRESSO_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_PRESSO_GSD_theta], 
+                                         thetaobs_se = est_sim[col_PRESSO_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    PRESSO_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_PRESSO_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_PRESSO_GSD_theta_se]])
+    PRESSO_GSD_type1error_calc[i] <- type1error(est_sim[[col_PRESSO_GSD_mr_pval]])
+    ## 9/ RAPS
+    col_RAPS_GSD_theta <- paste0("RAPS_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_RAPS_GSD_theta_se <- paste0("RAPS_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_RAPS_GSD_mr_pval <- paste0("RAPS_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    RAPS_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_RAPS_GSD_theta], 
+                                         thetaobs_se = est_sim[col_RAPS_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    RAPS_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_RAPS_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_RAPS_GSD_theta_se]])
+    RAPS_GSD_type1error_calc[i] <- type1error(est_sim[[col_RAPS_GSD_mr_pval]])
+    ## 10/LASSO
+    col_LASSO_GSD_theta <- paste0("LASSO_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_LASSO_GSD_theta_se <- paste0("LASSO_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+    col_LASSO_GSD_mr_pval <- paste0("LASSO_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+    # calc
+    LASSO_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_LASSO_GSD_theta], 
+                                         thetaobs_se = est_sim[col_LASSO_GSD_theta_se], 
+                                         theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+    LASSO_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_LASSO_GSD_theta]], 
+                                                                         thetaobs_se = est_sim[[col_LASSO_GSD_theta_se]])
+    LASSO_GSD_type1error_calc[i] <- type1error(est_sim[[col_LASSO_GSD_mr_pval]])
+    #-----------
   }
   
   ## combine metrics
@@ -1845,6 +2273,42 @@ for (true_method in 1:length(selected_true_methods)) {
     cbind(data.frame(MRMIX_GSD_coverage_calc, 
                      MRMIX_GSD_coverage_bias_eliminated_calc, MRMIX_GSD_type1error_calc)) %>% 
     as_tibble()
+  #5
+  MEDIAN_GSD_performance_metrics <- MEDIAN_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(MEDIAN_GSD_coverage_calc, 
+                     MEDIAN_GSD_coverage_bias_eliminated_calc, MEDIAN_GSD_type1error_calc)) %>% 
+    as_tibble()
+  #6
+  EGGER_GSD_performance_metrics <- EGGER_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(EGGER_GSD_coverage_calc, 
+                     EGGER_GSD_coverage_bias_eliminated_calc, EGGER_GSD_type1error_calc)) %>% 
+    as_tibble()
+  #7
+  ROBUST_GSD_performance_metrics <- ROBUST_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(ROBUST_GSD_coverage_calc, 
+                     ROBUST_GSD_coverage_bias_eliminated_calc, ROBUST_GSD_type1error_calc)) %>% 
+    as_tibble()
+  #8
+  PRESSO_GSD_performance_metrics <- PRESSO_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(PRESSO_GSD_coverage_calc, 
+                     PRESSO_GSD_coverage_bias_eliminated_calc, PRESSO_GSD_type1error_calc)) %>% 
+    as_tibble()
+  #9
+  RAPS_GSD_performance_metrics <- RAPS_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(RAPS_GSD_coverage_calc, 
+                     RAPS_GSD_coverage_bias_eliminated_calc, RAPS_GSD_type1error_calc)) %>% 
+    as_tibble()
+  #10
+  LASSO_GSD_performance_metrics <- LASSO_GSD_performance_metrics %>% 
+    select(N, everything()) %>% 
+    cbind(data.frame(LASSO_GSD_coverage_calc, 
+                     LASSO_GSD_coverage_bias_eliminated_calc, LASSO_GSD_type1error_calc)) %>% 
+    as_tibble()
   
   # STORE
   filename.IVW_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
@@ -1863,9 +2327,40 @@ for (true_method in 1:length(selected_true_methods)) {
                                       "_MRMIX_GSD_performance_metrics_TRUE_EST_", 
                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
   write.csv2(x = MRMIX_GSD_performance_metrics, file = filename.MRMIX_table.performance)
+  #5
+  filename.MEDIAN_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                      "_MEDIAN_GSD_performance_metrics_TRUE_EST_", 
+                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename.MEDIAN_table.performance)
+  #6
+  filename.EGGER_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                      "_EGGER_GSD_performance_metrics_TRUE_EST_", 
+                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  write.csv2(x = EGGER_GSD_performance_metrics, file = filename.EGGER_table.performance)
+  #7
+  filename.ROBUST_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                      "_ROBUST_GSD_performance_metrics_TRUE_EST_", 
+                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  write.csv2(x = ROBUST_GSD_performance_metrics, file = filename.ROBUST_table.performance)
+  #8
+  filename.PRESSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                      "_PRESSO_GSD_performance_metrics_TRUE_EST_", 
+                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  write.csv2(x = PRESSO_GSD_performance_metrics, file = filename.PRESSO_table.performance)
+  #9
+  filename.RAPS_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                      "_RAPS_GSD_performance_metrics_TRUE_EST_", 
+                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  write.csv2(x = RAPS_GSD_performance_metrics, file = filename.RAPS_table.performance)
+  #10
+  filename.LASSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                      "_LASSO_GSD_performance_metrics_TRUE_EST_", 
+                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  write.csv2(x = LASSO_GSD_performance_metrics, file = filename.LASSO_table.performance)
   
   ###
   ## PLOT  -------------------------------------------------------------------
+  ###
   IVW_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
     pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
@@ -1905,7 +2400,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            " estimate calculated with total sample size"))+
     theme_few() -> IVW_GSD_simplot_thetas
   
-  ## MODE
+  ## 2 MODE
   MODE_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_MODE_theta_sim_BMI_GSD)) %>% 
     pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
@@ -1945,7 +2440,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            " estimate calculated with total sample size"))+
     theme_few() -> MODE_GSD_simplot_thetas
   
-  ## CONMIX
+  ## 3 CONMIX
   CONMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_CONMIX_theta_sim_BMI_GSD)) %>% 
     pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
@@ -1982,7 +2477,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            " estimate calculated with total sample size"))+
     theme_few() -> CONMIX_GSD_simplot_thetas
   
-  ## MRMIX
+  ## 4 MRMIX
   MRMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_MRMIX_theta_sim_BMI_GSD)) %>% 
     pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
@@ -2019,24 +2514,284 @@ for (true_method in 1:length(selected_true_methods)) {
                            " estimate calculated with total sample size"))+
     theme_few() -> MRMIX_GSD_simplot_thetas
   
-  # SAVE
+  ## 5 MEDIAN
+  MEDIAN_BMI_GSD_geom_point_dat <- est_sim %>% 
+    select(!!!(colname_MEDIAN_theta_sim_BMI_GSD)) %>% 
+    pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+    mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+  
+  ggplot(MEDIAN_GSD_performance_metrics, aes(x=N, y=MEDIAN_GSD_mean))+ 
+    geom_point()+
+    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+           label= expression( paste("ref: ", theta[X] ))  , 
+           color= ggthemes_data$few$colors$Dark[9,2][[1]]
+             )+
+    ## ADD rainbow plots
+    geom_boxplot(data = MEDIAN_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                 col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                 alpha=0.2, size=0.2, outlier.shape = NA)+
+    ggdist::stat_halfeye(data = MEDIAN_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                         inherit.aes = FALSE, 
+                         slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                         geom = "slabinterval",
+                         na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+    gghalves::geom_half_point(
+      data = MEDIAN_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+      inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+      side = "l", range_scale = .4, alpha = .2)+
+    ## FINISH rainbow
+    scale_x_continuous(labels = comma)+
+    xlab("Size of Sample I")+
+    ylab("Mean thetas")+
+    scale_y_continuous(limits = c(0.25,0.8))+
+    labs(title = "Simulated Thetas with Empirical Standard Error", 
+         subtitle = paste0("MEDIAN estimate: BMI -> GSD\nSelected Reference Method: ", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> MEDIAN_GSD_simplot_thetas
+  
+  ## 6 EGGER
+  EGGER_BMI_GSD_geom_point_dat <- est_sim %>% 
+    select(!!!(colname_EGGER_theta_sim_BMI_GSD)) %>% 
+    pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+    mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+  
+  ggplot(EGGER_GSD_performance_metrics, aes(x=N, y=EGGER_GSD_mean))+ 
+    geom_point()+
+    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+           label= expression( paste("ref: ", theta[X] ))  , 
+           color= ggthemes_data$few$colors$Dark[9,2][[1]]
+             )+
+    ## ADD rainbow plots
+    geom_boxplot(data = EGGER_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                 col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                 alpha=0.2, size=0.2, outlier.shape = NA)+
+    ggdist::stat_halfeye(data = EGGER_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                         inherit.aes = FALSE, 
+                         slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                         geom = "slabinterval",
+                         na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+    gghalves::geom_half_point(
+      data = EGGER_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+      inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+      side = "l", range_scale = .4, alpha = .2)+
+    ## FINISH rainbow
+    scale_x_continuous(labels = comma)+
+    xlab("Size of Sample I")+
+    ylab("Mean thetas")+
+    scale_y_continuous(limits = c(0.25,0.8))+
+    labs(title = "Simulated Thetas with Empirical Standard Error", 
+         subtitle = paste0("EGGER estimate: BMI -> GSD\nSelected Reference Method: ", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> EGGER_GSD_simplot_thetas
+  ## 7 ROBUST
+  ROBUST_BMI_GSD_geom_point_dat <- est_sim %>% 
+    select(!!!(colname_ROBUST_theta_sim_BMI_GSD)) %>% 
+    pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+    mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+  
+  ggplot(ROBUST_GSD_performance_metrics, aes(x=N, y=ROBUST_GSD_mean))+ 
+    geom_point()+
+    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+           label= expression( paste("ref: ", theta[X] ))  , 
+           color= ggthemes_data$few$colors$Dark[9,2][[1]]
+             )+
+    ## ADD rainbow plots
+    geom_boxplot(data = ROBUST_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                 col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                 alpha=0.2, size=0.2, outlier.shape = NA)+
+    ggdist::stat_halfeye(data = ROBUST_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                         inherit.aes = FALSE, 
+                         slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                         geom = "slabinterval",
+                         na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+    gghalves::geom_half_point(
+      data = ROBUST_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+      inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+      side = "l", range_scale = .4, alpha = .2)+
+    ## FINISH rainbow
+    scale_x_continuous(labels = comma)+
+    xlab("Size of Sample I")+
+    ylab("Mean thetas")+
+    scale_y_continuous(limits = c(0.25,0.8))+
+    labs(title = "Simulated Thetas with Empirical Standard Error", 
+         subtitle = paste0("ROBUST estimate: BMI -> GSD\nSelected Reference Method: ", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> ROBUST_GSD_simplot_thetas
+  ## 8 PRESSO
+  PRESSO_BMI_GSD_geom_point_dat <- est_sim %>% 
+    select(!!!(colname_PRESSO_theta_sim_BMI_GSD)) %>% 
+    pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+    mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+  
+  ggplot(PRESSO_GSD_performance_metrics, aes(x=N, y=PRESSO_GSD_mean))+ 
+    geom_point()+
+    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+           label= expression( paste("ref: ", theta[X] ))  , 
+           color= ggthemes_data$few$colors$Dark[9,2][[1]]
+             )+
+    ## ADD rainbow plots
+    geom_boxplot(data = PRESSO_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                 col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                 alpha=0.2, size=0.2, outlier.shape = NA)+
+    ggdist::stat_halfeye(data = PRESSO_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                         inherit.aes = FALSE, 
+                         slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                         geom = "slabinterval",
+                         na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+    gghalves::geom_half_point(
+      data = PRESSO_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+      inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+      side = "l", range_scale = .4, alpha = .2)+
+    ## FINISH rainbow
+    scale_x_continuous(labels = comma)+
+    xlab("Size of Sample I")+
+    ylab("Mean thetas")+
+    scale_y_continuous(limits = c(0.25,0.8))+
+    labs(title = "Simulated Thetas with Empirical Standard Error", 
+         subtitle = paste0("PRESSO estimate: BMI -> GSD\nSelected Reference Method: ", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> PRESSO_GSD_simplot_thetas
+  ## 9 RAPS
+  RAPS_BMI_GSD_geom_point_dat <- est_sim %>% 
+    select(!!!(colname_RAPS_theta_sim_BMI_GSD)) %>% 
+    pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+    mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+  
+  ggplot(RAPS_GSD_performance_metrics, aes(x=N, y=RAPS_GSD_mean))+ 
+    geom_point()+
+    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+           label= expression( paste("ref: ", theta[X] ))  , 
+           color= ggthemes_data$few$colors$Dark[9,2][[1]]
+             )+
+    ## ADD rainbow plots
+    geom_boxplot(data = RAPS_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                 col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                 alpha=0.2, size=0.2, outlier.shape = NA)+
+    ggdist::stat_halfeye(data = RAPS_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                         inherit.aes = FALSE, 
+                         slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                         geom = "slabinterval",
+                         na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+    gghalves::geom_half_point(
+      data = RAPS_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+      inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+      side = "l", range_scale = .4, alpha = .2)+
+    ## FINISH rainbow
+    scale_x_continuous(labels = comma)+
+    xlab("Size of Sample I")+
+    ylab("Mean thetas")+
+    scale_y_continuous(limits = c(0.25,0.8))+
+    labs(title = "Simulated Thetas with Empirical Standard Error", 
+         subtitle = paste0("RAPS estimate: BMI -> GSD\nSelected Reference Method: ", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> RAPS_GSD_simplot_thetas
+  ## 10 LASSO
+  LASSO_BMI_GSD_geom_point_dat <- est_sim %>% 
+    select(!!!(colname_LASSO_theta_sim_BMI_GSD)) %>% 
+    pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+    mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+  
+  ggplot(LASSO_GSD_performance_metrics, aes(x=N, y=LASSO_GSD_mean))+ 
+    geom_point()+
+    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+           label= expression( paste("ref: ", theta[X] ))  , 
+           color= ggthemes_data$few$colors$Dark[9,2][[1]]
+             )+
+    ## ADD rainbow plots
+    geom_boxplot(data = LASSO_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                 col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                 alpha=0.2, size=0.2, outlier.shape = NA)+
+    ggdist::stat_halfeye(data = LASSO_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                         inherit.aes = FALSE, 
+                         slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                         geom = "slabinterval",
+                         na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+    gghalves::geom_half_point(
+      data = LASSO_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+      inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+      side = "l", range_scale = .4, alpha = .2)+
+    ## FINISH rainbow
+    scale_x_continuous(labels = comma)+
+    xlab("Size of Sample I")+
+    ylab("Mean thetas")+
+    scale_y_continuous(limits = c(0.25,0.8))+
+    labs(title = "Simulated Thetas with Empirical Standard Error", 
+         subtitle = paste0("LASSO estimate: BMI -> GSD\nSelected Reference Method: ", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> LASSO_GSD_simplot_thetas
+  
+  
+  ####-------------
+  # SAVE  --------------------------------
+  #1
   filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
   ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
          width = 15, height = 6, 
          units = "in"  # default
          )
+  #2
   filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
   ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
          width = 15, height = 6, 
          units = "in"  # default
          )
+  #3
   filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
   ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
          width = 15, height = 6, 
          units = "in"  # default
          )
+  #4
   filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MRMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
   ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
+         width = 15, height = 6, 
+         units = "in"  # default
+         )
+  #5
+  filename_MEDIAN_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MEDIAN_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  ggsave(filename = filename_MEDIAN_GSD_simplot_thetas, plot = MEDIAN_GSD_simplot_thetas, 
+         width = 15, height = 6, 
+         units = "in"  # default
+         )
+  #6
+  filename_EGGER_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_EGGER_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  ggsave(filename = filename_EGGER_GSD_simplot_thetas, plot = EGGER_GSD_simplot_thetas, 
+         width = 15, height = 6, 
+         units = "in"  # default
+         )
+  #7
+  filename_ROBUST_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_ROBUST_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  ggsave(filename = filename_ROBUST_GSD_simplot_thetas, plot = ROBUST_GSD_simplot_thetas, 
+         width = 15, height = 6, 
+         units = "in"  # default
+         )
+  #8
+  filename_PRESSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_PRESSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  ggsave(filename = filename_PRESSO_GSD_simplot_thetas, plot = PRESSO_GSD_simplot_thetas, 
+         width = 15, height = 6, 
+         units = "in"  # default
+         )
+  #9
+  filename_RAPS_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_RAPS_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  ggsave(filename = filename_RAPS_GSD_simplot_thetas, plot = RAPS_GSD_simplot_thetas, 
+         width = 15, height = 6, 
+         units = "in"  # default
+         )
+  #10
+  filename_LASSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_LASSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  ggsave(filename = filename_LASSO_GSD_simplot_thetas, plot = LASSO_GSD_simplot_thetas, 
          width = 15, height = 6, 
          units = "in"  # default
          )
@@ -2045,13 +2800,26 @@ for (true_method in 1:length(selected_true_methods)) {
   MODE_GSD_simplot_thetas$labels$title <- ""
   CONMIX_GSD_simplot_thetas$labels$title <- ""
   MRMIX_GSD_simplot_thetas$labels$title <- ""
-  ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thetas, MRMIX_GSD_simplot_thetas,
-            ncol = 1, nrow = 4) -> GSD_simplot_thetas_arrange
+  #5
+  MEDIAN_GSD_simplot_thetas$labels$title <- ""
+  #6
+  EGGER_GSD_simplot_thetas$labels$title <- ""
+  #7
+  ROBUST_GSD_simplot_thetas$labels$title <- ""
+  #8
+  PRESSO_GSD_simplot_thetas$labels$title <- ""
+  #9
+  RAPS_GSD_simplot_thetas$labels$title <- ""
+  #10
+  LASSO_GSD_simplot_thetas$labels$title <- ""
+  ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thetas, MRMIX_GSD_simplot_thetas, MEDIAN_GSD_simplot_thetas,
+            EGGER_GSD_simplot_thetas, ROBUST_GSD_simplot_thetas, PRESSO_GSD_simplot_thetas, RAPS_GSD_simplot_thetas, LASSO_GSD_simplot_thetas,
+            ncol = 1, nrow = 8) -> GSD_simplot_thetas_arrange
   GSD_simplot_thetas_arrange
   
   filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
   ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
-         width = 10, height = 22, 
+         width = 10, height = 38, 
          units = "in"  # default
          )
   
@@ -2165,7 +2933,166 @@ for (true_method in 1:length(selected_true_methods)) {
     theme_few() -> mseplot_MRMIX_GSD
   ggarrange(biasplot_MRMIX_GSD, mseplot_MRMIX_GSD) -> bias_mse_plot_MRMIX_GSD
   
-  ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GSD, bias_mse_plot_MRMIX_GSD,
+  ## 5 MEDIAN
+  ggplot(MEDIAN_GSD_performance_metrics, aes(x=N, y=MEDIAN_GSD_bias))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(-1.5,1.5))+
+    xlab("Size of Sample I")+
+    ylab("Bias")+
+    labs(title = "MEDIAN estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> biasplot_MEDIAN_GSD
+  ggplot(MEDIAN_GSD_performance_metrics, aes(x=N, y=MEDIAN_GSD_mse))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(0,1.8))+
+    xlab("Size of Sample I")+
+    ylab("MSE")+
+    labs(title = "MEDIAN estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> mseplot_MEDIAN_GSD
+  ggarrange(biasplot_MEDIAN_GSD, mseplot_MEDIAN_GSD) -> bias_mse_plot_MEDIAN_GSD
+  ## 6 EGGER
+  ggplot(EGGER_GSD_performance_metrics, aes(x=N, y=EGGER_GSD_bias))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(-1.5,1.5))+
+    xlab("Size of Sample I")+
+    ylab("Bias")+
+    labs(title = "EGGER estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> biasplot_EGGER_GSD
+  ggplot(EGGER_GSD_performance_metrics, aes(x=N, y=EGGER_GSD_mse))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(0,1.8))+
+    xlab("Size of Sample I")+
+    ylab("MSE")+
+    labs(title = "EGGER estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> mseplot_EGGER_GSD
+  ggarrange(biasplot_EGGER_GSD, mseplot_EGGER_GSD) -> bias_mse_plot_EGGER_GSD
+  ## 7 ROBUST
+  ggplot(ROBUST_GSD_performance_metrics, aes(x=N, y=ROBUST_GSD_bias))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(-1.5,1.5))+
+    xlab("Size of Sample I")+
+    ylab("Bias")+
+    labs(title = "ROBUST estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> biasplot_ROBUST_GSD
+  ggplot(ROBUST_GSD_performance_metrics, aes(x=N, y=ROBUST_GSD_mse))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(0,1.8))+
+    xlab("Size of Sample I")+
+    ylab("MSE")+
+    labs(title = "ROBUST estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> mseplot_ROBUST_GSD
+  ggarrange(biasplot_ROBUST_GSD, mseplot_ROBUST_GSD) -> bias_mse_plot_ROBUST_GSD
+  ## 8 PRESSO
+  ggplot(PRESSO_GSD_performance_metrics, aes(x=N, y=PRESSO_GSD_bias))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(-1.5,1.5))+
+    xlab("Size of Sample I")+
+    ylab("Bias")+
+    labs(title = "PRESSO estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> biasplot_PRESSO_GSD
+  ggplot(PRESSO_GSD_performance_metrics, aes(x=N, y=PRESSO_GSD_mse))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(0,1.8))+
+    xlab("Size of Sample I")+
+    ylab("MSE")+
+    labs(title = "PRESSO estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> mseplot_PRESSO_GSD
+  ggarrange(biasplot_PRESSO_GSD, mseplot_PRESSO_GSD) -> bias_mse_plot_PRESSO_GSD
+  ## 9 RAPS
+  ggplot(RAPS_GSD_performance_metrics, aes(x=N, y=RAPS_GSD_bias))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(-1.5,1.5))+
+    xlab("Size of Sample I")+
+    ylab("Bias")+
+    labs(title = "RAPS estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> biasplot_RAPS_GSD
+  ggplot(RAPS_GSD_performance_metrics, aes(x=N, y=RAPS_GSD_mse))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(0,1.8))+
+    xlab("Size of Sample I")+
+    ylab("MSE")+
+    labs(title = "RAPS estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> mseplot_RAPS_GSD
+  ggarrange(biasplot_RAPS_GSD, mseplot_RAPS_GSD) -> bias_mse_plot_RAPS_GSD
+  ## LASSO
+  ggplot(LASSO_GSD_performance_metrics, aes(x=N, y=LASSO_GSD_bias))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(-1.5,1.5))+
+    xlab("Size of Sample I")+
+    ylab("Bias")+
+    labs(title = "LASSO estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> biasplot_LASSO_GSD
+  ggplot(LASSO_GSD_performance_metrics, aes(x=N, y=LASSO_GSD_mse))+ 
+    geom_point()+
+    geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+    scale_x_continuous(labels = comma)+
+    scale_y_continuous(limits = c(0,1.8))+
+    xlab("Size of Sample I")+
+    ylab("MSE")+
+    labs(title = "LASSO estimate: BMI -> GSD",
+         caption = paste0("Selected Reference Method:\n", 
+                           selected_true_methods[true_method], 
+                           " estimate calculated with total sample size"))+
+    theme_few() -> mseplot_LASSO_GSD
+  ggarrange(biasplot_LASSO_GSD, mseplot_LASSO_GSD) -> bias_mse_plot_LASSO_GSD
+  
+  
+  ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GSD, bias_mse_plot_MRMIX_GSD, bias_mse_plot_MEDIAN_GSD,
+            bias_mse_plot_EGGER_GSD, bias_mse_plot_ROBUST_GSD, bias_mse_plot_PRESSO_GSD, bias_mse_plot_RAPS_GSD, bias_mse_plot_LASSO_GSD,
             ncol = 1, nrow = 4, common.legend = TRUE) -> bias_mse_plot_GSD
   bias_mse_plot_GSD
   
