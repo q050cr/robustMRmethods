@@ -65,7 +65,7 @@ sim_function <- function(dat, index) {
       # the error we encounter is with "i=7" 
       #     Error in seq.default(from = CIMin, to = CIMax, by = CIStep) : 
       #         wrong sign in 'by' argument
-      message(paste0("Caught an error with mr_conmix (BMI -> GSD)!\nSample size: ", n[dataset], 
+      message(paste0("Caught an error with mr_conmix (BMI -> GSD)!\nSample size: ", n[index], 
                      "\nComputed CI's with predefined range of [-15;15]"))
       message("Below is the error message from R:")
       print(e) 
@@ -156,7 +156,7 @@ sim_function <- function(dat, index) {
       # the error we encounter is with "i=7" 
       #     Error in seq.default(from = CIMin, to = CIMax, by = CIStep) : 
       #         wrong sign in 'by' argument
-      message(paste0("Caught an error with mr_lasso (BMI -> GSD)!\nSample size: ", n[dataset]))
+      message(paste0("Caught an error with mr_lasso (BMI -> GSD)!\nSample size: ", n[index]))
       message("Below is the error message from R:")
       print(e) 
       return(NA)
