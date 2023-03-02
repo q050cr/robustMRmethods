@@ -38,7 +38,7 @@ conflict_prefer("filter", "dplyr")
 
 # set to TRUE if simulation should run when script is sourced
 runSimulation <- TRUE
-nsim <- 2
+nsim <- 10
 
 runGeneticArchitectures <- TRUE  # if set to TRUE, simulations run on 4 different genetic architectures (split: median maf, median beta)
 # analysis set - create all combis
@@ -103,7 +103,7 @@ print(paste0("!!!!!--------------------------- ", round(timediff_purrr/60,2), " 
 
 saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_purrr_NSIM_", nsim, ".rds"))
 
-## with nsim=100 and the purrr script on the M1 Mac ∞ 5h
+## with nsim=100 and the purrr script on the M1 Mac ∞ 5h (only 4 methods at that time)
 #[1] "!!!!!--------------------------- 299.61 minutes passed for the simulation scenario! --------------------------------------!!!!!"
 
 
