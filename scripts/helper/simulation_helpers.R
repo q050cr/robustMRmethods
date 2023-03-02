@@ -18,7 +18,7 @@ conflict_prefer("filter", "dplyr")
 
 sim_function <- function(dat, index) {
   if(any(is.na(dat))) return(NULL)
-  
+  if(nrow(dat)<=3) return(NULL)  # cannot perform robust methods with one IV, "mr_presso method requires data on >3 variants."
   sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
   n <- sim_vars$n
   
@@ -65,7 +65,7 @@ sim_function <- function(dat, index) {
       # the error we encounter is with "i=7" 
       #     Error in seq.default(from = CIMin, to = CIMax, by = CIStep) : 
       #         wrong sign in 'by' argument
-      message(paste0("Caught an error with mr_conmix (BMI -> GSD)!\nSample size: ", n[i], 
+      message(paste0("Caught an error with mr_conmix (BMI -> GSD)!\nSample size: ", n[dataset], 
                      "\nComputed CI's with predefined range of [-15;15]"))
       message("Below is the error message from R:")
       print(e) 
@@ -148,14 +148,39 @@ sim_function <- function(dat, index) {
   return_vector <-  append(return_vector, raps.res.gsd$beta.p.value)
   
   # 10. MR-Lasso
-  lasso.res.gsd <- MendelianRandomization::mr_lasso(object = mr.obj.gsd)
-  return_vector <- append(return_vector, lasso.res.gsd$Estimate)
-  return_vector <- append(return_vector, lasso.res.gsd$StdError)
-  return_vector <- append(return_vector, lasso.res.gsd$Pvalue)
-  
+  lasso.res.gsd <- tryCatch(
+    expr = {
+      MendelianRandomization::mr_lasso(object = mr.obj.gsd)
+    },
+    error = function(e){
+      # the error we encounter is with "i=7" 
+      #     Error in seq.default(from = CIMin, to = CIMax, by = CIStep) : 
+      #         wrong sign in 'by' argument
+      message(paste0("Caught an error with mr_lasso (BMI -> GSD)!\nSample size: ", n[dataset]))
+      message("Below is the error message from R:")
+      print(e) 
+      return(NA)
+    },
+    warning = function(w){
+      message('Caught an warning!')
+      print(w)
+    },
+    finally = {
+      #message('All done, quitting.')
+    }
+  )
+  if (is.na(lasso.res.gsd)) {
+    return_vector <- append(return_vector, NA)
+    return_vector <- append(return_vector, NA)
+    return_vector <- append(return_vector, NA)
+  } else{
+    return_vector <- append(return_vector, lasso.res.gsd$Estimate)
+    return_vector <- append(return_vector, lasso.res.gsd$StdError)
+    return_vector <- append(return_vector, lasso.res.gsd$Pvalue)
+  }
+  ## return vector
   return(return_vector)
 }
-
 
 
 # POPULATE est_sim_temp --------------------------------------------------------
@@ -208,3 +233,7 @@ populate_est_sim <- function(nsim_list, nsim, no_cases) {
   }
   return(est_sim_temp)
 }
+
+
+
+
