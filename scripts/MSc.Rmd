@@ -413,7 +413,7 @@ fig00_b
 
 
 if (SAVE.files ==TRUE ){
-  filenamefig00_b <- paste0("../output/plots/", Sys.Date(), "_explained_var_X_new_sample_size_dep.png")
+  filenamefig00_b <- paste0("../output/plots/pve/", Sys.Date(), "_explained_var_X_new_sample_size_dep.svg")
   ggsave(filename = filenamefig00_b, plot = fig00_b, 
        width = 10, height = 6, 
        units = "in"  # default
@@ -539,13 +539,13 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
   ) -> fig01b.update
 fig01b.update  # USE THIS
 
-if (SAVE.files ==TRUE ){
-  filenamefig01_b <- paste0("../output/plots/", Sys.Date(), "_figure01_new_PVE_X_formula.png")
-  ggsave(filename = filenamefig01_b, plot = fig01b.update, 
-         width = 10, height = 6, 
-         units = "in"  # default
-         )
-}
+# if (SAVE.files ==TRUE ){
+#   filenamefig01_b <- paste0("../output/plots/", Sys.Date(), "_figure01_new_PVE_X_formula.png")
+#   ggsave(filename = filenamefig01_b, plot = fig01b.update, 
+#          width = 10, height = 6, 
+#          units = "in"  # default
+#          )
+# }
 ```
 
 Discussion: *Pleiotropy* with increasing sample size. INSIDE assumption. 
@@ -620,11 +620,11 @@ ggplot(data = plot_data_2, aes(x=maf.bmi, y=abs(beta.bmi),
 fig02.update
 
 
-# SAVE
-if (SAVE.files ==TRUE ){
-  filenamefig02 <- paste0("../output/plots/", Sys.Date(), "_figure02.png")
-  ggsave(filename = filenamefig02, plot = fig02.update)
-}
+# # SAVE
+# if (SAVE.files ==TRUE ){
+#   filenamefig02 <- paste0("../output/plots/", Sys.Date(), "_figure02.png")
+#   ggsave(filename = filenamefig02, plot = fig02.update)
+# }
 ```
 
 
@@ -714,13 +714,13 @@ ggpubr::ggarrange(ggarrange(fig02.update.arrange, fig01b.update.arrange, ncol=2,
 # final_plot1.arrange   # OLD
 final_plot1.arrange2   # use this!
 if (SAVE.files ==TRUE ){
-  filename_final_plot1 <- paste0("../output/plots/", Sys.Date(), "_final_plot1.arrange_OLD.png")
-  filename_final_plot1b <- paste0("../output/plots/", Sys.Date(), "_final_plot1b.arrange_NEW.png")
+  filename_final_plot1 <- paste0("../output/plots/pve/", Sys.Date(), "_final_plot1.arrange_OLD.svg")
+  filename_final_plot1b <- paste0("../output/plots/pve/", Sys.Date(), "_final_plot1b.arrange_NEW.svg")
   
-  ggsave(filename = filename_final_plot1, plot = final_plot1.arrange, 
-           width = 14, height = 10, 
-           units = "in"  # default
-           )
+  # ggsave(filename = filename_final_plot1, plot = final_plot1.arrange, 
+  #          width = 14, height = 10, 
+  #          units = "in"  # default
+  #          )
   ggsave(filename = filename_final_plot1b, plot = final_plot1.arrange2, 
            width = 14, height = 10, 
            units = "in"  # default
@@ -831,7 +831,7 @@ p1.gsd
 
 # SAVE
 if (SAVE.files ==TRUE ){
-  filename.mr.scatter.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrscatter_gsd.png")
+  filename.mr.scatter.gsd <- paste0("../output/plots/mr-analysis/", Sys.Date(), "_figure_mrscatter_gsd.svg")
   ggsave(filename = filename.mr.scatter.gsd, plot = p1.gsd, 
            width = 10, height = 6, 
            units = "in"  # default
@@ -854,7 +854,7 @@ p2.gsd <- mr_forest(
 
 #SAVE
 if (SAVE.files ==TRUE ){
-  filename.mr.forest.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_GSD.png")
+  filename.mr.forest.gsd <- paste0("../output/plots/mr-analysis/", Sys.Date(), "_figure_mrforest_GSD.svg")
   ggsave(filename = filename.mr.forest.gsd, plot = p2.gsd, 
          width = 5, 
          height = 24, 
@@ -884,7 +884,7 @@ p4.gsd
 
 #SAVE
 if (SAVE.files ==TRUE ){
-  filename.mr.funnel.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrfunnel_gsd.png")
+  filename.mr.funnel.gsd <- paste0("../output/plots/mr-analysis/", Sys.Date(), "_figure_mrfunnel_gsd.svg")
   ggsave(filename = filename.mr.funnel.gsd, plot = p4.gsd, 
          width = 8, 
          height = 4, 
@@ -931,7 +931,7 @@ p1[[1]] #+
 
 # SAVE
 if (SAVE.files ==TRUE ){
-  filename.mr.scatter <- paste0("../output/plots/", Sys.Date(), "_figure_mrscatter.png")
+  filename.mr.scatter <- paste0("../output/plots/mr-analysis/", Sys.Date(), "_figure_mrscatter.svg")
   ggsave(filename = filename.mr.scatter, plot = p1[[1]], 
            #width = 10, height = 6, 
            #units = "in"  # default
@@ -948,7 +948,7 @@ p2[[1]]
 
 #SAVE
 if (SAVE.files ==TRUE ){
-  filename.mr.forest <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_GBC.png")
+  filename.mr.forest <- paste0("../output/plots/mr-analysis/", Sys.Date(), "_figure_mrforest_GBC.svg")
   ggsave(filename = filename.mr.forest, plot = p2[[1]], 
          width = 5, 
          height = 24, 
@@ -968,7 +968,7 @@ p4
 
 #SAVE
 if (SAVE.files ==TRUE ){
-  filename.mr.funnel.gbc <- paste0("../output/plots/", Sys.Date(), "_figure_mrfunnel_gbc.png")
+  filename.mr.funnel.gbc <- paste0("../output/plots/mr-analysis/", Sys.Date(), "_figure_mrfunnel_gbc.svg")
   ggsave(filename = filename.mr.funnel.gbc, plot = p4, 
          width = 8, 
          height = 4, 
@@ -1143,13 +1143,13 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
   ) -> plot_pve_simulated
 #plot_pve_simulated
 
-if (SAVE.files ==TRUE ){
-  filename_pveplot_sim <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve.png")
-  ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
-         width = 10, height = 6, 
-         units = "in"  # default
-         )
-}
+# if (SAVE.files ==TRUE ){
+#   filename_pveplot_sim <- paste0("../output/plots/pve/", Sys.Date(), "_figure_simplot_pve.png")
+#   ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
+#          width = 10, height = 6, 
+#          units = "in"  # default
+#          )
+# }
 ```
 
 ```{r simulated-pves-raincloud-plot, fig.height=6, fig.width=10, warning=FALSE}
@@ -1209,7 +1209,7 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
 plot_pve_simulated.raincloud
 
 if (SAVE.files ==TRUE ){
-  filename_pveplot_sim.raincloud <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve_raincloud.png")
+  filename_pveplot_sim.raincloud <- paste0("../output/plots/pve/", Sys.Date(), "_figure_simplot_pve_raincloud.svg")
   ggsave(filename = filename_pveplot_sim.raincloud, plot = plot_pve_simulated.raincloud, 
          width = 10, height = 6, 
          units = "in"  # default
@@ -1384,7 +1384,7 @@ coverage_bias_eliminated <- function(thetaobs, thetaobs_se, ...) {
   return(coverage_bias_eliminated)
 }
 # type1error
-type1error <- function(pvals) sum(pvals<=0.05)/length(pvals)  # no causal_effect
+type1error <- function(pvals) sum(pvals<=0.05)/length(pvals)  # no causal_effect detected
 
 # GSD
 #1
@@ -1679,55 +1679,9 @@ LASSO_GSD_performance_metrics %>%
 
 
 
-```{r store-performance-metrics-csv}
-## GSD  we loop in the next section and save the files there with all references!
-# filename_IVW_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_IVW_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# filename_MODE_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_MODE_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# filename_CONMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_CONMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# filename_MRMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_MRMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# #5
-# filename_MEDIAN_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_MEDIAN_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# #6
-# filename_EGGER_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_EGGER_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# #7
-# filename_ROBUST_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_ROBUST_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# #8
-# filename_PRESSO_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_PRESSO_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# #9
-# filename_RAPS_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_RAPS_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# #10
-# filename_LASSO_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-#                                                Sys.Date(), "_LASSO_GSD_performance_metrics_NSIM_", nsim, ".csv")
-# write.csv2(x = IVW_GSD_performance_metrics, file = filename_IVW_GSD_performance_metrics)
-# write.csv2(x = MODE_GSD_performance_metrics, file = filename_MODE_GSD_performance_metrics)
-# write.csv2(x = CONMIX_GSD_performance_metrics, file = filename_CONMIX_GSD_performance_metrics)
-# write.csv2(x = MRMIX_GSD_performance_metrics, file = filename_MRMIX_GSD_performance_metrics)
-# #5
-# write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename_MEDIAN_GSD_performance_metrics)
-# #6
-# write.csv2(x = EGGER_GSD_performance_metrics, file = filename_EGGER_GSD_performance_metrics)
-# #7
-# write.csv2(x = ROBUST_GSD_performance_metrics, file = filename_ROBUST_GSD_performance_metrics)
-# #8
-# write.csv2(x = PRESSO_GSD_performance_metrics, file = filename_PRESSO_GSD_performance_metrics)
-# #9
-# write.csv2(x = RAPS_GSD_performance_metrics, file = filename_RAPS_GSD_performance_metrics)
-# #10
-# write.csv2(x = LASSO_GSD_performance_metrics, file = filename_LASSO_GSD_performance_metrics)
-```
-
-
 ```{r}
-#s1 <- simsum(data = est_sim, estvarname = "IVW_theta_sim_BMI_GSD_40000", se = "IVW_theta_se_sim_BMI_GSD_40000", true = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "IVW"] )
+library(rsimsum)
+s1 <- simsum(data = est_sim, estvarname = "IVW_theta_sim_BMI_GSD_150000", se = "IVW_theta_se_sim_BMI_GSD_150000", true = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "IVW"] )
 
 ## stats param
 # • nsim,the number of replications with non-missing point estimates and standard error.
@@ -1744,9 +1698,8 @@ LASSO_GSD_performance_metrics %>%
 # • cover, coverage of a nominal level\
 # • becover, bias corrected coverage of a nominal level\
 # • power, power of a (1 - level)\
-
-#statsparam <- c("nsim", "thetamean", "se2mean", "bias", "empse", "mse", "cover", "becover", "power")
-#simsum_summary <- summary(s1, stats = statsparam)
+statsparam <- c("nsim", "thetamean", "se2mean", "bias", "empse", "mse", "cover", "becover", "power")
+simsum_summary <- summary(s1, stats = statsparam)
 ```
 
 ---
@@ -1936,13 +1889,13 @@ ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thet
           ncol = 1, nrow = 4) -> GSD_simplot_thetas_arrange
 
 
-if (SAVE.files ==TRUE ){
-  filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_NSIM_", nsim,".png")
-  ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
-         width = 10, height = 22, 
-         units = "in"  # default
-         )
-}
+# if (SAVE.files ==TRUE ){
+#   filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_NSIM_", nsim,".png")
+#   ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
+#          width = 10, height = 22, 
+#          units = "in"  # default
+#          )
+# }
 ```
 
 
@@ -2039,13 +1992,13 @@ ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GS
           ncol = 1, nrow = 4, common.legend = TRUE) -> bias_mse_plot_GSD
 bias_mse_plot_GSD
 
-if (SAVE.files ==TRUE ){
-  filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_NSIM_", nsim, ".png")
-  ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
-         width = 7, height = 12, 
-         units = "in"  # default
-         )
-}
+# if (SAVE.files ==TRUE ){
+#   filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_NSIM_", nsim, ".png")
+#   ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
+#          width = 7, height = 12, 
+#          units = "in"  # default
+#          )
+# }
 ```
 
 
@@ -2370,55 +2323,55 @@ for (true_method in 1:length(selected_true_methods)) {
   )
   #eval(as.symbol(df_name))
   
-  # STORE
-  if (SAVE.files ==TRUE ){
-    filename.IVW_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_IVW_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = IVW_GSD_performance_metrics, file = filename.IVW_table.performance)
-    filename.MODE_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_MODE_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = MODE_GSD_performance_metrics, file = filename.MODE_table.performance)
-    filename.CONMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_CONMIX_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = CONMIX_GSD_performance_metrics, file = filename.CONMIX_table.performance)
-    filename.MRMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_MRMIX_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = MRMIX_GSD_performance_metrics, file = filename.MRMIX_table.performance)
-    #5
-    filename.MEDIAN_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_MEDIAN_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename.MEDIAN_table.performance)
-    #6
-    filename.EGGER_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_EGGER_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = EGGER_GSD_performance_metrics, file = filename.EGGER_table.performance)
-    #7
-    filename.ROBUST_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_ROBUST_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = ROBUST_GSD_performance_metrics, file = filename.ROBUST_table.performance)
-    #8
-    filename.PRESSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_PRESSO_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = PRESSO_GSD_performance_metrics, file = filename.PRESSO_table.performance)
-    #9
-    filename.RAPS_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_RAPS_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = RAPS_GSD_performance_metrics, file = filename.RAPS_table.performance)
-    #10
-    filename.LASSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                        "_LASSO_GSD_performance_metrics_TRUE_EST_", 
-                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-    write.csv2(x = LASSO_GSD_performance_metrics, file = filename.LASSO_table.performance)
-  }
+  # # STORE
+  # if (SAVE.files ==TRUE ){
+  #   filename.IVW_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_IVW_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = IVW_GSD_performance_metrics, file = filename.IVW_table.performance)
+  #   filename.MODE_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_MODE_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = MODE_GSD_performance_metrics, file = filename.MODE_table.performance)
+  #   filename.CONMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_CONMIX_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = CONMIX_GSD_performance_metrics, file = filename.CONMIX_table.performance)
+  #   filename.MRMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_MRMIX_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = MRMIX_GSD_performance_metrics, file = filename.MRMIX_table.performance)
+  #   #5
+  #   filename.MEDIAN_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_MEDIAN_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename.MEDIAN_table.performance)
+  #   #6
+  #   filename.EGGER_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_EGGER_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = EGGER_GSD_performance_metrics, file = filename.EGGER_table.performance)
+  #   #7
+  #   filename.ROBUST_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_ROBUST_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = ROBUST_GSD_performance_metrics, file = filename.ROBUST_table.performance)
+  #   #8
+  #   filename.PRESSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_PRESSO_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = PRESSO_GSD_performance_metrics, file = filename.PRESSO_table.performance)
+  #   #9
+  #   filename.RAPS_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_RAPS_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = RAPS_GSD_performance_metrics, file = filename.RAPS_table.performance)
+  #   #10
+  #   filename.LASSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+  #                                       "_LASSO_GSD_performance_metrics_TRUE_EST_", 
+  #                                       selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+  #   write.csv2(x = LASSO_GSD_performance_metrics, file = filename.LASSO_table.performance)
+  # }
   
   ###
   ## PLOT  -------------------------------------------------------------------
@@ -2794,71 +2747,70 @@ for (true_method in 1:length(selected_true_methods)) {
                            " estimate calculated with total sample size"))+
     theme_few() -> LASSO_GSD_simplot_thetas
   
-  
-  ####-------------
-  # SAVE  --------------------------------
-  if (SAVE.files ==TRUE ){
-    #1
-    filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #2
-    filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #3
-    filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #4
-    filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MRMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #5
-    filename_MEDIAN_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MEDIAN_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_MEDIAN_GSD_simplot_thetas, plot = MEDIAN_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #6
-    filename_EGGER_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_EGGER_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_EGGER_GSD_simplot_thetas, plot = EGGER_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #7
-    filename_ROBUST_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_ROBUST_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_ROBUST_GSD_simplot_thetas, plot = ROBUST_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #8
-    filename_PRESSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_PRESSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_PRESSO_GSD_simplot_thetas, plot = PRESSO_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #9
-    filename_RAPS_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_RAPS_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_RAPS_GSD_simplot_thetas, plot = RAPS_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-    #10
-    filename_LASSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_LASSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-    ggsave(filename = filename_LASSO_GSD_simplot_thetas, plot = LASSO_GSD_simplot_thetas, 
-           width = 15, height = 6, 
-           units = "in"  # default
-           )
-  }
+  # ####-------------
+  # # SAVE  --------------------------------
+  # if (SAVE.files ==TRUE ){
+  #   #1
+  #   filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #2
+  #   filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #3
+  #   filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #4
+  #   filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MRMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #5
+  #   filename_MEDIAN_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MEDIAN_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_MEDIAN_GSD_simplot_thetas, plot = MEDIAN_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #6
+  #   filename_EGGER_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_EGGER_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_EGGER_GSD_simplot_thetas, plot = EGGER_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #7
+  #   filename_ROBUST_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_ROBUST_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_ROBUST_GSD_simplot_thetas, plot = ROBUST_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #8
+  #   filename_PRESSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_PRESSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_PRESSO_GSD_simplot_thetas, plot = PRESSO_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #9
+  #   filename_RAPS_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_RAPS_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_RAPS_GSD_simplot_thetas, plot = RAPS_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  #   #10
+  #   filename_LASSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_LASSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+  #   ggsave(filename = filename_LASSO_GSD_simplot_thetas, plot = LASSO_GSD_simplot_thetas, 
+  #          width = 15, height = 6, 
+  #          units = "in"  # default
+  #          )
+  # }
 
   IVW_GSD_simplot_thetas$labels$title <- ""
   MODE_GSD_simplot_thetas$labels$title <- ""
@@ -2882,7 +2834,7 @@ for (true_method in 1:length(selected_true_methods)) {
   GSD_simplot_thetas_arrange
   
   if (SAVE.files ==TRUE ){
-    filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/theta_sims/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".svg")
     ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
            width = 10, height = 38, 
            units = "in"  # default
@@ -3163,7 +3115,7 @@ for (true_method in 1:length(selected_true_methods)) {
   bias_mse_plot_GSD
   
   if (SAVE.files ==TRUE ){
-    filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_REF_METHOD_", selected_true_methods[true_method], "_NSIM_",nsim, ".png")
+    filename_simplot_bias_mse <- paste0("../output/plots/bias-mse/", Sys.Date(), "_GSD_simplot_bias_mse_REF_METHOD_", selected_true_methods[true_method], "_NSIM_",nsim, ".svg")
     ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
            width = 7, height = 24, 
            units = "in"  # default
@@ -3535,75 +3487,75 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     )
     #eval(as.symbol(df_name))
 
-    # STORE
-    if (SAVE.files ==TRUE ){
-      filename.IVW_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_IVW_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = IVW_GSD_performance_metrics, file = filename.IVW_table.performance)
-      filename.MODE_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_MODE_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = MODE_GSD_performance_metrics, file = filename.MODE_table.performance)
-      filename.CONMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_CONMIX_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = CONMIX_GSD_performance_metrics, file = filename.CONMIX_table.performance)
-      filename.MRMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_MRMIX_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = MRMIX_GSD_performance_metrics, file = filename.MRMIX_table.performance)
-      #5
-      filename.MEDIAN_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_MEDIAN_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename.MEDIAN_table.performance)
-      #6
-      filename.EGGER_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_EGGER_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = EGGER_GSD_performance_metrics, file = filename.EGGER_table.performance)
-      #7
-      filename.ROBUST_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_ROBUST_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = ROBUST_GSD_performance_metrics, file = filename.ROBUST_table.performance)
-      #8
-      filename.PRESSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_PRESSO_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = PRESSO_GSD_performance_metrics, file = filename.PRESSO_table.performance)
-      #9
-      filename.RAPS_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_RAPS_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = RAPS_GSD_performance_metrics, file = filename.RAPS_table.performance)
-      #10
-      filename.LASSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                          "_LASSO_GSD_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch,
-                                          "_NSIM_", nsim, ".csv")
-      write.csv2(x = LASSO_GSD_performance_metrics, file = filename.LASSO_table.performance)
-    }
+    # # STORE
+    # if (SAVE.files ==TRUE ){
+    #   filename.IVW_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_IVW_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = IVW_GSD_performance_metrics, file = filename.IVW_table.performance)
+    #   filename.MODE_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_MODE_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = MODE_GSD_performance_metrics, file = filename.MODE_table.performance)
+    #   filename.CONMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_CONMIX_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = CONMIX_GSD_performance_metrics, file = filename.CONMIX_table.performance)
+    #   filename.MRMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_MRMIX_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = MRMIX_GSD_performance_metrics, file = filename.MRMIX_table.performance)
+    #   #5
+    #   filename.MEDIAN_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_MEDIAN_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename.MEDIAN_table.performance)
+    #   #6
+    #   filename.EGGER_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_EGGER_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = EGGER_GSD_performance_metrics, file = filename.EGGER_table.performance)
+    #   #7
+    #   filename.ROBUST_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_ROBUST_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = ROBUST_GSD_performance_metrics, file = filename.ROBUST_table.performance)
+    #   #8
+    #   filename.PRESSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_PRESSO_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = PRESSO_GSD_performance_metrics, file = filename.PRESSO_table.performance)
+    #   #9
+    #   filename.RAPS_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_RAPS_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = RAPS_GSD_performance_metrics, file = filename.RAPS_table.performance)
+    #   #10
+    #   filename.LASSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+    #                                       "_LASSO_GSD_performance_metrics_TRUE_EST_", 
+    #                                       selected_true_methods[true_method], 
+    #                                       "_GenArch_", name_GenArch,
+    #                                       "_NSIM_", nsim, ".csv")
+    #   write.csv2(x = LASSO_GSD_performance_metrics, file = filename.LASSO_table.performance)
+    # }
     
     ###
     ## PLOT  -------------------------------------------------------------------
@@ -4075,8 +4027,8 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     GSD_simplot_thetas_arrange
     
     if (SAVE.files ==TRUE ){
-      filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
-                                                    "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+      filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/theta-sims/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
+                                                    "_GenArch_", name_GenArch, "_NSIM_", nsim,".svg")
       ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
              width = 10, height = 38, 
              units = "in"  # default
@@ -4357,8 +4309,8 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     bias_mse_plot_GSD
     
     if (SAVE.files ==TRUE ){
-      filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_REF_METHOD_", selected_true_methods[true_method], 
-                                          "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+      filename_simplot_bias_mse <- paste0("../output/plots/bias-mse/", Sys.Date(), "_GSD_simplot_bias_mse_REF_METHOD_", selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch, "_NSIM_", nsim,".svg")
       ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
              width = 7, height = 24, 
              units = "in"  # default
@@ -4702,27 +4654,134 @@ for (ref.method in seq_along(selected_true_methods)) {
         gtsave(paste0(filename.gt.performance2, ".html")) 
     }
   
-  ## --
-  # CREATE PLOTS -------------------------------------------------------------
-  ## --
-  
-  df.temp.long[[ref.method]] %>%
-    mutate(N=paste0("Sample Size: ", format(N, scientific=FALSE))) %>% 
-    ggplot(aes(x=Method, y=mse, fill=Scenario )) +
-    geom_bar(stat="identity", position="dodge") +
-    facet_wrap(~N) + 
-    coord_flip()+
-    ggthemes::theme_few()+
-    ggthemes::scale_fill_few() -> dodged.barplot.mse
-  
-  
 }
 
 ```
 
+## Summary Plots
 
 
+```{r}
+dodged.barplot.mse <- list()
+dodged.barplot.bias <- list()
+dodged.barplot.coverage <- list()
+dodged.barplot.power<- list()
 
-
-
+for(ref.method in seq_along(df_metrics_all_scenarios)) {
+  ## --
+  # CREATE PLOTS -------------------------------------------------------------
+  ## --
+  
+  
+  ## MSE PLOT FACET WRAP ------------------------------------------------------
+  
+  df.temp.long[[ref.method]] %>%
+    mutate(N=paste0("Sample Size: ", format(N, scientific=FALSE))) %>% 
+    mutate(label.too.large = ifelse(mse>0.5, "MSE \u2265 0.5", NA)) %>% 
+    ggplot(aes(x=Method, y=mse, fill=Scenario )) +
+    geom_bar(stat="identity", position=position_dodge2(reverse=TRUE)) +   # reverse dodge
+    geom_text(aes(x= Method, y= 0.4, label = label.too.large),# position = position_dodge(),
+              #size = 2.25, angle = 90
+              )+
+    facet_wrap(~N) + 
+    xlab("Method")+
+    ylab(paste0("Mean Squared Error with nsim=", nsim))+
+    labs(title = paste0("Selected Reference Method: ", 
+                            selected_true_methods[ref.method])
+         )+
+    #ylim(0, 0.5)+
+    coord_flip(ylim=c(0,0.5))+
+    ggthemes::theme_few()+
+    ggthemes::scale_fill_few() -> dodged.barplot.mse[[ref.method]]
+  
+  if (SAVE.files ==TRUE ){
+    ## arranged plots are toooo small 
+    filename.dodged.barplot.mse <- paste0("../output/plots/summary-plots/", Sys.Date(), "_GSD_dodged_barplot_mse_REF_METHOD_",
+                                          selected_true_methods[ref.method], "_NSIM_", nsim)
+    ggsave(filename = paste0(filename.dodged.barplot.mse, ".svg"), plot =  dodged.barplot.mse[[ref.method]], 
+             width = 12, height = 8, 
+             units = "in"  # default
+             )
+  }
+  
+  ## BIAS PLOT FACET WRAP ------------------------------------------------------
+  
+  df.temp.long[[ref.method]] %>%
+    mutate(N=paste0("Sample Size: ", format(N, scientific=FALSE))) %>% 
+    ggplot(aes(x=Method, y=bias, fill=Scenario )) +
+    geom_bar(stat="identity", position=position_dodge2(reverse=TRUE)) +   # reverse dodge
+    geom_hline(yintercept = 0,  col=ggthemes_data$few$colors$Dark[3,2][[1]], alpha=0.6)+
+    facet_wrap(~N) + 
+    xlab("Method")+
+    ylab(paste0("Bias with nsim=", nsim))+
+    labs(title = paste0("Selected Reference Method: ", 
+                            selected_true_methods[ref.method])
+         )+
+    coord_flip()+
+    ggthemes::theme_few()+
+    ggthemes::scale_fill_few() -> dodged.barplot.bias[[ref.method]]
+  
+  if (SAVE.files ==TRUE ){
+    ## arranged plots are toooo small 
+    filename.dodged.barplot.bias <- paste0("../output/plots/summary-plots/", Sys.Date(), "_GSD_dodged_barplot_bias_REF_METHOD_",
+                                          selected_true_methods[ref.method], "_NSIM_", nsim)
+    ggsave(filename = paste0(filename.dodged.barplot.bias, ".svg"), plot =  dodged.barplot.bias[[ref.method]], 
+             width = 12, height = 8, 
+             units = "in"  # default
+             )
+  }
+  
+  ## COVERAGE PLOT FACET WRAP ------------------------------------------------------
+  df.temp.long[[ref.method]] %>%
+    mutate(N=paste0("Sample Size: ", format(N, scientific=FALSE))) %>% 
+    ggplot(aes(x=Method, y=coverage, fill=Scenario )) +
+    geom_bar(stat="identity", position=position_dodge2(reverse=TRUE)) +   # reverse dodge
+    geom_hline(yintercept = 0.95,  col=ggthemes_data$few$colors$Dark[3,2][[1]], alpha=0.6)+
+    facet_wrap(~N) + 
+    xlab("Method")+
+    ylab(paste0("Coverage with nsim=", nsim))+
+    labs(title = paste0("Selected Reference Method: ", 
+                            selected_true_methods[ref.method])
+         )+
+    coord_flip()+
+    ggthemes::theme_few()+
+    ggthemes::scale_fill_few() -> dodged.barplot.coverage[[ref.method]]
+  
+  if (SAVE.files ==TRUE ){
+    ## arranged plots are toooo small 
+    filename.dodged.barplot.coverage <- paste0("../output/plots/summary-plots/", Sys.Date(), "_GSD_dodged_barplot_coverage_REF_METHOD_",
+                                          selected_true_methods[ref.method], "_NSIM_", nsim)
+    ggsave(filename = paste0(filename.dodged.barplot.coverage, ".svg"), plot =  dodged.barplot.coverage[[ref.method]], 
+             width = 12, height = 8, 
+             units = "in"  # default
+             )
+  }
+  
+  ## Power of 5% level test (not TYPE1ERROR) PLOT FACET WRAP ------------------------------------------------------
+  df.temp.long[[ref.method]] %>%
+    mutate(N=paste0("Sample Size: ", format(N, scientific=FALSE))) %>% 
+    ggplot(aes(x=Method, y=type1error, fill=Scenario )) +
+    geom_bar(stat="identity", position=position_dodge2(reverse=TRUE)) +   # reverse dodge
+    geom_hline(yintercept = 0.95,  col=ggthemes_data$few$colors$Dark[3,2][[1]], alpha=0.6)+
+    facet_wrap(~N) + 
+    xlab("Method")+
+    ylab(paste0("Power of 5% Level Test with nsim=", nsim))+
+    labs(title = paste0("Selected Reference Method: ", 
+                            selected_true_methods[ref.method])
+         )+
+    coord_flip()+
+    ggthemes::theme_few()+
+    ggthemes::scale_fill_few() -> dodged.barplot.power[[ref.method]]
+  
+  if (SAVE.files ==TRUE ){
+    ## arranged plots are toooo small 
+    filename.dodged.barplot.power <- paste0("../output/plots/summary-plots/", Sys.Date(), "_GSD_dodged_barplot_power_REF_METHOD_",
+                                          selected_true_methods[ref.method], "_NSIM_", nsim)
+    ggsave(filename = paste0(filename.dodged.barplot.power, ".svg"), plot =  dodged.barplot.power[[ref.method]], 
+             width = 12, height = 8, 
+             units = "in"  # default
+             )
+  }
+}
+```
 
