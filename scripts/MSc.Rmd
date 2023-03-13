@@ -28,6 +28,8 @@ editor_options:
 figurespath <- paste0("../reports/", format(Sys.time(), "%Y%m%d"), '_figures/')
 knitr::opts_chunk$set(fig.path = figurespath)  # reference is script! also creates new dirs
 
+SAVE.files <- FALSE
+
 library(dplyr)
 library(purrr)
 library(tidyr)
@@ -409,11 +411,16 @@ fig00_b
 #        units = "in"  # default
 #        )
 
-filenamefig00_b <- paste0("../output/plots/", Sys.Date(), "_explained_var_X_new_sample_size_dep.png")
-ggsave(filename = filenamefig00_b, plot = fig00_b, 
+
+if (SAVE.files ==TRUE ){
+  filenamefig00_b <- paste0("../output/plots/", Sys.Date(), "_explained_var_X_new_sample_size_dep.png")
+  ggsave(filename = filenamefig00_b, plot = fig00_b, 
        width = 10, height = 6, 
        units = "in"  # default
        )
+}
+
+
 ```
 
 ## Plot Figure 1 from Qi&Chatterjee 2021
@@ -532,11 +539,13 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
   ) -> fig01b.update
 fig01b.update  # USE THIS
 
-filenamefig01_b <- paste0("../output/plots/", Sys.Date(), "_figure01_new_PVE_X_formula.png")
-ggsave(filename = filenamefig01_b, plot = fig01b.update, 
-       width = 10, height = 6, 
-       units = "in"  # default
-       )
+if (SAVE.files ==TRUE ){
+  filenamefig01_b <- paste0("../output/plots/", Sys.Date(), "_figure01_new_PVE_X_formula.png")
+  ggsave(filename = filenamefig01_b, plot = fig01b.update, 
+         width = 10, height = 6, 
+         units = "in"  # default
+         )
+}
 ```
 
 Discussion: *Pleiotropy* with increasing sample size. INSIDE assumption. 
@@ -610,9 +619,12 @@ ggplot(data = plot_data_2, aes(x=maf.bmi, y=abs(beta.bmi),
   scale_colour_few() -> fig02.update
 fig02.update
 
+
 # SAVE
-filenamefig02 <- paste0("../output/plots/", Sys.Date(), "_figure02.png")
-ggsave(filename = filenamefig02, plot = fig02.update)
+if (SAVE.files ==TRUE ){
+  filenamefig02 <- paste0("../output/plots/", Sys.Date(), "_figure02.png")
+  ggsave(filename = filenamefig02, plot = fig02.update)
+}
 ```
 
 
@@ -701,18 +713,19 @@ ggpubr::ggarrange(ggarrange(fig02.update.arrange, fig01b.update.arrange, ncol=2,
 
 # final_plot1.arrange   # OLD
 final_plot1.arrange2   # use this!
-
-filename_final_plot1 <- paste0("../output/plots/", Sys.Date(), "_final_plot1.arrange_OLD.png")
-filename_final_plot1b <- paste0("../output/plots/", Sys.Date(), "_final_plot1b.arrange_NEW.png")
-
-ggsave(filename = filename_final_plot1, plot = final_plot1.arrange, 
-         width = 14, height = 10, 
-         units = "in"  # default
-         )
-ggsave(filename = filename_final_plot1b, plot = final_plot1.arrange2, 
-         width = 14, height = 10, 
-         units = "in"  # default
-         )
+if (SAVE.files ==TRUE ){
+  filename_final_plot1 <- paste0("../output/plots/", Sys.Date(), "_final_plot1.arrange_OLD.png")
+  filename_final_plot1b <- paste0("../output/plots/", Sys.Date(), "_final_plot1b.arrange_NEW.png")
+  
+  ggsave(filename = filename_final_plot1, plot = final_plot1.arrange, 
+           width = 14, height = 10, 
+           units = "in"  # default
+           )
+  ggsave(filename = filename_final_plot1b, plot = final_plot1.arrange2, 
+           width = 14, height = 10, 
+           units = "in"  # default
+           )
+}
 ```
 
 
@@ -727,7 +740,10 @@ ggsave(filename = filename_final_plot1b, plot = final_plot1.arrange2,
 ```{r MendelianRandomization-analysis-GSD, warning=FALSE}
 # outsourced calculation to `perform_mr.R`
 # data FOR estimates in `perform_mr.R` script and simulation in `simstudy.R` script
-saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
+
+if (SAVE.files ==TRUE ){
+  saveRDS(my_data_harm, paste0("../output/Rdata/", Sys.Date(), "_my_data_harm.rds"))
+}
 
 ## load results from script `perform_mr.R`
 est.bmi.gsd <- readRDS(dplyr::last(list.files("../output/Rdata/", pattern = "_est_BMI_GSD.rds", full.names = TRUE))) 
@@ -814,11 +830,13 @@ p1.gsd+
 p1.gsd
 
 # SAVE
-filename.mr.scatter.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrscatter_gsd.png")
-ggsave(filename = filename.mr.scatter.gsd, plot = p1.gsd, 
-         width = 10, height = 6, 
-         units = "in"  # default
-         )
+if (SAVE.files ==TRUE ){
+  filename.mr.scatter.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrscatter_gsd.png")
+  ggsave(filename = filename.mr.scatter.gsd, plot = p1.gsd, 
+           width = 10, height = 6, 
+           units = "in"  # default
+           )
+}
 ```
 
 
@@ -835,12 +853,14 @@ p2.gsd <- mr_forest(
   ggthemes::theme_few()
 
 #SAVE
-filename.mr.forest.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_GSD.png")
-ggsave(filename = filename.mr.forest.gsd, plot = p2.gsd, 
-       width = 5, 
-       height = 24, 
-         #units = "in"  # default
-         )
+if (SAVE.files ==TRUE ){
+  filename.mr.forest.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_GSD.png")
+  ggsave(filename = filename.mr.forest.gsd, plot = p2.gsd, 
+         width = 5, 
+         height = 24, 
+           #units = "in"  # default
+           )
+}
 ```
 
 ### Funnel Plot
@@ -863,12 +883,14 @@ p4.gsd <- p4.gsd+
 p4.gsd
 
 #SAVE
-filename.mr.funnel.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrfunnel_gsd.png")
-ggsave(filename = filename.mr.funnel.gsd, plot = p4.gsd, 
-       width = 8, 
-       height = 4, 
-       units = "in"  # default
-         )
+if (SAVE.files ==TRUE ){
+  filename.mr.funnel.gsd <- paste0("../output/plots/", Sys.Date(), "_figure_mrfunnel_gsd.png")
+  ggsave(filename = filename.mr.funnel.gsd, plot = p4.gsd, 
+         width = 8, 
+         height = 4, 
+         units = "in"  # default
+           )
+}
 
 ```
 
@@ -908,11 +930,13 @@ p1[[1]] #+
   #ggthemes::theme_few()
 
 # SAVE
-filename.mr.scatter <- paste0("../output/plots/", Sys.Date(), "_figure_mrscatter.png")
-ggsave(filename = filename.mr.scatter, plot = p1[[1]], 
-         #width = 10, height = 6, 
-         #units = "in"  # default
-         )
+if (SAVE.files ==TRUE ){
+  filename.mr.scatter <- paste0("../output/plots/", Sys.Date(), "_figure_mrscatter.png")
+  ggsave(filename = filename.mr.scatter, plot = p1[[1]], 
+           #width = 10, height = 6, 
+           #units = "in"  # default
+           )
+}
 ```
 
 ### Forest Plot
@@ -923,12 +947,14 @@ p2 <- mr_forest_plot(res_single,  exponentiate = FALSE)
 p2[[1]]
 
 #SAVE
-filename.mr.forest <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_GBC.png")
-ggsave(filename = filename.mr.forest, plot = p2[[1]], 
-       width = 5, 
-       height = 24, 
-         #units = "in"  # default
-         )
+if (SAVE.files ==TRUE ){
+  filename.mr.forest <- paste0("../output/plots/", Sys.Date(), "_figure_mrforest_GBC.png")
+  ggsave(filename = filename.mr.forest, plot = p2[[1]], 
+         width = 5, 
+         height = 24, 
+           #units = "in"  # default
+           )
+}
 ```
 
 ### Funnel Plot
@@ -941,12 +967,14 @@ p4[[1]] +
 p4
 
 #SAVE
-filename.mr.funnel.gbc <- paste0("../output/plots/", Sys.Date(), "_figure_mrfunnel_gbc.png")
-ggsave(filename = filename.mr.funnel.gbc, plot = p4, 
-       width = 8, 
-       height = 4, 
-       units = "in"  # default
-         )
+if (SAVE.files ==TRUE ){
+  filename.mr.funnel.gbc <- paste0("../output/plots/", Sys.Date(), "_figure_mrfunnel_gbc.png")
+  ggsave(filename = filename.mr.funnel.gbc, plot = p4, 
+         width = 8, 
+         height = 4, 
+         units = "in"  # default
+           )
+}
 ```
 
 
@@ -994,13 +1022,16 @@ We simulate betas from a normal distribution. The script is outsourced to `simst
 ```{r simulatesimulatesimulate, warning=FALSE}
 # save simulation-vars for simulation `simstudy.R` script
 sim_vars <- list(n=n, colnames_pval=colnames_pval)
-saveRDS(sim_vars, paste0("../output/Rdata/", Sys.Date(), "_sim_vars.rds"))
+if (SAVE.files ==TRUE ){
+  saveRDS(sim_vars, paste0("../output/Rdata/", Sys.Date(), "_sim_vars.rds"))
+}
 ## SIMULATION OUTSOURCED TO "./scripts/simstudy.R"
 
 # read dat from "simstudy.R"  #------------------------------------------------
 #est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_est_sim_NSIM_", full.names = TRUE)))
 # from "purrr-simstudy.R"
 est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_est_sim_purrr_NSIM_", full.names = TRUE)))
+est_sim_architectures <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_est_sim_architectures_purrr_NSIM_", full.names = TRUE)))
 nsim <- nrow(est_sim)
 ```
 
@@ -1051,7 +1082,7 @@ colname_LASSO_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_
 # filter out sample sizes (IVW only used as example, could be any other col)
 sample_size_filtered <- as.numeric(str_extract(colname_IVW_theta_sim_BMI_GSD, pattern = "(\\d)+"))
 
-# EXPOSURE PVE
+# EXPOSURE PVE ------------------------------------------------------------------------------------------------------
 est_sim %>% 
   select(!!!(colname_pve_X)) %>% 
   pivot_longer(everything(), names_to = "PVE_X", values_to = "value_X") %>% 
@@ -1112,11 +1143,13 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
   ) -> plot_pve_simulated
 #plot_pve_simulated
 
-filename_pveplot_sim <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve.png")
-ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
-       width = 10, height = 6, 
-       units = "in"  # default
-       )
+if (SAVE.files ==TRUE ){
+  filename_pveplot_sim <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve.png")
+  ggsave(filename = filename_pveplot_sim, plot = plot_pve_simulated, 
+         width = 10, height = 6, 
+         units = "in"  # default
+         )
+}
 ```
 
 ```{r simulated-pves-raincloud-plot, fig.height=6, fig.width=10, warning=FALSE}
@@ -1175,11 +1208,13 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+    # plot_data1b from section 
   ) -> plot_pve_simulated.raincloud
 plot_pve_simulated.raincloud
 
-filename_pveplot_sim.raincloud <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve_raincloud.png")
-ggsave(filename = filename_pveplot_sim.raincloud, plot = plot_pve_simulated.raincloud, 
-       width = 10, height = 6, 
-       units = "in"  # default
-       )
+if (SAVE.files ==TRUE ){
+  filename_pveplot_sim.raincloud <- paste0("../output/plots/", Sys.Date(), "_figure_simplot_pve_raincloud.png")
+  ggsave(filename = filename_pveplot_sim.raincloud, plot = plot_pve_simulated.raincloud, 
+         width = 10, height = 6, 
+         units = "in"  # default
+         )
+}
 ```
 
 ## Performance Metrics
@@ -1645,49 +1680,49 @@ LASSO_GSD_performance_metrics %>%
 
 
 ```{r store-performance-metrics-csv}
-## GSD
-filename_IVW_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_IVW_GSD_performance_metrics_NSIM_", nsim, ".csv")
-filename_MODE_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_MODE_GSD_performance_metrics_NSIM_", nsim, ".csv")
-filename_CONMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_CONMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
-filename_MRMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_MRMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
-#5
-filename_MEDIAN_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_MEDIAN_GSD_performance_metrics_NSIM_", nsim, ".csv")
-#6
-filename_EGGER_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_EGGER_GSD_performance_metrics_NSIM_", nsim, ".csv")
-#7
-filename_ROBUST_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_ROBUST_GSD_performance_metrics_NSIM_", nsim, ".csv")
-#8
-filename_PRESSO_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_PRESSO_GSD_performance_metrics_NSIM_", nsim, ".csv")
-#9
-filename_RAPS_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_RAPS_GSD_performance_metrics_NSIM_", nsim, ".csv")
-#10
-filename_LASSO_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
-                                               Sys.Date(), "_LASSO_GSD_performance_metrics_NSIM_", nsim, ".csv")
-write.csv2(x = IVW_GSD_performance_metrics, file = filename_IVW_GSD_performance_metrics)
-write.csv2(x = MODE_GSD_performance_metrics, file = filename_MODE_GSD_performance_metrics)
-write.csv2(x = CONMIX_GSD_performance_metrics, file = filename_CONMIX_GSD_performance_metrics)
-write.csv2(x = MRMIX_GSD_performance_metrics, file = filename_MRMIX_GSD_performance_metrics)
-#5
-write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename_MEDIAN_GSD_performance_metrics)
-#6
-write.csv2(x = EGGER_GSD_performance_metrics, file = filename_EGGER_GSD_performance_metrics)
-#7
-write.csv2(x = ROBUST_GSD_performance_metrics, file = filename_ROBUST_GSD_performance_metrics)
-#8
-write.csv2(x = PRESSO_GSD_performance_metrics, file = filename_PRESSO_GSD_performance_metrics)
-#9
-write.csv2(x = RAPS_GSD_performance_metrics, file = filename_RAPS_GSD_performance_metrics)
-#10
-write.csv2(x = LASSO_GSD_performance_metrics, file = filename_LASSO_GSD_performance_metrics)
+## GSD  we loop in the next section and save the files there with all references!
+# filename_IVW_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_IVW_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# filename_MODE_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_MODE_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# filename_CONMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_CONMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# filename_MRMIX_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_MRMIX_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# #5
+# filename_MEDIAN_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_MEDIAN_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# #6
+# filename_EGGER_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_EGGER_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# #7
+# filename_ROBUST_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_ROBUST_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# #8
+# filename_PRESSO_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_PRESSO_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# #9
+# filename_RAPS_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_RAPS_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# #10
+# filename_LASSO_GSD_performance_metrics <- paste0("../output/performance_metrics/", 
+#                                                Sys.Date(), "_LASSO_GSD_performance_metrics_NSIM_", nsim, ".csv")
+# write.csv2(x = IVW_GSD_performance_metrics, file = filename_IVW_GSD_performance_metrics)
+# write.csv2(x = MODE_GSD_performance_metrics, file = filename_MODE_GSD_performance_metrics)
+# write.csv2(x = CONMIX_GSD_performance_metrics, file = filename_CONMIX_GSD_performance_metrics)
+# write.csv2(x = MRMIX_GSD_performance_metrics, file = filename_MRMIX_GSD_performance_metrics)
+# #5
+# write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename_MEDIAN_GSD_performance_metrics)
+# #6
+# write.csv2(x = EGGER_GSD_performance_metrics, file = filename_EGGER_GSD_performance_metrics)
+# #7
+# write.csv2(x = ROBUST_GSD_performance_metrics, file = filename_ROBUST_GSD_performance_metrics)
+# #8
+# write.csv2(x = PRESSO_GSD_performance_metrics, file = filename_PRESSO_GSD_performance_metrics)
+# #9
+# write.csv2(x = RAPS_GSD_performance_metrics, file = filename_RAPS_GSD_performance_metrics)
+# #10
+# write.csv2(x = LASSO_GSD_performance_metrics, file = filename_LASSO_GSD_performance_metrics)
 ```
 
 
@@ -1869,27 +1904,27 @@ ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=mean))+
   theme_few() -> MRMIX_GSD_simplot_thetas
 MRMIX_GSD_simplot_thetas
 
-# SAVE
-filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
-       width = 15, height = 6, 
-       units = "in"  # default
-       )
-filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
-       width = 15, height = 6, 
-       units = "in"  # default
-       )
-filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
-       width = 15, height = 6, 
-       units = "in"  # default
-       )
-filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
-       width = 15, height = 6, 
-       units = "in"  # default
-       )
+# # SAVE   # we loop in the next section and save the ggarrange plots for inspection
+# filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_NSIM_", nsim,".png")
+# ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
+#        width = 15, height = 6, 
+#        units = "in"  # default
+#        )
+# filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_NSIM_", nsim,".png")
+# ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
+#        width = 15, height = 6, 
+#        units = "in"  # default
+#        )
+# filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_NSIM_", nsim,".png")
+# ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
+#        width = 15, height = 6, 
+#        units = "in"  # default
+#        )
+# filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_NSIM_", nsim,".png")
+# ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
+#        width = 15, height = 6, 
+#        units = "in"  # default
+#        )
 ```
 
 ```{r theta-sim-distribution-GSD-arrange, fig.height=18, fig.width=10, warning=FALSE}
@@ -1900,11 +1935,14 @@ MRMIX_GSD_simplot_thetas$labels$title <- ""
 ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thetas, MRMIX_GSD_simplot_thetas,
           ncol = 1, nrow = 4) -> GSD_simplot_thetas_arrange
 
-filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_NSIM_", nsim,".png")
-ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
-       width = 10, height = 22, 
-       units = "in"  # default
-       )
+
+if (SAVE.files ==TRUE ){
+  filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_NSIM_", nsim,".png")
+  ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
+         width = 10, height = 22, 
+         units = "in"  # default
+         )
+}
 ```
 
 
@@ -2001,11 +2039,13 @@ ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GS
           ncol = 1, nrow = 4, common.legend = TRUE) -> bias_mse_plot_GSD
 bias_mse_plot_GSD
 
-filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_NSIM_", nsim, ".png")
-ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
-       width = 7, height = 12, 
-       units = "in"  # default
-       )
+if (SAVE.files ==TRUE ){
+  filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_NSIM_", nsim, ".png")
+  ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
+         width = 7, height = 12, 
+         units = "in"  # default
+         )
+}
 ```
 
 
@@ -2310,53 +2350,75 @@ for (true_method in 1:length(selected_true_methods)) {
                      LASSO_GSD_coverage_bias_eliminated_calc, LASSO_GSD_type1error_calc)) %>% 
     as_tibble()
   
+  # #----
+  # COMBINE TO PRESENT RESULTS ----------------------------------------------------
+  # #----
+  df_name <- paste0("df_combined_method_metrics_TRUE_EST_", selected_true_methods[true_method])
+  assign(x = df_name, value = tibble(N=n))
+  # scenarios <- c("all_instruments", "common_strong", "common_weak", "rare_strong", "rare_weak")
+  assign(x = df_name, value = eval(as.symbol(df_name)) %>% 
+    left_join(IVW_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(MODE_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(CONMIX_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(MRMIX_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(MEDIAN_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(EGGER_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(ROBUST_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(PRESSO_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(RAPS_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+    left_join(LASSO_GSD_performance_metrics %>% select(-var), by = c("N"="N"))
+  )
+  #eval(as.symbol(df_name))
+  
   # STORE
-  filename.IVW_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_IVW_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = IVW_GSD_performance_metrics, file = filename.IVW_table.performance)
-  filename.MODE_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_MODE_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = MODE_GSD_performance_metrics, file = filename.MODE_table.performance)
-  filename.CONMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_CONMIX_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = CONMIX_GSD_performance_metrics, file = filename.CONMIX_table.performance)
-  filename.MRMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_MRMIX_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = MRMIX_GSD_performance_metrics, file = filename.MRMIX_table.performance)
-  #5
-  filename.MEDIAN_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_MEDIAN_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename.MEDIAN_table.performance)
-  #6
-  filename.EGGER_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_EGGER_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = EGGER_GSD_performance_metrics, file = filename.EGGER_table.performance)
-  #7
-  filename.ROBUST_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_ROBUST_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = ROBUST_GSD_performance_metrics, file = filename.ROBUST_table.performance)
-  #8
-  filename.PRESSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_PRESSO_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = PRESSO_GSD_performance_metrics, file = filename.PRESSO_table.performance)
-  #9
-  filename.RAPS_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_RAPS_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = RAPS_GSD_performance_metrics, file = filename.RAPS_table.performance)
-  #10
-  filename.LASSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
-                                      "_LASSO_GSD_performance_metrics_TRUE_EST_", 
-                                      selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
-  write.csv2(x = LASSO_GSD_performance_metrics, file = filename.LASSO_table.performance)
+  if (SAVE.files ==TRUE ){
+    filename.IVW_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_IVW_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = IVW_GSD_performance_metrics, file = filename.IVW_table.performance)
+    filename.MODE_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_MODE_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = MODE_GSD_performance_metrics, file = filename.MODE_table.performance)
+    filename.CONMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_CONMIX_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = CONMIX_GSD_performance_metrics, file = filename.CONMIX_table.performance)
+    filename.MRMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_MRMIX_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = MRMIX_GSD_performance_metrics, file = filename.MRMIX_table.performance)
+    #5
+    filename.MEDIAN_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_MEDIAN_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename.MEDIAN_table.performance)
+    #6
+    filename.EGGER_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_EGGER_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = EGGER_GSD_performance_metrics, file = filename.EGGER_table.performance)
+    #7
+    filename.ROBUST_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_ROBUST_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = ROBUST_GSD_performance_metrics, file = filename.ROBUST_table.performance)
+    #8
+    filename.PRESSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_PRESSO_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = PRESSO_GSD_performance_metrics, file = filename.PRESSO_table.performance)
+    #9
+    filename.RAPS_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_RAPS_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = RAPS_GSD_performance_metrics, file = filename.RAPS_table.performance)
+    #10
+    filename.LASSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                        "_LASSO_GSD_performance_metrics_TRUE_EST_", 
+                                        selected_true_methods[true_method], "_NSIM_", nsim, ".csv")
+    write.csv2(x = LASSO_GSD_performance_metrics, file = filename.LASSO_table.performance)
+  }
   
   ###
   ## PLOT  -------------------------------------------------------------------
@@ -2735,66 +2797,68 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ####-------------
   # SAVE  --------------------------------
-  #1
-  filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #2
-  filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #3
-  filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #4
-  filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MRMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #5
-  filename_MEDIAN_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MEDIAN_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_MEDIAN_GSD_simplot_thetas, plot = MEDIAN_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #6
-  filename_EGGER_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_EGGER_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_EGGER_GSD_simplot_thetas, plot = EGGER_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #7
-  filename_ROBUST_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_ROBUST_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_ROBUST_GSD_simplot_thetas, plot = ROBUST_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #8
-  filename_PRESSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_PRESSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_PRESSO_GSD_simplot_thetas, plot = PRESSO_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #9
-  filename_RAPS_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_RAPS_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_RAPS_GSD_simplot_thetas, plot = RAPS_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
-  #10
-  filename_LASSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_LASSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_LASSO_GSD_simplot_thetas, plot = LASSO_GSD_simplot_thetas, 
-         width = 15, height = 6, 
-         units = "in"  # default
-         )
+  if (SAVE.files ==TRUE ){
+    #1
+    filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #2
+    filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #3
+    filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #4
+    filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MRMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #5
+    filename_MEDIAN_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MEDIAN_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_MEDIAN_GSD_simplot_thetas, plot = MEDIAN_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #6
+    filename_EGGER_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_EGGER_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_EGGER_GSD_simplot_thetas, plot = EGGER_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #7
+    filename_ROBUST_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_ROBUST_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_ROBUST_GSD_simplot_thetas, plot = ROBUST_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #8
+    filename_PRESSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_PRESSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_PRESSO_GSD_simplot_thetas, plot = PRESSO_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #9
+    filename_RAPS_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_RAPS_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_RAPS_GSD_simplot_thetas, plot = RAPS_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+    #10
+    filename_LASSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_LASSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_LASSO_GSD_simplot_thetas, plot = LASSO_GSD_simplot_thetas, 
+           width = 15, height = 6, 
+           units = "in"  # default
+           )
+  }
 
   IVW_GSD_simplot_thetas$labels$title <- ""
   MODE_GSD_simplot_thetas$labels$title <- ""
@@ -2814,14 +2878,16 @@ for (true_method in 1:length(selected_true_methods)) {
   LASSO_GSD_simplot_thetas$labels$title <- ""
   ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thetas, MRMIX_GSD_simplot_thetas, MEDIAN_GSD_simplot_thetas,
             EGGER_GSD_simplot_thetas, ROBUST_GSD_simplot_thetas, PRESSO_GSD_simplot_thetas, RAPS_GSD_simplot_thetas, LASSO_GSD_simplot_thetas,
-            ncol = 1, nrow = 8) -> GSD_simplot_thetas_arrange
+            ncol = 1, nrow = 10) -> GSD_simplot_thetas_arrange
   GSD_simplot_thetas_arrange
   
-  filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
-  ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
-         width = 10, height = 38, 
-         units = "in"  # default
-         )
+  if (SAVE.files ==TRUE ){
+    filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".png")
+    ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
+           width = 10, height = 38, 
+           units = "in"  # default
+           )
+  }
   
   ### GSD Bias & MSE
   #BIAS
@@ -3093,14 +3159,1256 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GSD, bias_mse_plot_MRMIX_GSD, bias_mse_plot_MEDIAN_GSD,
             bias_mse_plot_EGGER_GSD, bias_mse_plot_ROBUST_GSD, bias_mse_plot_PRESSO_GSD, bias_mse_plot_RAPS_GSD, bias_mse_plot_LASSO_GSD,
-            ncol = 1, nrow = 4, common.legend = TRUE) -> bias_mse_plot_GSD
+            ncol = 1, nrow = 10, common.legend = TRUE) -> bias_mse_plot_GSD
   bias_mse_plot_GSD
   
-  filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_REF_METHOD_", selected_true_methods[true_method], "_NSIM_",nsim, ".png")
-  ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
-         width = 7, height = 12, 
-         units = "in"  # default
-         )
+  if (SAVE.files ==TRUE ){
+    filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_REF_METHOD_", selected_true_methods[true_method], "_NSIM_",nsim, ".png")
+    ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
+           width = 7, height = 24, 
+           units = "in"  # default
+           )
+  }
 }
+
 ```
+
+
+## Now loop over all genetic architecture simulations
+
+
+```{r parallel-performance-genetic-architectures}
+effect_size <- c("strong", "weak")
+maf <- c("rare", "common")
+all_quadrants <- tidyr::crossing(effect_size, maf)
+
+# create copy of est_sim so the genetic architectures can be assigned to this variable in the loop 
+# without losing the simulations on all variants not considering genetic architecture
+est_sim_all_variants <- est_sim
+
+# now we do not need to rewrite the code from above but can assign each genetic architecture df to  est_sim
+# and only need to change the names of the files we store for later usage
+for (my_architecture in 1:length(est_sim_architectures)) {
+  
+  est_sim <- est_sim_architectures[[my_architecture]]
+  name_GenArch <- gsub(pattern = "_est_sim", replacement = "", names(est_sim_architectures)[my_architecture])
+  
+  # fewer variants -> no results for smaller sample sizes -> reassign sample sizes and colnames
+  
+  #1
+  colname_IVW_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_sim_BMI_GSD_")]
+  colname_IVW_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "IVW_theta_se_sim_BMI_GSD_")]
+  #2
+  colname_MODE_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_sim_BMI_GSD_")]
+  colname_MODE_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MODE_theta_se_sim_BMI_GSD_")]
+  #3
+  colname_CONMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_sim_BMI_GSD_")]
+  colname_CONMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "CONMIX_theta_se_sim_BMI_GSD_")]
+  #4
+  colname_MRMIX_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MRMIX_theta_sim_BMI_GSD_")]
+  colname_MRMIX_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MRMIX_theta_se_sim_BMI_GSD_")]
+  #5
+  colname_MEDIAN_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MEDIAN_theta_sim_BMI_GSD_")]
+  colname_MEDIAN_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "MEDIAN_theta_se_sim_BMI_GSD_")]
+  #6
+  colname_EGGER_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "EGGER_theta_sim_BMI_GSD_")]
+  colname_EGGER_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "EGGER_theta_se_sim_BMI_GSD_")]
+  #7
+  colname_ROBUST_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "ROBUST_theta_sim_BMI_GSD_")]
+  colname_ROBUST_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "ROBUST_theta_se_sim_BMI_GSD_")]
+  #8
+  colname_PRESSO_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "PRESSO_theta_sim_BMI_GSD_")]
+  colname_PRESSO_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "PRESSO_theta_se_sim_BMI_GSD_")]
+  #9
+  colname_RAPS_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "RAPS_theta_sim_BMI_GSD_")]
+  colname_RAPS_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "RAPS_theta_se_sim_BMI_GSD_")]
+  #10
+  colname_LASSO_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "LASSO_theta_sim_BMI_GSD_")]
+  colname_LASSO_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "LASSO_theta_se_sim_BMI_GSD_")]
+  
+  # retrieve IVW/ MODE/ CONMIX cols for BMI -> GBC
+  # removed on 2023-01-24 (see github)
+  
+  # filter out sample sizes (IVW only used as example, could be any other col)
+  sample_size_filtered <- as.numeric(str_extract(colname_IVW_theta_sim_BMI_GSD, pattern = "(\\d)+"))
+  
+  ### NOW START LOOP --------------------------------------------------------
+  for (true_method in 1:length(selected_true_methods)) {
+    # define reference estimate for ALL 5 chosen methods in loop 
+    args.gsd.method <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]], 
+                            nsim=nrow(est_sim)
+    )
+    #1
+    IVW_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, IVW_GSD_mean=mean, IVW_GSD_emp_se=emp_se, IVW_GSD_bias=bias, IVW_GSD_mse=mse)
+    #2
+    MODE_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_MODE_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, MODE_GSD_mean=mean, MODE_GSD_emp_se=emp_se, MODE_GSD_bias=bias, MODE_GSD_mse=mse)
+    #3
+    CONMIX_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_CONMIX_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, CONMIX_GSD_mean=mean, CONMIX_GSD_emp_se=emp_se, CONMIX_GSD_bias=bias, CONMIX_GSD_mse=mse)
+    #4
+    MRMIX_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_MRMIX_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, MRMIX_GSD_mean=mean, MRMIX_GSD_emp_se=emp_se, MRMIX_GSD_bias=bias, MRMIX_GSD_mse=mse)
+    #5
+    MEDIAN_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_MEDIAN_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, MEDIAN_GSD_mean=mean, MEDIAN_GSD_emp_se=emp_se, MEDIAN_GSD_bias=bias, MEDIAN_GSD_mse=mse)
+    #6
+    EGGER_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_EGGER_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, EGGER_GSD_mean=mean, EGGER_GSD_emp_se=emp_se, EGGER_GSD_bias=bias, EGGER_GSD_mse=mse)
+    #7
+    ROBUST_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_ROBUST_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, ROBUST_GSD_mean=mean, ROBUST_GSD_emp_se=emp_se, ROBUST_GSD_bias=bias, ROBUST_GSD_mse=mse)
+    #8
+    PRESSO_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_PRESSO_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, PRESSO_GSD_mean=mean, PRESSO_GSD_emp_se=emp_se, PRESSO_GSD_bias=bias, PRESSO_GSD_mse=mse)
+    #9
+    RAPS_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_RAPS_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, RAPS_GSD_mean=mean, RAPS_GSD_emp_se=emp_se, RAPS_GSD_bias=bias, RAPS_GSD_mse=mse)
+    #10
+    LASSO_GSD_performance_metrics <- est_sim %>% 
+      select(!!!(colname_LASSO_theta_sim_BMI_GSD)) %>% 
+      map_df(.f = ~ funs %>% 
+               map(exec, .x, !!!args.gsd.method), .id = "var") %>% 
+      cbind(sample_size_filtered) %>% 
+      rename(N = sample_size_filtered, LASSO_GSD_mean=mean, LASSO_GSD_emp_se=emp_se, LASSO_GSD_bias=bias, LASSO_GSD_mse=mse)
+    
+    ## further metrics
+    IVW_GSD_coverage_calc <- c()
+    IVW_GSD_coverage_bias_eliminated_calc <- c()
+    IVW_GSD_type1error_calc <- c()
+    MODE_GSD_coverage_calc <- c()
+    MODE_GSD_coverage_bias_eliminated_calc <- c()
+    MODE_GSD_type1error_calc <- c()
+    CONMIX_GSD_coverage_calc <- c()
+    CONMIX_GSD_coverage_bias_eliminated_calc <- c()
+    CONMIX_GSD_type1error_calc <- c()
+    MRMIX_GSD_coverage_calc <- c()
+    MRMIX_GSD_coverage_bias_eliminated_calc <- c()
+    MRMIX_GSD_type1error_calc <- c()
+    #5
+    MEDIAN_GSD_coverage_calc <- c()
+    MEDIAN_GSD_coverage_bias_eliminated_calc <- c()
+    MEDIAN_GSD_type1error_calc <- c()
+    #6
+    EGGER_GSD_coverage_calc <- c()
+    EGGER_GSD_coverage_bias_eliminated_calc <- c()
+    EGGER_GSD_type1error_calc <- c()
+    #7
+    ROBUST_GSD_coverage_calc <- c()
+    ROBUST_GSD_coverage_bias_eliminated_calc <- c()
+    ROBUST_GSD_type1error_calc <- c()
+    #8
+    PRESSO_GSD_coverage_calc <- c()
+    PRESSO_GSD_coverage_bias_eliminated_calc <- c()
+    PRESSO_GSD_type1error_calc <- c()
+    #9
+    RAPS_GSD_coverage_calc <- c()
+    RAPS_GSD_coverage_bias_eliminated_calc <- c()
+    RAPS_GSD_type1error_calc <- c()
+    #10
+    LASSO_GSD_coverage_calc <- c()
+    LASSO_GSD_coverage_bias_eliminated_calc <- c()
+    LASSO_GSD_type1error_calc <- c()
+  
+    for (i in 1:length(sample_size_filtered)) {
+      sample_size <- sample_size_filtered[i]
+      # GSD additional metrics ----------------------------------------------------
+      ## 1/ IVW
+      col_IVW_GSD_theta <- paste0("IVW_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_IVW_GSD_theta_se <- paste0("IVW_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_IVW_GSD_mr_pval <- paste0("IVW_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      IVW_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_IVW_GSD_theta], thetaobs_se = est_sim[col_IVW_GSD_theta_se], theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      IVW_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_IVW_GSD_theta]], thetaobs_se = est_sim[[col_IVW_GSD_theta_se]])
+      IVW_GSD_type1error_calc[i] <- type1error(est_sim[[col_IVW_GSD_mr_pval]])
+      ## 2/ MODE
+      col_MODE_GSD_theta <- paste0("MODE_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_MODE_GSD_theta_se <- paste0("MODE_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_MODE_GSD_mr_pval <- paste0("MODE_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      MODE_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MODE_GSD_theta], 
+                                           thetaobs_se = est_sim[col_MODE_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      MODE_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MODE_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_MODE_GSD_theta_se]])
+      MODE_GSD_type1error_calc[i] <- type1error(est_sim[[col_MODE_GSD_mr_pval]])
+      ## 3/ CONMIX
+      col_CONMIX_GSD_theta <- paste0("CONMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_CONMIX_GSD_theta_se <- paste0("CONMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_CONMIX_GSD_mr_pval <- paste0("CONMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      CONMIX_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_CONMIX_GSD_theta], 
+                                           thetaobs_se = est_sim[col_CONMIX_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      CONMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_CONMIX_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_CONMIX_GSD_theta_se]])
+      CONMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_CONMIX_GSD_mr_pval]])  
+      ## 4/ MRMIX
+      col_MRMIX_GSD_theta <- paste0("MRMIX_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_MRMIX_GSD_theta_se <- paste0("MRMIX_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_MRMIX_GSD_mr_pval <- paste0("MRMIX_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      MRMIX_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MRMIX_GSD_theta], 
+                                           thetaobs_se = est_sim[col_MRMIX_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      MRMIX_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MRMIX_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_MRMIX_GSD_theta_se]])
+      MRMIX_GSD_type1error_calc[i] <- type1error(est_sim[[col_MRMIX_GSD_mr_pval]])  
+      ## 5/ MEDIAN
+      col_MEDIAN_GSD_theta <- paste0("MEDIAN_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_MEDIAN_GSD_theta_se <- paste0("MEDIAN_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_MEDIAN_GSD_mr_pval <- paste0("MEDIAN_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      MEDIAN_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_MEDIAN_GSD_theta], 
+                                           thetaobs_se = est_sim[col_MEDIAN_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      MEDIAN_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_MEDIAN_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_MEDIAN_GSD_theta_se]])
+      MEDIAN_GSD_type1error_calc[i] <- type1error(est_sim[[col_MEDIAN_GSD_mr_pval]])  
+      ## 6/ EGGER
+      col_EGGER_GSD_theta <- paste0("EGGER_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_EGGER_GSD_theta_se <- paste0("EGGER_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_EGGER_GSD_mr_pval <- paste0("EGGER_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      EGGER_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_EGGER_GSD_theta], 
+                                           thetaobs_se = est_sim[col_EGGER_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      EGGER_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_EGGER_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_EGGER_GSD_theta_se]])
+      EGGER_GSD_type1error_calc[i] <- type1error(est_sim[[col_EGGER_GSD_mr_pval]])
+      ## 7/ ROBUST
+      col_ROBUST_GSD_theta <- paste0("ROBUST_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_ROBUST_GSD_theta_se <- paste0("ROBUST_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_ROBUST_GSD_mr_pval <- paste0("ROBUST_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      ROBUST_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_ROBUST_GSD_theta], 
+                                           thetaobs_se = est_sim[col_ROBUST_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      ROBUST_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_ROBUST_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_ROBUST_GSD_theta_se]])
+      ROBUST_GSD_type1error_calc[i] <- type1error(est_sim[[col_ROBUST_GSD_mr_pval]])
+      ## 8/ PRESSO
+      col_PRESSO_GSD_theta <- paste0("PRESSO_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_PRESSO_GSD_theta_se <- paste0("PRESSO_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_PRESSO_GSD_mr_pval <- paste0("PRESSO_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      PRESSO_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_PRESSO_GSD_theta], 
+                                           thetaobs_se = est_sim[col_PRESSO_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      PRESSO_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_PRESSO_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_PRESSO_GSD_theta_se]])
+      PRESSO_GSD_type1error_calc[i] <- type1error(est_sim[[col_PRESSO_GSD_mr_pval]])
+      ## 9/ RAPS
+      col_RAPS_GSD_theta <- paste0("RAPS_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_RAPS_GSD_theta_se <- paste0("RAPS_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_RAPS_GSD_mr_pval <- paste0("RAPS_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      RAPS_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_RAPS_GSD_theta], 
+                                           thetaobs_se = est_sim[col_RAPS_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      RAPS_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_RAPS_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_RAPS_GSD_theta_se]])
+      RAPS_GSD_type1error_calc[i] <- type1error(est_sim[[col_RAPS_GSD_mr_pval]])
+      ## 10/LASSO
+      col_LASSO_GSD_theta <- paste0("LASSO_theta_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_LASSO_GSD_theta_se <- paste0("LASSO_theta_se_sim_BMI_GSD_", format(sample_size, scientific = FALSE))
+      col_LASSO_GSD_mr_pval <- paste0("LASSO_mr_pval_BMI_GSD_", format(sample_size, scientific = FALSE))
+      # calc
+      LASSO_GSD_coverage_calc[i] <- coverage(thetaobs = est_sim[col_LASSO_GSD_theta], 
+                                           thetaobs_se = est_sim[col_LASSO_GSD_theta_se], 
+                                           theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]])
+      LASSO_GSD_coverage_bias_eliminated_calc[i] <- coverage_bias_eliminated(thetaobs = est_sim[[col_LASSO_GSD_theta]], 
+                                                                           thetaobs_se = est_sim[[col_LASSO_GSD_theta_se]])
+      LASSO_GSD_type1error_calc[i] <- type1error(est_sim[[col_LASSO_GSD_mr_pval]])
+      #-----------
+    }
+    
+    ## combine metrics
+    IVW_GSD_performance_metrics <- IVW_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(IVW_GSD_coverage_calc, IVW_GSD_coverage_bias_eliminated_calc, IVW_GSD_type1error_calc)) %>% 
+      as_tibble()
+    MODE_GSD_performance_metrics <- MODE_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(MODE_GSD_coverage_calc, 
+                       MODE_GSD_coverage_bias_eliminated_calc, MODE_GSD_type1error_calc)) %>% 
+      as_tibble()
+    CONMIX_GSD_performance_metrics <- CONMIX_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(CONMIX_GSD_coverage_calc, 
+                       CONMIX_GSD_coverage_bias_eliminated_calc, CONMIX_GSD_type1error_calc)) %>% 
+      as_tibble()
+    MRMIX_GSD_performance_metrics <- MRMIX_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(MRMIX_GSD_coverage_calc, 
+                       MRMIX_GSD_coverage_bias_eliminated_calc, MRMIX_GSD_type1error_calc)) %>% 
+      as_tibble()
+    #5
+    MEDIAN_GSD_performance_metrics <- MEDIAN_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(MEDIAN_GSD_coverage_calc, 
+                       MEDIAN_GSD_coverage_bias_eliminated_calc, MEDIAN_GSD_type1error_calc)) %>% 
+      as_tibble()
+    #6
+    EGGER_GSD_performance_metrics <- EGGER_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(EGGER_GSD_coverage_calc, 
+                       EGGER_GSD_coverage_bias_eliminated_calc, EGGER_GSD_type1error_calc)) %>% 
+      as_tibble()
+    #7
+    ROBUST_GSD_performance_metrics <- ROBUST_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(ROBUST_GSD_coverage_calc, 
+                       ROBUST_GSD_coverage_bias_eliminated_calc, ROBUST_GSD_type1error_calc)) %>% 
+      as_tibble()
+    #8
+    PRESSO_GSD_performance_metrics <- PRESSO_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(PRESSO_GSD_coverage_calc, 
+                       PRESSO_GSD_coverage_bias_eliminated_calc, PRESSO_GSD_type1error_calc)) %>% 
+      as_tibble()
+    #9
+    RAPS_GSD_performance_metrics <- RAPS_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(RAPS_GSD_coverage_calc, 
+                       RAPS_GSD_coverage_bias_eliminated_calc, RAPS_GSD_type1error_calc)) %>% 
+      as_tibble()
+    #10
+    LASSO_GSD_performance_metrics <- LASSO_GSD_performance_metrics %>% 
+      select(N, everything()) %>% 
+      cbind(data.frame(LASSO_GSD_coverage_calc, 
+                       LASSO_GSD_coverage_bias_eliminated_calc, LASSO_GSD_type1error_calc)) %>% 
+      as_tibble()
+
+    # #----
+    # COMBINE TO PRESENT RESULTS Scenarios 2-5 ----------------------------------------------------
+    # #----
+    df_name <- paste0("df_combined_method_metrics_TRUE_EST_", selected_true_methods[true_method], "_GenArch_", name_GenArch)
+    assign(x = df_name, value = tibble(N=n))
+    
+    # scenarios <- c("all_instruments", "common_strong", "common_weak", "rare_strong", "rare_weak")
+    assign(x = df_name, value = eval(as.symbol(df_name)) %>% 
+      left_join(IVW_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(MODE_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(CONMIX_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(MRMIX_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(MEDIAN_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(EGGER_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(ROBUST_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(PRESSO_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(RAPS_GSD_performance_metrics %>% select(-var), by = c("N"="N")) %>% 
+      left_join(LASSO_GSD_performance_metrics %>% select(-var), by = c("N"="N"))
+    )
+    #eval(as.symbol(df_name))
+
+    # STORE
+    if (SAVE.files ==TRUE ){
+      filename.IVW_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_IVW_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = IVW_GSD_performance_metrics, file = filename.IVW_table.performance)
+      filename.MODE_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_MODE_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = MODE_GSD_performance_metrics, file = filename.MODE_table.performance)
+      filename.CONMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_CONMIX_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = CONMIX_GSD_performance_metrics, file = filename.CONMIX_table.performance)
+      filename.MRMIX_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_MRMIX_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = MRMIX_GSD_performance_metrics, file = filename.MRMIX_table.performance)
+      #5
+      filename.MEDIAN_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_MEDIAN_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = MEDIAN_GSD_performance_metrics, file = filename.MEDIAN_table.performance)
+      #6
+      filename.EGGER_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_EGGER_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = EGGER_GSD_performance_metrics, file = filename.EGGER_table.performance)
+      #7
+      filename.ROBUST_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_ROBUST_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = ROBUST_GSD_performance_metrics, file = filename.ROBUST_table.performance)
+      #8
+      filename.PRESSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_PRESSO_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = PRESSO_GSD_performance_metrics, file = filename.PRESSO_table.performance)
+      #9
+      filename.RAPS_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_RAPS_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = RAPS_GSD_performance_metrics, file = filename.RAPS_table.performance)
+      #10
+      filename.LASSO_table.performance <- paste0("../output/performance_metrics/", Sys.Date(), 
+                                          "_LASSO_GSD_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch,
+                                          "_NSIM_", nsim, ".csv")
+      write.csv2(x = LASSO_GSD_performance_metrics, file = filename.LASSO_table.performance)
+    }
+    
+    ###
+    ## PLOT  -------------------------------------------------------------------
+    ###
+    IVW_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(IVW_GSD_performance_metrics, aes(x=N, y=IVW_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      # geom_errorbar(aes(ymin=IVW_GSD_mean-1.96*IVW_GSD_emp_se, ymax=IVW_GSD_mean+1.96*IVW_GSD_emp_se), 
+      #               width=3000, # x-axis dimension
+      #               position = "dodge")+
+      ## ADD rainbow plots
+      geom_boxplot(data = IVW_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = IVW_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = IVW_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("IVW estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> IVW_GSD_simplot_thetas
+    
+    ## 2 MODE
+    MODE_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_MODE_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(MODE_GSD_performance_metrics, aes(x=N, y=MODE_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      # geom_errorbar(aes(ymin=MODE_GSD_mean-1.96*MODE_GSD_emp_se, ymax=MODE_GSD_mean+1.96*MODE_GSD_emp_se), 
+      #               width=3000, # x-axis dimension
+      #               position = "dodge")+
+      ## ADD rainbow plots
+      geom_boxplot(data = MODE_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = MODE_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = MODE_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("MODE estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> MODE_GSD_simplot_thetas
+    
+    ## 3 CONMIX
+    CONMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_CONMIX_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=CONMIX_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      ## ADD rainbow plots
+      geom_boxplot(data = CONMIX_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = CONMIX_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = CONMIX_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("CONMIX estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> CONMIX_GSD_simplot_thetas
+    
+    ## 4 MRMIX
+    MRMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_MRMIX_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=MRMIX_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      ## ADD rainbow plots
+      geom_boxplot(data = MRMIX_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = MRMIX_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = MRMIX_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("MRMIX estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> MRMIX_GSD_simplot_thetas
+    
+    ## 5 MEDIAN
+    MEDIAN_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_MEDIAN_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(MEDIAN_GSD_performance_metrics, aes(x=N, y=MEDIAN_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      ## ADD rainbow plots
+      geom_boxplot(data = MEDIAN_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = MEDIAN_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = MEDIAN_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("MEDIAN estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> MEDIAN_GSD_simplot_thetas
+    
+    ## 6 EGGER
+    EGGER_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_EGGER_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(EGGER_GSD_performance_metrics, aes(x=N, y=EGGER_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      ## ADD rainbow plots
+      geom_boxplot(data = EGGER_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = EGGER_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = EGGER_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("EGGER estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> EGGER_GSD_simplot_thetas
+    ## 7 ROBUST
+    ROBUST_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_ROBUST_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(ROBUST_GSD_performance_metrics, aes(x=N, y=ROBUST_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      ## ADD rainbow plots
+      geom_boxplot(data = ROBUST_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = ROBUST_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = ROBUST_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("ROBUST estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> ROBUST_GSD_simplot_thetas
+    ## 8 PRESSO
+    PRESSO_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_PRESSO_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(PRESSO_GSD_performance_metrics, aes(x=N, y=PRESSO_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      ## ADD rainbow plots
+      geom_boxplot(data = PRESSO_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = PRESSO_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = PRESSO_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("PRESSO estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> PRESSO_GSD_simplot_thetas
+    ## 9 RAPS
+    RAPS_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_RAPS_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(RAPS_GSD_performance_metrics, aes(x=N, y=RAPS_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      ## ADD rainbow plots
+      geom_boxplot(data = RAPS_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = RAPS_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = RAPS_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("RAPS estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> RAPS_GSD_simplot_thetas
+    ## 10 LASSO
+    LASSO_BMI_GSD_geom_point_dat <- est_sim %>% 
+      select(!!!(colname_LASSO_theta_sim_BMI_GSD)) %>% 
+      pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
+      mutate(theta_sim_numeric = as.numeric(stringr::str_extract(string =theta_sim, pattern = "\\d+")))
+    
+    ggplot(LASSO_GSD_performance_metrics, aes(x=N, y=LASSO_GSD_mean))+ 
+      geom_point()+
+      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+             label= expression( paste("ref: ", theta[X] ))  , 
+             color= ggthemes_data$few$colors$Dark[9,2][[1]]
+               )+
+      ## ADD rainbow plots
+      geom_boxplot(data = LASSO_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                   col=ggthemes_data$few$colors$Dark[3,2][[1]],
+                   alpha=0.2, size=0.2, outlier.shape = NA)+
+      ggdist::stat_halfeye(data = LASSO_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
+                           inherit.aes = FALSE, 
+                           slab_fill=ggthemes_data$few$colors$Dark[3,2][[1]], slab_alpha = 0.2,
+                           geom = "slabinterval",
+                           na.rm=TRUE, trim=TRUE, adjust = .5, width = 10000, .width = 0, justification = -.3, point_colour = NA)+
+      gghalves::geom_half_point(
+        data = LASSO_BMI_GSD_geom_point_dat, mapping=aes(x=theta_sim_numeric-2000, y=value, group=theta_sim_numeric), 
+        inherit.aes = FALSE, size=0.2, colour=ggthemes_data$few$colors$Dark[3,2][[1]],
+        side = "l", range_scale = .4, alpha = .2)+
+      ## FINISH rainbow
+      scale_x_continuous(labels = comma)+
+      xlab("Size of Sample I")+
+      ylab("Mean thetas")+
+      scale_y_continuous(limits = c(0.25,0.8))+
+      labs(title = "Simulated Thetas with Empirical Standard Error", 
+           subtitle = paste0("LASSO estimate: BMI -> GSD\nSelected Reference Method: ", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> LASSO_GSD_simplot_thetas
+    
+    
+    ####-------------
+    # SAVE  --------------------------------
+    # #1
+    # filename_IVW_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_IVW_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], 
+    #                                           "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_IVW_GSD_simplot_thetas, plot = IVW_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #2
+    # filename_MODE_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MODE_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], 
+    #                                            "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_MODE_GSD_simplot_thetas, plot = MODE_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #3
+    # filename_CONMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_CONMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], 
+    #                                              "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_CONMIX_GSD_simplot_thetas, plot = CONMIX_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #4
+    # filename_MRMIX_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MRMIX_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], 
+    #                                             "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_MRMIX_GSD_simplot_thetas, plot = MRMIX_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #5
+    # filename_MEDIAN_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_MEDIAN_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], 
+    #                                              "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_MEDIAN_GSD_simplot_thetas, plot = MEDIAN_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #6
+    # filename_EGGER_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_EGGER_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], 
+    #                                             "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_EGGER_GSD_simplot_thetas, plot = EGGER_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #7
+    # filename_ROBUST_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_ROBUST_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
+    #                                              "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_ROBUST_GSD_simplot_thetas, plot = ROBUST_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #8
+    # filename_PRESSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_PRESSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
+    #                                              "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_PRESSO_GSD_simplot_thetas, plot = PRESSO_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #9
+    # filename_RAPS_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_RAPS_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
+    #                                            "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_RAPS_GSD_simplot_thetas, plot = RAPS_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+    # #10
+    # filename_LASSO_GSD_simplot_thetas <- paste0("../output/plots/", Sys.Date(), "_LASSO_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
+    #                                             "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+    # ggsave(filename = filename_LASSO_GSD_simplot_thetas, plot = LASSO_GSD_simplot_thetas, 
+    #        width = 15, height = 6, 
+    #        units = "in"  # default
+    #        )
+  
+    IVW_GSD_simplot_thetas$labels$title <- ""
+    MODE_GSD_simplot_thetas$labels$title <- ""
+    CONMIX_GSD_simplot_thetas$labels$title <- ""
+    MRMIX_GSD_simplot_thetas$labels$title <- ""
+    #5
+    MEDIAN_GSD_simplot_thetas$labels$title <- ""
+    #6
+    EGGER_GSD_simplot_thetas$labels$title <- ""
+    #7
+    ROBUST_GSD_simplot_thetas$labels$title <- ""
+    #8
+    PRESSO_GSD_simplot_thetas$labels$title <- ""
+    #9
+    RAPS_GSD_simplot_thetas$labels$title <- ""
+    #10
+    LASSO_GSD_simplot_thetas$labels$title <- ""
+    ggarrange(IVW_GSD_simplot_thetas,MODE_GSD_simplot_thetas,CONMIX_GSD_simplot_thetas, MRMIX_GSD_simplot_thetas, MEDIAN_GSD_simplot_thetas,
+              EGGER_GSD_simplot_thetas, ROBUST_GSD_simplot_thetas, PRESSO_GSD_simplot_thetas, RAPS_GSD_simplot_thetas, LASSO_GSD_simplot_thetas,
+              ncol = 1, nrow = 10) -> GSD_simplot_thetas_arrange
+    GSD_simplot_thetas_arrange
+    
+    if (SAVE.files ==TRUE ){
+      filename_GSD_simplot_thetas_arrange <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
+                                                    "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+      ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
+             width = 10, height = 38, 
+             units = "in"  # default
+             )
+    }
+    
+    ### GSD Bias & MSE
+    #BIAS
+    ggplot(IVW_GSD_performance_metrics, aes(x=N, y=IVW_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "IVW estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_IVW_GSD
+    #MSE
+    ggplot(IVW_GSD_performance_metrics, aes(x=N, y=IVW_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "IVW estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_IVW_GSD
+    ggarrange(biasplot_IVW_GSD, mseplot_IVW_GSD) -> bias_mse_plot_IVW_GSD
+    
+    ## MODE
+    ggplot(MODE_GSD_performance_metrics, aes(x=N, y=MODE_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "MODE estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_MODE_GSD
+    ggplot(MODE_GSD_performance_metrics, aes(x=N, y=MODE_GSD_mse))+ 
+      geom_point()+
+        geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "MODE estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_MODE_GSD
+    ggarrange(biasplot_MODE_GSD, mseplot_MODE_GSD) -> bias_mse_plot_MODE_GSD
+    
+    ## CONMIX
+    ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=CONMIX_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "CONMIX estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_CONMIX_GSD
+    ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=CONMIX_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "CONMIX estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_CONMIX_GSD
+    ggarrange(biasplot_CONMIX_GSD, mseplot_CONMIX_GSD) -> bias_mse_plot_CONMIX_GSD
+    
+    ## MRMIX
+    ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=MRMIX_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "MRMIX estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_MRMIX_GSD
+    ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=MRMIX_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "MRMIX estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_MRMIX_GSD
+    ggarrange(biasplot_MRMIX_GSD, mseplot_MRMIX_GSD) -> bias_mse_plot_MRMIX_GSD
+    
+    ## 5 MEDIAN
+    ggplot(MEDIAN_GSD_performance_metrics, aes(x=N, y=MEDIAN_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "MEDIAN estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_MEDIAN_GSD
+    ggplot(MEDIAN_GSD_performance_metrics, aes(x=N, y=MEDIAN_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "MEDIAN estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_MEDIAN_GSD
+    ggarrange(biasplot_MEDIAN_GSD, mseplot_MEDIAN_GSD) -> bias_mse_plot_MEDIAN_GSD
+    ## 6 EGGER
+    ggplot(EGGER_GSD_performance_metrics, aes(x=N, y=EGGER_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "EGGER estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_EGGER_GSD
+    ggplot(EGGER_GSD_performance_metrics, aes(x=N, y=EGGER_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "EGGER estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_EGGER_GSD
+    ggarrange(biasplot_EGGER_GSD, mseplot_EGGER_GSD) -> bias_mse_plot_EGGER_GSD
+    ## 7 ROBUST
+    ggplot(ROBUST_GSD_performance_metrics, aes(x=N, y=ROBUST_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "ROBUST estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_ROBUST_GSD
+    ggplot(ROBUST_GSD_performance_metrics, aes(x=N, y=ROBUST_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "ROBUST estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_ROBUST_GSD
+    ggarrange(biasplot_ROBUST_GSD, mseplot_ROBUST_GSD) -> bias_mse_plot_ROBUST_GSD
+    ## 8 PRESSO
+    ggplot(PRESSO_GSD_performance_metrics, aes(x=N, y=PRESSO_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "PRESSO estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_PRESSO_GSD
+    ggplot(PRESSO_GSD_performance_metrics, aes(x=N, y=PRESSO_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "PRESSO estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_PRESSO_GSD
+    ggarrange(biasplot_PRESSO_GSD, mseplot_PRESSO_GSD) -> bias_mse_plot_PRESSO_GSD
+    ## 9 RAPS
+    ggplot(RAPS_GSD_performance_metrics, aes(x=N, y=RAPS_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "RAPS estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_RAPS_GSD
+    ggplot(RAPS_GSD_performance_metrics, aes(x=N, y=RAPS_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "RAPS estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_RAPS_GSD
+    ggarrange(biasplot_RAPS_GSD, mseplot_RAPS_GSD) -> bias_mse_plot_RAPS_GSD
+    ## LASSO
+    ggplot(LASSO_GSD_performance_metrics, aes(x=N, y=LASSO_GSD_bias))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(-1.5,1.5))+
+      xlab("Size of Sample I")+
+      ylab("Bias")+
+      labs(title = "LASSO estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> biasplot_LASSO_GSD
+    ggplot(LASSO_GSD_performance_metrics, aes(x=N, y=LASSO_GSD_mse))+ 
+      geom_point()+
+      geom_hline(yintercept=  0, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
+      scale_x_continuous(labels = comma)+
+      scale_y_continuous(limits = c(0,1.8))+
+      xlab("Size of Sample I")+
+      ylab("MSE")+
+      labs(title = "LASSO estimate: BMI -> GSD",
+           caption = paste0("Selected Reference Method:\n", 
+                             selected_true_methods[true_method], 
+                             " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
+      theme_few() -> mseplot_LASSO_GSD
+    ggarrange(biasplot_LASSO_GSD, mseplot_LASSO_GSD) -> bias_mse_plot_LASSO_GSD
+    
+    
+    ggarrange(bias_mse_plot_IVW_GSD, bias_mse_plot_MODE_GSD, bias_mse_plot_CONMIX_GSD, bias_mse_plot_MRMIX_GSD, bias_mse_plot_MEDIAN_GSD,
+              bias_mse_plot_EGGER_GSD, bias_mse_plot_ROBUST_GSD, bias_mse_plot_PRESSO_GSD, bias_mse_plot_RAPS_GSD, bias_mse_plot_LASSO_GSD,
+              ncol = 1, nrow = 10, common.legend = TRUE) -> bias_mse_plot_GSD
+    bias_mse_plot_GSD
+    
+    if (SAVE.files ==TRUE ){
+      filename_simplot_bias_mse <- paste0("../output/plots/", Sys.Date(), "_GSD_simplot_bias_mse_REF_METHOD_", selected_true_methods[true_method], 
+                                          "_GenArch_", name_GenArch, "_NSIM_", nsim,".png")
+      ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
+             width = 7, height = 24, 
+             units = "in"  # default
+             )
+    }
+  }
+}
+
+```
+
+
+# Create final tables and figures
+
+## Tables
+
+For all scenarios (a. all instruments, b. common+strong, c. common+weak, d. rare+strong, e. rare+weak) we need to describe our results for a smaller set of sample sizes. 
+
+```{r}
+df_name <- paste0("df_combined_method_metrics_TRUE_EST_", selected_true_methods[true_method])
+df_name <- paste0("df_combined_method_metrics_TRUE_EST_", selected_true_methods[true_method], "_GenArch_", name_GenArch)
+
+df_metrics_all_scenarios <- list()
+for(true_method in seq_along(selected_true_methods)) {
+  # scenario 1) all IVs
+  df_name <- paste0("df_combined_method_metrics_TRUE_EST_", selected_true_methods[true_method])
+  df_metrics_all_scenarios[[true_method]] <- eval(as.symbol(df_name)) %>% 
+    rename_with(.fn = ~ paste0(.x, "_ALL_INSTR"), .cols = -"N")
+  
+  # scenarios 2)-5) GenArchs
+  for (my_architecture in seq_along(est_sim_architectures)) {
+    name_GenArch <- gsub(pattern = "_est_sim", replacement = "", names(est_sim_architectures)[my_architecture])
+    df_name <- paste0("df_combined_method_metrics_TRUE_EST_", selected_true_methods[true_method], "_GenArch_", name_GenArch)
+    
+    df_metrics_all_scenarios[[true_method]] <- df_metrics_all_scenarios[[true_method]] %>% 
+      left_join(eval(as.symbol(df_name)) %>% 
+                  rename_with(.fn = ~ paste0(.x, "_", name_GenArch), .cols = -"N"), by=c("N"="N"))
+  }
+}
+# name list
+names(df_metrics_all_scenarios) <- c("scenario_ALL_INSTR", "STRONG_COMMON", "STRONG_RARE", "WEAK_COMMON", "WEAK_RARE")
+```
+
+
+
+
+
+
+
+
 
