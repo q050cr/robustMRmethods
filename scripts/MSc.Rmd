@@ -3226,9 +3226,6 @@ for (my_architecture in 1:length(est_sim_architectures)) {
   colname_LASSO_theta_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "LASSO_theta_sim_BMI_GSD_")]
   colname_LASSO_theta_se_sim_BMI_GSD <- colnames(est_sim)[str_detect(colnames(est_sim), pattern = "LASSO_theta_se_sim_BMI_GSD_")]
   
-  # retrieve IVW/ MODE/ CONMIX cols for BMI -> GBC
-  # removed on 2023-01-24 (see github)
-  
   # filter out sample sizes (IVW only used as example, could be any other col)
   sample_size_filtered <- as.numeric(str_extract(colname_IVW_theta_sim_BMI_GSD, pattern = "(\\d)+"))
   
@@ -4372,14 +4369,16 @@ for (my_architecture in 1:length(est_sim_architectures)) {
 
 ```
 
+\clearpage
 
 # Create final tables and figures
 
 ## Tables
 
-For all scenarios (a. all instruments, b. common+strong, c. common+weak, d. rare+strong, e. rare+weak) we need to describe our results for a smaller set of sample sizes. 
+For all scenarios (a. all instruments, b. common+strong, c. common+weak, d. rare+strong, e. rare+weak) we need to describe our results for a smaller set of sample sizes. We create a list that holds a dataframe for each reference method (1:5). Each dataframe contains results from all scenarios.
 
 ```{r}
+# we have assigned dataframes in the loop above!
 df_name <- paste0("df_combined_method_metrics_TRUE_EST_", selected_true_methods[true_method])
 df_name <- paste0("df_combined_method_metrics_TRUE_EST_", selected_true_methods[true_method], "_GenArch_", name_GenArch)
 
@@ -4400,11 +4399,326 @@ for(true_method in seq_along(selected_true_methods)) {
                   rename_with(.fn = ~ paste0(.x, "_", name_GenArch), .cols = -"N"), by=c("N"="N"))
   }
 }
+
 # name list
-names(df_metrics_all_scenarios) <- c("scenario_ALL_INSTR", "STRONG_COMMON", "STRONG_RARE", "WEAK_COMMON", "WEAK_RARE")
+names(df_metrics_all_scenarios) <- paste0("ref_", selected_true_methods)
 ```
 
 
+```{r gt-summary-tabs}
+# https://rfortherestofus.com/2019/11/how-to-make-beautiful-tables-in-r/
+library(gt)
+df.temp.long <- list()
+df.temp.wide <- list()
+
+sample_size_subset <- c(50000, 100000, 200000, 300000)
+
+for(ref.method in seq_along(df_metrics_all_scenarios)) {
+  
+  ## MEAN ## ---------------------------------------------------------------
+  # later plot N=50,000 all methods and different scenarios
+  
+  ## CREATE LONG FORMAT
+  df_metrics_all_scenarios[[ref.method]] %>% 
+    filter(N %in% sample_size_subset) %>% 
+    select(N, contains("_mean_") & 
+             (contains("_ALL_INSTR") | contains("_STRONG_COMMON") | 
+                contains("STRONG_RARE") | contains("WEAK_COMMON") | contains("WEAK_RARE"))
+           ) %>% 
+    #mutate(N = format(N, scientific=FALSE)) %>% 
+    pivot_longer(cols=!N, names_to="Method", values_to="Mean")  %>% 
+    separate(
+      col="Method", into = c("Method", "Scenario"), sep = "_GSD_mean_"
+    ) -> df.temp.long[[ref.method]]
+  
+  ## EMP SE ## ---------------------------------------------------------------
+  df_metrics_all_scenarios[[ref.method]] %>% 
+    filter(N %in% sample_size_subset) %>% 
+    select(N, contains("_emp_se_") & 
+             (contains("_ALL_INSTR") | contains("_STRONG_COMMON") | 
+                contains("STRONG_RARE") | contains("WEAK_COMMON") | contains("WEAK_RARE"))
+           ) %>% 
+    #mutate(N = format(N, scientific=FALSE)) %>% 
+    pivot_longer(cols=!N, names_to="Method", values_to="emp_se")  %>% 
+    separate(
+      col="Method", into = c("Method", "Scenario"), sep = "_GSD_emp_se_"
+    )  -> temp.dat
+  
+  df.temp.long[[ref.method]] <- df.temp.long[[ref.method]] %>% 
+    left_join(temp.dat, by=c("Method"="Method", "Scenario"="Scenario", "N"="N"))
+  
+  ## BIAS ## ---------------------------------------------------------------
+  df_metrics_all_scenarios[[ref.method]] %>% 
+    filter(N %in% sample_size_subset) %>% 
+    select(N, contains("GSD_bias_") & 
+             (contains("_ALL_INSTR") | contains("_STRONG_COMMON") | 
+                contains("STRONG_RARE") | contains("WEAK_COMMON") | contains("WEAK_RARE"))
+           ) %>% 
+    #mutate(N = format(N, scientific=FALSE)) %>% 
+    pivot_longer(cols=!N, names_to="Method", values_to="bias")  %>% 
+    separate(
+      col="Method", into = c("Method", "Scenario"), sep = "_GSD_bias_"
+    )  -> temp.dat
+  
+  df.temp.long[[ref.method]] <- df.temp.long[[ref.method]] %>% 
+    left_join(temp.dat, by=c("Method"="Method", "Scenario"="Scenario", "N"="N"))
+  
+  ## MSE ## ---------------------------------------------------------------
+  df_metrics_all_scenarios[[ref.method]] %>% 
+    filter(N %in% sample_size_subset) %>% 
+    select(N, contains("_mse_") & 
+             (contains("_ALL_INSTR") | contains("_STRONG_COMMON") | 
+                contains("STRONG_RARE") | contains("WEAK_COMMON") | contains("WEAK_RARE"))
+           ) %>% 
+    #mutate(N = format(N, scientific=FALSE)) %>% 
+    pivot_longer(cols=!N, names_to="Method", values_to="mse")  %>% 
+    separate(
+      col="Method", into = c("Method", "Scenario"), sep = "_GSD_mse_"
+    )  -> temp.dat
+  
+  df.temp.long[[ref.method]] <- df.temp.long[[ref.method]] %>% 
+    left_join(temp.dat, by=c("Method"="Method", "Scenario"="Scenario", "N"="N"))
+  
+  ## COVERAGE ## ---------------------------------------------------------------
+  df_metrics_all_scenarios[[ref.method]] %>% 
+    filter(N %in% sample_size_subset) %>% 
+    select(N, contains("GSD_coverage_calc_") & 
+             (contains("_ALL_INSTR") | contains("_STRONG_COMMON") | 
+                contains("STRONG_RARE") | contains("WEAK_COMMON") | contains("WEAK_RARE"))
+           ) %>% 
+    #mutate(N = format(N, scientific=FALSE)) %>% 
+    pivot_longer(cols=!N, names_to="Method", values_to="coverage")  %>% 
+    separate(
+      col="Method", into = c("Method", "Scenario"), sep = "_GSD_coverage_calc_"
+    )  -> temp.dat
+  
+  df.temp.long[[ref.method]] <- df.temp.long[[ref.method]] %>% 
+    left_join(temp.dat, by=c("Method"="Method", "Scenario"="Scenario", "N"="N"))
+  
+  ## TYPE1ERROR ## ---------------------------------------------------------------
+  df_metrics_all_scenarios[[ref.method]] %>% 
+    filter(N %in% sample_size_subset) %>% 
+    select(N, contains("GSD_type1error_calc_") & 
+             (contains("_ALL_INSTR") | contains("_STRONG_COMMON") | 
+                contains("STRONG_RARE") | contains("WEAK_COMMON") | contains("WEAK_RARE"))
+           ) %>% 
+    #mutate(N = format(N, scientific=FALSE)) %>% 
+    pivot_longer(cols=!N, names_to="Method", values_to="type1error")  %>% 
+    separate(
+      col="Method", into = c("Method", "Scenario"), sep = "_GSD_type1error_calc_"
+    )  -> temp.dat
+  
+  df.temp.long[[ref.method]] <- df.temp.long[[ref.method]] %>% 
+    left_join(temp.dat, by=c("Method"="Method", "Scenario"="Scenario", "N"="N"))
+  
+  #--
+  ### CREATE WIDE FORMAT -------------------------------------------------------
+  #--
+  
+  ## only one variable 
+  #df.temp.long[[ref.method]] %>% 
+  #  select(N, Method, Scenario, Mean) %>% 
+  #  pivot_wider(names_from = "Scenario", values_from = "Mean", names_glue = "Mean_{Scenario}") 
+  
+  ## several variables
+  df.temp.long[[ref.method]] %>% 
+    select(N, Method, Scenario, Mean, emp_se) %>% 
+    pivot_wider(names_from = Scenario, values_from = c(Mean, emp_se),  
+                #names_vary = "slowest",  # naming scheme
+                names_glue = "{.value}_{Scenario}") -> df.temp.wide[[ref.method]]
+  
+}
+
+# name list
+names(df.temp.long) <- paste0("ref_", selected_true_methods)
+
+### {gt} manual stub and grouping of rows  ###
+### https://gt.rstudio.com/articles/intro-creating-gt-tables.html 
+### https://themockup.blog/static/resources/gt-cookbook.html#introduction 
+
+#df.temp.wide[[ref.method]] %>% 
+  #gt(groupname_col="N") %>% 
+  #gt(rowname_col = "N") %>% 
+  # tab_stubhead(label = "Sample Size") %>% 
+  # tab_row_group(
+  #   label = "Sample Size = 50,000", 
+  #   rows = 1:10
+  # ) %>% 
+  # tab_row_group(
+  #   label = "Sample Size = 100,000", 
+  #   rows = 11:20
+  # ) 
+
+gt.tables.mean.se <- list()
+gt.tables.performance2 <- list()
+
+## loop to create tables
+for (ref.method in seq_along(selected_true_methods)) {
+  
+  
+  ## TABLE 01: MEAN +- SE
+  df.temp.long[[ref.method]] %>% 
+    select(N, Method, Scenario, Mean, emp_se) %>% 
+    # first pivot wider
+    pivot_wider(names_from = Scenario, values_from = c(Mean, emp_se),  
+                  #names_vary = "slowest",  # naming scheme
+                  names_glue = "{.value}_{Scenario}") %>% 
+    mutate(N = paste0("Sample Size = ", format(N, scientific=FALSE))) %>% 
+    gt(groupname_col="N") %>% 
+    tab_header(
+      title = md("**Mean estimate with corresponding empirical standard errors**"),
+      subtitle = md(paste0("Reference estimate: ", selected_true_methods[ref.method]))
+    ) %>% 
+    tab_spanner(
+      label = "Mean [\u00b1 Empirical Standard Error]", 
+      columns = 3:7
+    ) %>% 
+    cols_label(
+      Mean_ALL_INSTR = md("**Scenario 1**"),
+      Mean_STRONG_COMMON = md("**Scenario 2**"),
+      Mean_STRONG_RARE = md("**Scenario 3**"),
+      Mean_WEAK_COMMON = md("**Scenario 4**"),
+      Mean_WEAK_RARE = md("**Scenario 5**"),
+    ) %>% 
+    cols_merge(
+      columns = c(Mean_ALL_INSTR, emp_se_ALL_INSTR),
+      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+    ) %>% 
+    cols_merge(
+      columns = c(Mean_STRONG_COMMON, emp_se_STRONG_COMMON),
+      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+    ) %>% 
+    cols_merge(
+      columns = c(Mean_STRONG_RARE, emp_se_STRONG_RARE),
+      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+    ) %>% 
+    cols_merge(
+      columns = c(Mean_WEAK_COMMON, emp_se_WEAK_COMMON),
+      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+    ) %>% 
+    cols_merge(
+      columns = c(Mean_WEAK_RARE, emp_se_WEAK_RARE),
+      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+    ) %>% 
+    fmt_number(columns = 3:12,decimals = 3, use_seps=TRUE) %>% 
+    tab_source_note(
+      source_note = md("*Scenario 1* corresponds to all genetic instruments being used; 
+                       *Scenario 2* uses relatively strong and common variants;
+                       *Scenario 3* uses relatively strong and rare variants; 
+                       *Scenario 4* uses relatively weak and common variants;
+                       *Scenario 5* uses relatively weak and rare variants")
+    ) %>% 
+    opt_stylize(style=1, color="gray") -> gt.tables.mean.se[[ref.method]]
+  
+  if (SAVE.files ==TRUE ){
+    filename.gt.mean.se <- paste0("../output/gt-tables/", Sys.Date(), 
+                                          "_mean_emp_se_performance_metrics_TRUE_EST_", 
+                                          selected_true_methods[ref.method], 
+                                          "_NSIM_", nsim)
+    
+    gt.tables.mean.se[[ref.method]] %>% 
+      gtsave(paste0(filename.gt.mean.se, ".docx"))   # alternative .rtf, .tex, .png, .html
+    gt.tables.mean.se[[ref.method]] %>% 
+      gtsave(paste0(filename.gt.mean.se, ".html")) 
+  }
+  
+  
+  # TABLE 02: BIAS, MSE, COVERAGE, TYPE1ERROR
+  df.temp.long[[ref.method]] %>%
+    select(N, Method, Scenario, bias, mse, coverage, type1error) %>% 
+    # first pivot wider
+    pivot_wider(names_from = Scenario, values_from = c(bias, mse, coverage, type1error),  
+                  #names_vary = "slowest",  # naming scheme
+                  names_glue = "{.value}_{Scenario}") %>% 
+    mutate(N = paste0("Sample Size = ", format(N, scientific=FALSE))) %>% 
+    gt(groupname_col="N") %>% 
+    tab_header(
+      title = md("**Performance measures**"),
+      subtitle = md(paste0("Reference estimate: ", selected_true_methods[ref.method]))
+    ) %>% 
+    tab_spanner(
+      label = "Bias", 
+      columns = 3:7
+    ) %>% 
+    tab_spanner(
+      label = "MSE", 
+      columns = 8:12
+    ) %>% 
+    tab_spanner(
+      label = "Coverage", 
+      columns = 13:17
+    ) %>% 
+    tab_spanner(
+      label = "Type 1 Error", 
+      columns = 18:22
+    ) %>% 
+    cols_label(
+      bias_ALL_INSTR = md("**Scenario 1**"),
+      bias_STRONG_COMMON = md("**Scenario 2**"),
+      bias_STRONG_RARE = md("**Scenario 3**"),
+      bias_WEAK_COMMON = md("**Scenario 4**"),
+      bias_WEAK_RARE = md("**Scenario 5**"),
+    ) %>% 
+    cols_label(
+      mse_ALL_INSTR = md("**Scenario 1**"),
+      mse_STRONG_COMMON = md("**Scenario 2**"),
+      mse_STRONG_RARE = md("**Scenario 3**"),
+      mse_WEAK_COMMON = md("**Scenario 4**"),
+      mse_WEAK_RARE = md("**Scenario 5**"),
+    ) %>% 
+    cols_label(
+      coverage_ALL_INSTR = md("**Scenario 1**"),
+      coverage_STRONG_COMMON = md("**Scenario 2**"),
+      coverage_STRONG_RARE = md("**Scenario 3**"),
+      coverage_WEAK_COMMON = md("**Scenario 4**"),
+      coverage_WEAK_RARE = md("**Scenario 5**"),
+    ) %>% 
+    cols_label(
+      type1error_ALL_INSTR = md("**Scenario 1**"),
+      type1error_STRONG_COMMON = md("**Scenario 2**"),
+      type1error_STRONG_RARE = md("**Scenario 3**"),
+      type1error_WEAK_COMMON = md("**Scenario 4**"),
+      type1error_WEAK_RARE = md("**Scenario 5**"),
+    ) %>% 
+    fmt_number(columns = 3:22,decimals = 3, use_seps=TRUE) %>% 
+    tab_source_note(
+      source_note = md("*Scenario 1* corresponds to all genetic instruments being used; 
+                       *Scenario 2* uses relatively strong and common variants;
+                       *Scenario 3* uses relatively strong and rare variants; 
+                       *Scenario 4* uses relatively weak and common variants;
+                       *Scenario 5* uses relatively weak and rare variants")
+    ) %>% 
+    opt_stylize(style=1, color="gray") -> gt.tables.performance2[[ref.method]]
+  
+    if (SAVE.files ==TRUE ){
+      filename.gt.performance2 <- paste0("../output/gt-tables/", Sys.Date(), 
+                                            "_performance2_metrics_TRUE_EST_", 
+                                            selected_true_methods[ref.method], 
+                                            "_NSIM_", nsim)
+      
+      gt.tables.performance2[[ref.method]] %>% 
+        gtsave(paste0(filename.gt.performance2, ".docx"))   # alternative .rtf, .tex, .png, .html
+      gt.tables.performance2[[ref.method]] %>% 
+        gtsave(paste0(filename.gt.performance2, ".html")) 
+    }
+  
+  ## --
+  # CREATE PLOTS -------------------------------------------------------------
+  ## --
+  
+  df.temp.long[[ref.method]] %>%
+    mutate(N=paste0("Sample Size: ", format(N, scientific=FALSE))) %>% 
+    ggplot(aes(x=Method, y=mse, fill=Scenario )) +
+    geom_bar(stat="identity", position="dodge") +
+    facet_wrap(~N) + 
+    coord_flip()+
+    ggthemes::theme_few()+
+    ggthemes::scale_fill_few() -> dodged.barplot.mse
+  
+  
+}
+
+```
 
 
 
