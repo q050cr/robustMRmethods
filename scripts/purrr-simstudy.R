@@ -55,14 +55,16 @@ my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern
 sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
 
 # only simulate defined set of smaller sample sizes?
-if (subsetSampleSizes == TRUE) {
-  n <- c(50000, 100000, 150000, 200000, 300000)
-} else{
-  n <- sim_vars$n
-}
-
+n <- sim_vars$n
 colnames_pval <- sim_vars$colnames_pval
 n.orig <- 334487
+
+## subset?
+if (subsetSampleSizes == TRUE) {
+  n <- as.integer(n[c(8, 13, 18, 23, 33)])
+  colnames_pval <- colnames_pval[c(8, 13, 18, 23, 33)]
+}
+
 
 ## PARAMS for simulation
 set.seed(1234)
