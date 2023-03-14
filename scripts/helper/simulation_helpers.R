@@ -16,7 +16,10 @@ source("scripts/helper/PVE_calculation_fns.R")
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 
-sim_function <- function(dat, index) {
+sim_function <- function(dat, index, runMRpresso) {
+  ## if runMRpresso == FALSE, only NAs will returned
+  
+  
   if(any(is.na(dat))) return(NULL)
   if(nrow(dat)<=3) return(NULL)  # cannot perform robust methods with one IV, "mr_presso method requires data on >3 variants."
   sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
@@ -126,19 +129,25 @@ sim_function <- function(dat, index) {
   return_vector <- append(return_vector, robust.res.gsd$Pvalue)
   
   # 8. MR-PRESSO
-  presso.df = data.frame(bx = dat$beta.bmi_sim_norm, by = dat$beta.gsd, bxse = dat$se_update_BMI, byse = dat$se.gsd)
-  presso.res.gsd = MRPRESSO::mr_presso(BetaOutcome = "by", BetaExposure = "bx", SdOutcome = "byse", SdExposure = "bxse", 
-                  OUTLIERtest = TRUE, DISTORTIONtest = TRUE, data = presso.df, NbDistribution = 500, SignifThreshold = 0.05)
-  if (!is.na(presso.res.gsd$`Main MR results`[2,"Causal Estimate"]) & !is.na(presso.res.gsd$`Main MR results`[2,"Sd"])){
-    return_vector <-  append(return_vector, presso.res.gsd$`Main MR results`[2,"Causal Estimate"])
-    return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[2,"Sd"])
-    return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[2,"P-value"])
-  } else{  # if no outlier-corrected analysis was calculated
-    return_vector <-  append(return_vector, presso.res.gsd$`Main MR results`[1,"Causal Estimate"])
-    return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[1,"Sd"])
-    return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[1,"P-value"])
+  presso.df = data.frame(bx = dat$beta.bmi_sim_norm, by = dat$beta.gsd, bxse = dat$se_update_BMI, byse = dat$se.gsd)  # also needed for MR-RAPS
+  ## only run if really wanted to run
+  if (runMRpresso == TRUE) {
+    presso.res.gsd = MRPRESSO::mr_presso(BetaOutcome = "by", BetaExposure = "bx", SdOutcome = "byse", SdExposure = "bxse", 
+                    OUTLIERtest = TRUE, DISTORTIONtest = TRUE, data = presso.df, NbDistribution = 500, SignifThreshold = 0.05)
+    if (!is.na(presso.res.gsd$`Main MR results`[2,"Causal Estimate"]) & !is.na(presso.res.gsd$`Main MR results`[2,"Sd"])){
+      return_vector <-  append(return_vector, presso.res.gsd$`Main MR results`[2,"Causal Estimate"])
+      return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[2,"Sd"])
+      return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[2,"P-value"])
+    } else{  # if no outlier-corrected analysis was calculated
+      return_vector <-  append(return_vector, presso.res.gsd$`Main MR results`[1,"Causal Estimate"])
+      return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[1,"Sd"])
+      return_vector <- append(return_vector, presso.res.gsd$`Main MR results`[1,"P-value"])
+    }
+  } else{
+    # if not run, return 3 values of NA (Estimate, SD, P-Val)
+    return_vector <- append(return_vector, c(NA, NA, NA))
   }
-
+  
   # 9. MR-RAPS
   raps.res.gsd = mr.raps::mr.raps.overdispersed.robust(presso.df$bx, presso.df$by, presso.df$bxse, presso.df$byse,
                                      loss.function = "huber", k = 1.345, initialization = c("l2"), 
