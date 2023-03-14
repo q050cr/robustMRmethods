@@ -38,6 +38,7 @@ conflict_prefer("filter", "dplyr")
 
 # set to TRUE if simulation should run when script is sourced
 runSimulation <- TRUE
+subsetSampleSizes <- TRUE
 runMRpresso <- FALSE  # runs foreeeever ;)
 nsim <- 2
 
@@ -52,7 +53,14 @@ all_quadrants <- tidyr::crossing(effect_size, maf)
 my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "my_data_harm.rds", full.names = TRUE)))
 # vars from MSc script
 sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
-n <- sim_vars$n
+
+# only simulate defined set of smaller sample sizes?
+if (subsetSampleSizes == TRUE) {
+  n <- c(50000, 100000, 150000, 200000, 300000)
+} else{
+  n <- sim_vars$n
+}
+
 colnames_pval <- sim_vars$colnames_pval
 n.orig <- 334487
 
