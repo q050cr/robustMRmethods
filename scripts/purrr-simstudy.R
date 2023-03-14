@@ -40,9 +40,9 @@ conflict_prefer("filter", "dplyr")
 runSimulation <- TRUE
 subsetSampleSizes <- TRUE
 runMRpresso <- FALSE  # runs foreeeever ;)
-nsim <- 2
-
+nsim <- 100
 runGeneticArchitectures <- TRUE  # if set to TRUE, simulations run on 4 different genetic architectures (split: median maf, median beta)
+
 # analysis set - create all combis
 effect_size <- c("strong", "weak")
 maf <- c("rare", "common")
@@ -60,9 +60,10 @@ colnames_pval <- sim_vars$colnames_pval
 n.orig <- 334487
 
 ## subset?
+subset.index <- c(8, 13, 18, 23, 33)
 if (subsetSampleSizes == TRUE) {
-  n <- as.integer(n[c(8, 13, 18, 23, 33)])
-  colnames_pval <- colnames_pval[c(8, 13, 18, 23, 33)]
+  n <- as.integer(n[subset.index])
+  colnames_pval <- colnames_pval[subset.index]
 }
 
 
@@ -146,7 +147,7 @@ if (runGeneticArchitectures == TRUE) {
       
       ## now purrr
       # returns nsim* results for MR simulations PER sample size
-      nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs_filter[[dataset]], index = dataset), 
+      nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs_filter[[dataset]], index = dataset, runMRpresso = runMRpresso),      # RUN MR PRESSO???
                                .progress=list(clear=FALSE, 
                                               name=paste0("Progress of simulation of sample size: ", format(n[dataset], scientific = FALSE)))
       )
@@ -165,6 +166,4 @@ timediff_purrr_archi <- T1_architecture - T0_architecture
 print(paste0("!!!!!--------------------------- ", round(timediff_purrr_archi/60,2), " minutes passed for the simulation scenario! --------------------------------------!!!!!"))
 
 saveRDS(est_sim_architectures, paste0("./output/Rdata/", Sys.Date(), "_est_sim_architectures_purrr_NSIM_", nsim, ".rds"))
-
-
 
