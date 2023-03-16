@@ -50,7 +50,7 @@ all_quadrants <- tidyr::crossing(effect_size, maf)
 
 # GET DATA ----------------------------------------------------------------
 # data
-my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "my_data_harm.rds", full.names = TRUE)))
+my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/harmonized-dat/", pattern = "my_data_harm.rds", full.names = TRUE)))
 # vars from MSc script
 sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
 
@@ -113,7 +113,7 @@ T1 <- proc.time()[3]
 timediff_purrr <- T1 - T0
 print(paste0("!!!!!--------------------------- ", round(timediff_purrr/60,2), " minutes passed for the simulation scenario! --------------------------------------!!!!!"))
 
-saveRDS(est_sim, paste0("./output/Rdata/", Sys.Date(), "_est_sim_purrr_NSIM_", nsim, ".rds"))
+saveRDS(est_sim, paste0("./output/Rdata/sim-results/", Sys.Date(), "_est_sim_purrr_NSIM_", nsim, ".rds"))
 
 ## with nsim=100 and the purrr script on the M1 Mac ∞ 5h (only 4 methods at that time)
 #[1] "!!!!!--------------------------- 299.61 minutes passed for the simulation scenario! --------------------------------------!!!!!"
@@ -165,5 +165,5 @@ T1_architecture <- proc.time()[3]
 timediff_purrr_archi <- T1_architecture - T0_architecture
 print(paste0("!!!!!--------------------------- ", round(timediff_purrr_archi/60,2), " minutes passed for the simulation scenario! --------------------------------------!!!!!"))
 
-saveRDS(est_sim_architectures, paste0("./output/Rdata/", Sys.Date(), "_est_sim_architectures_purrr_NSIM_", nsim, ".rds"))
+saveRDS(est_sim_architectures, paste0("./output/Rdata/sim-results/", Sys.Date(), "_est_sim_architectures_purrr_NSIM_", nsim, ".rds"))
 

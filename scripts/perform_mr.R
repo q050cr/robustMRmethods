@@ -27,7 +27,7 @@ library(penalized)
 source("./scripts/helper/MR_lasso.R")
 
 ## load data created in MSc.rmd
-my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "my_data_harm.rds", full.names = TRUE)))
+my_data_harm <- readRDS(file = dplyr::last(list.files("./output/Rdata/harmonized-dat/", pattern = "my_data_harm.rds", full.names = TRUE)))
 
 # perform MR analysis -----------------------------------------------------
 set.seed(123)
@@ -171,7 +171,7 @@ if (numIV>2){
 }
 
 ## SAVE estimates
-saveRDS(est, paste0("./output/Rdata/", Sys.Date(), "_est.rds"))
+saveRDS(est, paste0("./output/Rdata/mr-results/", Sys.Date(), "_est.rds"))
 
 
 # BMI -> GSD --------------------------------------------------------------
@@ -315,4 +315,4 @@ if (numIV>2){
 }
 
 ## SAVE estimates
-saveRDS(est.bmi.gsd, paste0("./output/Rdata/", Sys.Date(), "_est_BMI_GSD.rds"))
+saveRDS(est.bmi.gsd, paste0("./output/Rdata/mr-results/", Sys.Date(), "_est_BMI_GSD.rds"))
