@@ -40,8 +40,8 @@ conflict_prefer("filter", "dplyr")
 runSimulation <- TRUE
 subsetSampleSizes <- TRUE
 runMRpresso <- FALSE  # runs foreeeever ;)
-nsim <- 100
-runGeneticArchitectures <- TRUE  # if set to TRUE, simulations run on 4 different genetic architectures (split: median maf, median beta)
+nsim <- 500
+runGeneticArchitectures <- FALSE  # if set to TRUE, simulations run on 4 different genetic architectures (split: median maf, median beta)
 
 # analysis set - create all combis
 effect_size <- c("strong", "weak")
