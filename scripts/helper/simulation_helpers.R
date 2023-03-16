@@ -31,7 +31,7 @@ sim_function <- function(dat, index, runMRpresso, subsetSampleSizes) {
   subset.index <- c(8, 13, 18, 23, 33)
   if (subsetSampleSizes == TRUE) {
     n <- as.integer(n[subset.index])
-    colnames_pval <- colnames_pval[subset.index]
+    #colnames_pval <- colnames_pval[subset.index]  # not imported colnames_pval into function !
   }
   
   return_vector <- c()
