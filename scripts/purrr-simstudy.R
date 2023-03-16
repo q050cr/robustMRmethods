@@ -40,7 +40,7 @@ conflict_prefer("filter", "dplyr")
 runSimulation <- TRUE
 subsetSampleSizes <- TRUE
 runMRpresso <- FALSE  # runs foreeeever ;)
-nsim <- 500
+nsim <- 3
 runGeneticArchitectures <- FALSE  # if set to TRUE, simulations run on 4 different genetic architectures (split: median maf, median beta)
 
 # analysis set - create all combis
@@ -97,7 +97,7 @@ if (runSimulation == TRUE) {
     
     ## now purrr
     # returns nsim* results for MR simulations PER sample size
-    nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs[[dataset]], index = dataset, runMRpresso = runMRpresso),      # RUN MR PRESSO???
+    nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs[[dataset]], index = dataset, runMRpresso = runMRpresso, subsetSampleSizes=subsetSampleSizes),      # RUN MR PRESSO???
                              .progress=list(clear=FALSE, 
                                             name=paste0("Progress of simulation of sample size: ", format(n[dataset], scientific = FALSE)))
     )
@@ -147,7 +147,7 @@ if (runGeneticArchitectures == TRUE) {
       
       ## now purrr
       # returns nsim* results for MR simulations PER sample size
-      nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs_filter[[dataset]], index = dataset, runMRpresso = runMRpresso),      # RUN MR PRESSO???
+      nsim_list_dataset <- map(1:nsim, ~sim_function(dat = gen_dfs_filter[[dataset]], index = dataset, runMRpresso = runMRpresso, subsetSampleSizes=subsetSampleSizes),      # RUN MR PRESSO???
                                .progress=list(clear=FALSE, 
                                               name=paste0("Progress of simulation of sample size: ", format(n[dataset], scientific = FALSE)))
       )

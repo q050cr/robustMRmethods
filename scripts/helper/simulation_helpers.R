@@ -16,14 +16,23 @@ source("scripts/helper/PVE_calculation_fns.R")
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 
-sim_function <- function(dat, index, runMRpresso) {
+sim_function <- function(dat, index, runMRpresso, subsetSampleSizes) {
+  ## index used to address specific samplesize in PVE calculation
   ## if runMRpresso == FALSE, only NAs will returned
+  ## subsetSampleSizes ... use smaller set of sample sizes
   
   
   if(any(is.na(dat))) return(NULL)
   if(nrow(dat)<=3) return(NULL)  # cannot perform robust methods with one IV, "mr_presso method requires data on >3 variants."
   sim_vars <- readRDS(file = dplyr::last(list.files("./output/Rdata/", pattern = "_sim_vars.rds", full.names = TRUE)))
   n <- sim_vars$n
+  
+  ## subset?
+  subset.index <- c(8, 13, 18, 23, 33)
+  if (subsetSampleSizes == TRUE) {
+    n <- as.integer(n[subset.index])
+    colnames_pval <- colnames_pval[subset.index]
+  }
   
   return_vector <- c()
   dat <- dat %>% 
