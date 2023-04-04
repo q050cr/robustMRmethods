@@ -40,7 +40,7 @@ conflict_prefer("filter", "dplyr")
 runSimulation <- TRUE
 subsetSampleSizes <- TRUE
 runMRpresso <- FALSE  # runs foreeeever ;)
-nsim <- 500
+nsim <- 1000
 runGeneticArchitectures <- FALSE  # if set to TRUE, simulations run on 4 different genetic architectures (split: median maf, median beta)
 
 # analysis set - create all combis
@@ -161,9 +161,11 @@ if (runGeneticArchitectures == TRUE) {
   }
 }
 
-T1_architecture <- proc.time()[3]
-timediff_purrr_archi <- T1_architecture - T0_architecture
-print(paste0("!!!!!--------------------------- ", round(timediff_purrr_archi/60,2), " minutes passed for the simulation scenario! --------------------------------------!!!!!"))
-
-saveRDS(est_sim_architectures, paste0("./output/Rdata/sim-results/", Sys.Date(), "_est_sim_architectures_purrr_NSIM_", nsim, ".rds"))
+if (runGeneticArchitectures == TRUE) {
+  T1_architecture <- proc.time()[3]
+  timediff_purrr_archi <- T1_architecture - T0_architecture
+  print(paste0("!!!!!--------------------------- ", round(timediff_purrr_archi/60,2), " minutes passed for the simulation scenario! --------------------------------------!!!!!"))
+  
+  saveRDS(est_sim_architectures, paste0("./output/Rdata/sim-results/", Sys.Date(), "_est_sim_architectures_purrr_NSIM_", nsim, ".rds"))
+}
 
