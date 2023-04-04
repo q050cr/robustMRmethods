@@ -982,7 +982,7 @@ if (SAVE.files ==TRUE ){
 
 ```{r MendelianRandomization-analysis, warning=FALSE}
 ## load results
-est <- readRDS(file = dplyr::last(list.files("../output/Rdata/", pattern = "_est.rds", full.names = TRUE)))
+est <- readRDS(file = dplyr::last(list.files("../output/Rdata/mr-results/", pattern = "_est.rds", full.names = TRUE)))
 
 # biology plausibility FTO & MC4R
 # ## The mr_ivw function implements the inverse-variance method, informally 
