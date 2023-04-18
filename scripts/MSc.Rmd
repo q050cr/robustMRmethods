@@ -499,9 +499,11 @@ df_cum_expl_var <- df_cum_expl_var %>%
     count_IVs_scaled = count_IVs*scale_factor)
 
 plot_data1b <- df_cum_expl_var %>% 
-  pivot_longer(cols = c(cum_expl_varX2, cum_expl_varU, cum_expl_varY)) %>% 
-  mutate(name = factor(name, labels = c("% var(U)", "% var(X)", "% var(Y)")),
-         name = factor(name, levels = c("% var(X)", "% var(Y)", "% var(U)") )
+  pivot_longer(cols = c(cum_expl_varX2, cum_expl_varU, 
+                        #cum_expl_varY
+                        )) %>% 
+  mutate(name = factor(name, labels = c("% var(Y)", "% var(X)")) #, "% var(Y)")),   # change made on 2023-04-18
+         #name = factor(name, levels = c("% var(X)", "% var(Y)", "% var(U)") )
          )
 ## plot
 ggplot(plot_data1b, aes(x=n, y=value, col=name))+
@@ -532,12 +534,12 @@ ggplot(plot_data1b, aes(x=n, y=value, col=name))+
   #                                         "Number of IVs" = "black"
   #                                         ))
   #
-  scale_color_manual(name = "", values = c("% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
+  scale_color_manual(name = "", values = c(#"% var(U)" = ggthemes_data$few$colors$Dark[2,2][[1]], 
                                            "% var(X)" = ggthemes_data$few$colors$Dark[3,2][[1]], 
                                            "% var(Y)" = ggthemes_data$few$colors$Dark[4,2][[1]], 
                                            "Number of IVs" = "black"),
                      # order
-                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)", "% var(U)")
+                     breaks = c( "Number of IVs", "% var(X)", "% var(Y)")  #, "% var(U)")
   ) -> fig01b.update
 fig01b.update  # USE THIS
 
