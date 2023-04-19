@@ -39,9 +39,9 @@ conflict_prefer("filter", "dplyr")
 # set to TRUE if simulation should run when script is sourced
 runSimulation <- TRUE
 subsetSampleSizes <- TRUE
-runMRpresso <- FALSE  # runs foreeeever ;)
-nsim <- 1000
-runGeneticArchitectures <- FALSE  # if set to TRUE, simulations run on 4 different genetic architectures (split: median maf, median beta)
+runMRpresso <- TRUE  # runs foreeeever ;)
+nsim <- 100
+runGeneticArchitectures <- TRUE  # if set to TRUE, simulations run on 4 different genetic architectures (split: median maf, median beta)
 
 # analysis set - create all combis
 effect_size <- c("strong", "weak")

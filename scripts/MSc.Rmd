@@ -1083,6 +1083,12 @@ est_sim <- readRDS(dplyr::last(list.files(path = "./output/Rdata/sim-results/", 
 est_sim_architectures <- readRDS(dplyr::last(list.files(path = "./output/Rdata/sim-results/", pattern = "_est_sim_architectures_purrr_NSIM_", full.names = TRUE)))
 nsim <- nrow(est_sim)
 nsim_architectures <- nrow(est_sim_architectures[[1]])
+
+all(is.na(est_sim$PRESSO_theta_se_sim_BMI_GSD_200000))
+all(is.na(est_sim_architectures[[1]]$PRESSO_mr_pval_BMI_GSD_200000))
+est_sim_PRESSO <- readRDS("./output/Rdata/_old/2022-12-23_est_sim_NSIM_100.rds")
+
+
 ```
 
 
@@ -4767,3 +4773,4 @@ Apart from R's base functionality, the following packages were used: <br/>
 installed.packages()[names(sessionInfo()$otherPkgs), "Version"]
 # map(names(sessionInfo()$otherPkgs), ~citation(.x))
 ```
+
