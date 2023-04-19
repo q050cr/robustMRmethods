@@ -4744,3 +4744,26 @@ if (SAVE.files ==TRUE ){
 
 ```
 
+
+
+\clearpage
+
+# References
+
+<div id="refs"></div>
+
+
+\clearpage
+
+
+# Software
+
+This analysis was carried out using the statistical software `r base::version$version.string`.
+
+Apart from R's base functionality, the following packages were used: <br/>
+
+```{r software, echo=FALSE}
+# or faster with function...
+installed.packages()[names(sessionInfo()$otherPkgs), "Version"]
+# map(names(sessionInfo()$otherPkgs), ~citation(.x))
+```
