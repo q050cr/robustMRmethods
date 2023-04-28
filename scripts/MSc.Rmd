@@ -17,18 +17,28 @@ output:
     toc_depth: 4
     df_print: kable
     latex_engine: xelatex
-bibliography: ./references/references.bib
+bibliography: ../references/references.bib
 editor_options: 
   chunk_output_type: inline
 ---
 
 
 ```{r setup, include=FALSE}
-#knitr::opts_chunk$set(echo = FALSE)
-figurespath <- paste0("./reports/", format(Sys.time(), "%Y%m%d"), '_figures/')
-knitr::opts_chunk$set(fig.path = figurespath)  # reference is script! also creates new dirs
+###
+# to knit the doc go to 'render_param_reports_msc.R'
+###
 
-SAVE.files <- FALSE
+# Set the working directory to the directory containing the R Markdown file
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+figurespath <- paste0("../reports/", format(Sys.time(), "%Y%m%d"), '_figures/')
+knitr::opts_chunk$set(echo = FALSE, 
+                      fig.path = figurespath,  # still a rmd relative file structure here
+                      dev = "svg")
+
+
+
+SAVE.files <- TRUE
 
 library(dplyr)
 library(purrr)
@@ -60,6 +70,8 @@ conflict_prefer("filter", "dplyr")
 conflicts_prefer(kableExtra::kable)
 # conflict_prefer("kable", "kableExtra")
 ```
+
+![AG Meder](../img/meder_presentation_heart.png)
 
 # Discussion
 
@@ -1079,14 +1091,26 @@ if (SAVE.files ==TRUE ){
 # read dat from "simstudy.R"  #------------------------------------------------
 #est_sim <- readRDS(dplyr::last(list.files(path = "../output/Rdata", pattern = "_est_sim_NSIM_", full.names = TRUE)))
 # from "purrr-simstudy.R"
-est_sim <- readRDS(dplyr::last(list.files(path = "./output/Rdata/sim-results/", pattern = "_est_sim_purrr_NSIM_", full.names = TRUE)))
-est_sim_architectures <- readRDS(dplyr::last(list.files(path = "./output/Rdata/sim-results/", pattern = "_est_sim_architectures_purrr_NSIM_", full.names = TRUE)))
+
+
+# est_sim <- readRDS(dplyr::last(list.files(path = "./output/Rdata/sim-results/", pattern = "_est_sim_purrr_NSIM_", full.names = TRUE)))
+# est_sim_architectures <- readRDS(dplyr::last(list.files(path = "./output/Rdata/sim-results/", pattern = "_est_sim_architectures_purrr_NSIM_", full.names = TRUE)))
+
+# # ANALYSIS SET 2023-04-20 NSIM = 100
+# est_sim <- readRDS(file = "./output/Rdata/sim-results/2023-04-20-nsim100/2023-04-20_est_sim_purrr_NSIM_100.rds")
+# est_sim_architectures <- readRDS(file = "./output/Rdata/sim-results/2023-04-20-nsim100/2023-04-20_est_sim_architectures_purrr_NSIM_100.rds")
+
+# ANALYSIS SET 2023-04-27 NSIM = 500
+est_sim <- readRDS(file = "./output/Rdata/sim-results/2023-04-27-nsim500/2023-04-24_est_sim_purrr_NSIM_500.rds")
+est_sim_architectures <- readRDS(file = "./output/Rdata/sim-results/2023-04-27-nsim500/2023-04-27_est_sim_architectures_purrr_NSIM_500.rds")
+
+
 nsim <- nrow(est_sim)
 nsim_architectures <- nrow(est_sim_architectures[[1]])
 
-all(is.na(est_sim$PRESSO_theta_se_sim_BMI_GSD_200000))
-all(is.na(est_sim_architectures[[1]]$PRESSO_mr_pval_BMI_GSD_200000))
-est_sim_PRESSO <- readRDS("./output/Rdata/_old/2022-12-23_est_sim_NSIM_100.rds")
+# all(is.na(est_sim$PRESSO_theta_se_sim_BMI_GSD_200000))
+# all(is.na(est_sim_architectures[[1]]$PRESSO_mr_pval_BMI_GSD_200000))
+# est_sim_PRESSO <- readRDS("./output/Rdata/_old/2022-12-23_est_sim_NSIM_100.rds")
 
 
 ```
@@ -2060,7 +2084,6 @@ bias_mse_plot_GSD
 
 **Deleted all code for GBC simulation downstream analysis since no longer needed for thesis.**
 
----
 
 # Parallelize performance estimates for different "TRUE" estimates
 
@@ -2074,7 +2097,7 @@ true_estimates <- est.bmi.gsd %>%
   filter(mr_methods %in% selected_true_methods)
 ```
 
-```{r parallel-performance}
+```{r parallel-performance, warning=FALSE}
 for (true_method in 1:length(selected_true_methods)) {
   # define reference estimate for ALL 5 chosen methods in loop 
   args.gsd.method <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]], 
@@ -2416,9 +2439,11 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("IVW estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("IVW estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+                           ))+
     theme_few() -> IVW_GSD_simplot_thetas
   
   ## 2 MODE
@@ -2456,9 +2481,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("MODE estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("MODE estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> MODE_GSD_simplot_thetas
   
   ## 3 CONMIX
@@ -2493,9 +2521,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("CONMIX estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("CONMIX estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> CONMIX_GSD_simplot_thetas
   
   ## 4 MRMIX
@@ -2530,9 +2561,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("MRMIX estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("MRMIX estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> MRMIX_GSD_simplot_thetas
   
   ## 5 MEDIAN
@@ -2567,9 +2601,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("MEDIAN estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("MEDIAN estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> MEDIAN_GSD_simplot_thetas
   
   ## 6 EGGER
@@ -2604,9 +2641,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("EGGER estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("EGGER estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> EGGER_GSD_simplot_thetas
   ## 7 ROBUST
   ROBUST_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2640,9 +2680,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("ROBUST estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("ROBUST estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> ROBUST_GSD_simplot_thetas
   ## 8 PRESSO
   PRESSO_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2676,9 +2719,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("PRESSO estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("PRESSO estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> PRESSO_GSD_simplot_thetas
   ## 9 RAPS
   RAPS_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2712,9 +2758,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("RAPS estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("RAPS estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> RAPS_GSD_simplot_thetas
   ## 10 LASSO
   LASSO_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2748,9 +2797,12 @@ for (true_method in 1:length(selected_true_methods)) {
     ylab("Mean thetas")+
     scale_y_continuous(limits = c(0.25,0.8))+
     labs(title = "Simulated Thetas with Empirical Standard Error", 
-         subtitle = paste0("LASSO estimate: BMI -> GSD\nSelected Reference Method: ", 
-                           selected_true_methods[true_method], 
-                           " estimate calculated with total sample size"))+
+         subtitle = paste0("LASSO estimate: BMI -> GSD"
+                           #"\nSelected Reference Method: ", 
+                           #selected_true_methods[true_method], 
+                           #" estimate calculated with total sample size")
+         )
+    ) +
     theme_few() -> LASSO_GSD_simplot_thetas
 
   IVW_GSD_simplot_thetas$labels$title <- ""
@@ -3070,7 +3122,7 @@ for (true_method in 1:length(selected_true_methods)) {
 ## Now loop over all genetic architecture simulations
 
 
-```{r parallel-performance-genetic-architectures}
+```{r parallel-performance-genetic-architectures, warning=FALSE}
 effect_size <- c("strong", "weak")
 maf <- c("rare", "common")
 all_quadrants <- tidyr::crossing(effect_size, maf)
@@ -3825,7 +3877,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     GSD_simplot_thetas_arrange
     
     if (SAVE.files ==TRUE ){
-      filename_GSD_simplot_thetas_arrange <- paste0("./output/plots/theta-sims/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
+      filename_GSD_simplot_thetas_arrange <- paste0("./output/plots/theta_sims/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
                                                     "_GenArch_", name_GenArch, "_NSIM_", nsim,".svg")
       ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
              width = 10, height = 38, 
@@ -4107,7 +4159,8 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     bias_mse_plot_GSD
     
     if (SAVE.files ==TRUE ){
-      filename_simplot_bias_mse <- paste0("./output/plots/bias-mse/", Sys.Date(), "_GSD_simplot_bias_mse_REF_METHOD_", selected_true_methods[true_method], 
+      filename_simplot_bias_mse <- paste0("./output/plots/bias-mse/", Sys.Date(), "_GSD_bias_mse_REF_METHOD_",
+                                          selected_true_methods[true_method], 
                                           "_GenArch_", name_GenArch, "_NSIM_", nsim,".svg")
       ggsave(filename = filename_simplot_bias_mse, plot = bias_mse_plot_GSD, 
              width = 7, height = 24, 
@@ -4286,77 +4339,81 @@ names(df.temp.long) <- paste0("ref_", selected_true_methods)
 gt.tables.mean.se <- list()
 gt.tables.performance2 <- list()
 
-## loop to create tables
+
+
+## TABLE 01: MEAN +- SE -----------------------------------------------------
+# same for all references
+df.temp.long[[1]] %>% 
+  select(N, Method, Scenario, Mean, emp_se) %>% 
+  # first pivot wider
+  pivot_wider(names_from = Scenario, values_from = c(Mean, emp_se),  
+                #names_vary = "slowest",  # naming scheme
+                names_glue = "{.value}_{Scenario}") %>% 
+  mutate(N = paste0("Sample Size = ", format(N, scientific=FALSE))) %>% 
+  gt(groupname_col="N") %>% 
+  tab_header(
+    title = md("**Mean estimate with corresponding empirical standard errors**"),
+    #subtitle = md(paste0("Reference estimate: ", selected_true_methods[ref.method]))
+  ) %>% 
+  tab_spanner(
+    label = "Mean [\u00b1 Empirical Standard Error]", 
+    columns = 3:7
+  ) %>% 
+  cols_label(
+    Mean_ALL_INSTR = md("**Scenario 1**"),
+    Mean_STRONG_COMMON = md("**Scenario 2**"),
+    Mean_STRONG_RARE = md("**Scenario 3**"),
+    Mean_WEAK_COMMON = md("**Scenario 4**"),
+    Mean_WEAK_RARE = md("**Scenario 5**"),
+  ) %>% 
+  cols_merge(
+    columns = c(Mean_ALL_INSTR, emp_se_ALL_INSTR),
+    pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+  ) %>% 
+  cols_merge(
+    columns = c(Mean_STRONG_COMMON, emp_se_STRONG_COMMON),
+    pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+  ) %>% 
+  cols_merge(
+    columns = c(Mean_STRONG_RARE, emp_se_STRONG_RARE),
+    pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+  ) %>% 
+  cols_merge(
+    columns = c(Mean_WEAK_COMMON, emp_se_WEAK_COMMON),
+    pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+  ) %>% 
+  cols_merge(
+    columns = c(Mean_WEAK_RARE, emp_se_WEAK_RARE),
+    pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
+  ) %>% 
+  fmt_number(columns = 3:12,decimals = 3, use_seps=TRUE) %>% 
+  tab_source_note(
+    source_note = md("*Scenario 1* corresponds to all genetic instruments being used; 
+                     *Scenario 2* uses relatively strong and common variants;
+                     *Scenario 3* uses relatively strong and rare variants; 
+                     *Scenario 4* uses relatively weak and common variants;
+                     *Scenario 5* uses relatively weak and rare variants")
+  ) %>% 
+  opt_stylize(style=1, color="gray") -> gt.tables.mean.se[[1]]
+
+print(gt.tables.mean.se[[1]])
+
+if (SAVE.files ==TRUE ){
+  filename.gt.mean.se <- paste0("./output/gt-tables/sim-results/mean-empse/", Sys.Date(), 
+                                        "_mean_emp_se_performance_metrics_NSIM_", nsim)
+  
+  gt.tables.mean.se[[1]] %>% 
+    gtsave(paste0(filename.gt.mean.se, ".docx"))   # alternative .rtf, .tex, .png, .html
+  gt.tables.mean.se[[1]] %>% 
+    gtsave(paste0(filename.gt.mean.se, ".html")) 
+  gt.tables.mean.se[[1]] %>% 
+    gtsave(paste0(filename.gt.mean.se, ".tex")) 
+}
+
+
+## loop to create tables with reference change
 for (ref.method in seq_along(selected_true_methods)) {
-  
-  ## TABLE 01: MEAN +- SE -----------------------------------------------------
-  df.temp.long[[ref.method]] %>% 
-    select(N, Method, Scenario, Mean, emp_se) %>% 
-    # first pivot wider
-    pivot_wider(names_from = Scenario, values_from = c(Mean, emp_se),  
-                  #names_vary = "slowest",  # naming scheme
-                  names_glue = "{.value}_{Scenario}") %>% 
-    mutate(N = paste0("Sample Size = ", format(N, scientific=FALSE))) %>% 
-    gt(groupname_col="N") %>% 
-    tab_header(
-      title = md("**Mean estimate with corresponding empirical standard errors**"),
-      subtitle = md(paste0("Reference estimate: ", selected_true_methods[ref.method]))
-    ) %>% 
-    tab_spanner(
-      label = "Mean [\u00b1 Empirical Standard Error]", 
-      columns = 3:7
-    ) %>% 
-    cols_label(
-      Mean_ALL_INSTR = md("**Scenario 1**"),
-      Mean_STRONG_COMMON = md("**Scenario 2**"),
-      Mean_STRONG_RARE = md("**Scenario 3**"),
-      Mean_WEAK_COMMON = md("**Scenario 4**"),
-      Mean_WEAK_RARE = md("**Scenario 5**"),
-    ) %>% 
-    cols_merge(
-      columns = c(Mean_ALL_INSTR, emp_se_ALL_INSTR),
-      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
-    ) %>% 
-    cols_merge(
-      columns = c(Mean_STRONG_COMMON, emp_se_STRONG_COMMON),
-      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
-    ) %>% 
-    cols_merge(
-      columns = c(Mean_STRONG_RARE, emp_se_STRONG_RARE),
-      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
-    ) %>% 
-    cols_merge(
-      columns = c(Mean_WEAK_COMMON, emp_se_WEAK_COMMON),
-      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
-    ) %>% 
-    cols_merge(
-      columns = c(Mean_WEAK_RARE, emp_se_WEAK_RARE),
-      pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
-    ) %>% 
-    fmt_number(columns = 3:12,decimals = 3, use_seps=TRUE) %>% 
-    tab_source_note(
-      source_note = md("*Scenario 1* corresponds to all genetic instruments being used; 
-                       *Scenario 2* uses relatively strong and common variants;
-                       *Scenario 3* uses relatively strong and rare variants; 
-                       *Scenario 4* uses relatively weak and common variants;
-                       *Scenario 5* uses relatively weak and rare variants")
-    ) %>% 
-    opt_stylize(style=1, color="gray") -> gt.tables.mean.se[[ref.method]]
-  
-  if (SAVE.files ==TRUE ){
-    filename.gt.mean.se <- paste0("./output/gt-tables/sim-results/mean-empse/", Sys.Date(), 
-                                          "_mean_emp_se_performance_metrics_TRUE_EST_", 
-                                          selected_true_methods[ref.method], 
-                                          "_NSIM_", nsim)
-    
-    gt.tables.mean.se[[ref.method]] %>% 
-      gtsave(paste0(filename.gt.mean.se, ".docx"))   # alternative .rtf, .tex, .png, .html
-    gt.tables.mean.se[[ref.method]] %>% 
-      gtsave(paste0(filename.gt.mean.se, ".html")) 
-    gt.tables.mean.se[[ref.method]] %>% 
-      gtsave(paste0(filename.gt.mean.se, ".tex")) 
-  }
-  
+
   # TABLE 02: BIAS, MSE, COVERAGE, TYPE1ERROR ---------------------------------
   df.temp.long[[ref.method]] %>%
     select(N, Method, Scenario, bias, mse, coverage, type1error) %>% 
@@ -4383,7 +4440,7 @@ for (ref.method in seq_along(selected_true_methods)) {
       columns = 13:17
     ) %>% 
     tab_spanner(
-      label = "Type 1 Error", 
+      label = "Power", 
       columns = 18:22
     ) %>% 
     cols_label(
@@ -4424,7 +4481,10 @@ for (ref.method in seq_along(selected_true_methods)) {
     ) %>% 
     opt_stylize(style=1, color="gray") -> gt.tables.performance2[[ref.method]]
   
-    if (SAVE.files ==TRUE ){
+  
+  print(gt.tables.performance2[[ref.method]])
+  
+  if (SAVE.files ==TRUE ){
       filename.gt.performance2 <- paste0("./output/gt-tables/sim-results/", Sys.Date(), 
                                             "_performance2_metrics_TRUE_EST_", 
                                             selected_true_methods[ref.method], 
@@ -4436,7 +4496,7 @@ for (ref.method in seq_along(selected_true_methods)) {
         gtsave(paste0(filename.gt.performance2, ".html")) 
       gt.tables.performance2[[ref.method]] %>% 
         gtsave(paste0(filename.gt.performance2, ".tex")) 
-    }
+  }
 }
 
 ```
@@ -4446,7 +4506,7 @@ for (ref.method in seq_along(selected_true_methods)) {
 ## Summary Plots
 
 
-```{r}
+```{r summary-plots-all-1, figures-side, fig.show='hold', out.width="100%", warning=FALSE, message=FALSE}
 dodged.barplot.mse <- list()
 dodged.barplot.mse.scenario <- list()  # store plots for 1 ref-estimate, all Scenarios
 dodged.barplot.mse.references <- list()  # store plots for ALL_INSTR for all different ref-estimates
@@ -4503,6 +4563,8 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
       ggthemes::theme_few()+  # remove legend
       ggthemes::scale_fill_few() -> dodged.barplot.mse.scenario[[scenario]]
     
+    plot(dodged.barplot.mse.scenario[[scenario]])
+    
       if (SAVE.files ==TRUE ){
         ## arranged plots are toooo small 
         filename.dodged.barplot.mse.scenario <- paste0("./output/plots/summary-plots/scenario_",scenarios[scenario],"/",
@@ -4520,6 +4582,7 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
   # scenarios without all instruments in arranged plot
   arrangedplot.mse.scenarios <- 
     ggarrange(plotlist = dodged.barplot.mse.scenario[-1], labels = c("A", "B", "C", "D", "E", "F"))
+  plot(arrangedplot.mse.scenarios)
   if (SAVE.files ==TRUE ){
         ## arranged plots are toooo small 
         filename.arrangedplot.mse.scenarios <- paste0("./output/plots/summary-plots/arranged_scenarios/",
@@ -4551,6 +4614,8 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
     coord_flip(ylim=c(0,0.5))+
     ggthemes::theme_few()+
     ggthemes::scale_fill_few() -> dodged.barplot.mse[[ref.method]]
+  
+  plot(dodged.barplot.mse[[ref.method]])
   
   if (SAVE.files ==TRUE ){
     ## arranged plots are toooo small 
@@ -4597,6 +4662,8 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
       ggthemes::theme_few()+  # remove legend
       ggthemes::scale_fill_few() -> dodged.barplot.bias.scenario[[scenario]]
     
+    plot(dodged.barplot.bias.scenario[[scenario]])
+    
       if (SAVE.files ==TRUE ){
         ## arranged plots are toooo small 
         filename.dodged.barplot.bias.scenario <- paste0("./output/plots/summary-plots/scenario_",scenarios[scenario],"/",
@@ -4614,6 +4681,9 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
    # scenarios without all instruments in arranged plot
   arrangedplot.bias.scenarios <- 
     ggarrange(plotlist = dodged.barplot.bias.scenario[-1], labels = c("A", "B", "C", "D", "E", "F"))
+  
+  plot(arrangedplot.bias.scenarios)
+  
   if (SAVE.files ==TRUE ){
         ## arranged plots are toooo small 
         filename.arrangedplot.bias.scenarios <- paste0("./output/plots/summary-plots/arranged_scenarios/",
@@ -4641,6 +4711,8 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
     coord_flip()+
     ggthemes::theme_few()+
     ggthemes::scale_fill_few() -> dodged.barplot.bias[[ref.method]]
+  
+  plot(dodged.barplot.bias[[ref.method]])
   
   if (SAVE.files ==TRUE ){
     ## arranged plots are toooo small 
@@ -4670,6 +4742,8 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
     ggthemes::theme_few()+
     ggthemes::scale_fill_few() -> dodged.barplot.coverage[[ref.method]]
   
+  plot(dodged.barplot.coverage[[ref.method]])
+  
   if (SAVE.files ==TRUE ){
     ## arranged plots are toooo small 
     filename.dodged.barplot.coverage <- paste0("./output/plots/summary-plots/COVERAGE_stacked/", Sys.Date(),
@@ -4698,6 +4772,8 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
     ggthemes::theme_few()+
     ggthemes::scale_fill_few() -> dodged.barplot.power[[ref.method]]
   
+  plot(dodged.barplot.power[[ref.method]])
+  
   if (SAVE.files ==TRUE ){
     ## arranged plots are toooo small 
     filename.dodged.barplot.power <- paste0("./output/plots/summary-plots/POWER_stacked/", Sys.Date(), "_power_GSD_dodged_barplot_REF_METHOD_",
@@ -4719,9 +4795,12 @@ dodged.barplot.mse.references.update <- map(seq_along(dodged.barplot.mse.referen
 arrangedplot.mse.references <- 
     ggarrange(plotlist = dodged.barplot.mse.references.update, labels = c("A", "B", "C", "D", "E", "F"), ncol=3, nrow=2)
 
+plot(arrangedplot.mse.references)
+
 if (SAVE.files ==TRUE ){
     ## arranged plots are toooo small 
-    filename.dodged.barplot.mse <- paste0("./output/plots/summary-plots/arranged_references/", Sys.Date(), "_mse_GSD_dodged_barplot_REF_METHOD_",
+    filename.dodged.barplot.mse <- paste0("./output/plots/summary-plots/arranged_references/", 
+                                          Sys.Date(), "_mse_GSD_dodged_barplot_REF_METHOD_",
                                           selected_true_methods[ref.method], "_NSIM_", nsim)
     ggsave(filename = paste0(filename.dodged.barplot.mse, ".svg"), plot =  arrangedplot.mse.references, 
              width = 14, height = 14, 
@@ -4737,6 +4816,8 @@ dodged.barplot.bias.references.update <- map(seq_along(dodged.barplot.bias.refer
 
 arrangedplot.bias.references <- 
     ggarrange(plotlist = dodged.barplot.bias.references.update, labels = c("A", "B", "C", "D", "E", "F"), ncol=3, nrow=2)
+
+plot(arrangedplot.bias.references)
 
 if (SAVE.files ==TRUE ){
     ## arranged plots are toooo small 
