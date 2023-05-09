@@ -4796,24 +4796,24 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
         aes(fill = smallest_mse), # add fill aesthetics to highlight the bars with the smallest mse value within each group
         stat="identity", position=position_dodge2(reverse=TRUE),
         #color=ggthemes_data$few$colors$Dark[2,2][[1]],
-        ) +   # reverse dodge
+      ) +   # reverse dodge
       geom_text(aes(x= Method, y= my.y.lim, label = label.too.large,
                     colour=label.too.large), #position = position_dodge(),
                 nudge_y = -0.1, #size = 2.25, angle = 90
                 color=ggthemes_data$few$colors$Dark[4,2][[1]],
                 fontface="bold"
-                )+
+      )+
       facet_wrap(~N, nrow = 4) + 
       xlab("Method")+
       ylab(paste0("Mean Squared Error with nsim=", nsim))+
-      labs(title = paste0("Selected Reference Method: ", 
-                              selected_true_methods[ref.method]),
-           subtitle = paste0("Genetic Architecture: ", scenarios[scenario])
-           )+
+      labs(#title = paste0("Selected Reference Method: ", 
+          #                selected_true_methods[ref.method]),
+           #subtitle = paste0("Genetic Architecture: ", scenarios[scenario])
+      )+
       #ylim(0, 0.5)+
       coord_flip(ylim=c(0, my.y.lim))+
       ggthemes::theme_few()+  # remove legend
-      ggthemes::scale_fill_few() -> dodged.barplot.mse.scenario[[scenario]]
+      scale_fill_manual(values = c("gray80", "blue"), guide = "none") -> dodged.barplot.mse.scenario[[scenario]]
     
     plot(dodged.barplot.mse.scenario[[scenario]])
     
@@ -4829,9 +4829,9 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
                )
       }
   }
-  dodged.barplot.mse.references[ref.method] <- dodged.barplot.mse.scenario[1]
+  dodged.barplot.mse.references[ref.method] <- dodged.barplot.mse.scenario[1]   # save scenario 1 "ALL INSTR"
   
-  # scenarios without all instruments in arranged plot
+  # scenarios WITHOUT all instruments in arranged plot
   arrangedplot.mse.scenarios <- 
     ggarrange(plotlist = dodged.barplot.mse.scenario[-1], labels = c("A", "B", "C", "D", "E", "F"))
   plot(arrangedplot.mse.scenarios)
