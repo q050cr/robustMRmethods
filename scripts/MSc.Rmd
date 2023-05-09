@@ -879,6 +879,8 @@ p1.gsd$layers[[5]]$aes_params$alpha <- 0.3
 p1.gsd$layers[[6]]$aes_params$colour <- ggthemes_data$few$colors$Dark[2,2][[1]]
 
 p1.gsd+
+  xlab("SNP effect on BMI")+
+  ylab("SNP effect on GSD")+
   ggthemes::theme_few() -> p1.gsd
 
 p1.gsd
@@ -4813,7 +4815,7 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
       #ylim(0, 0.5)+
       coord_flip(ylim=c(0, my.y.lim))+
       ggthemes::theme_few()+  # remove legend
-      scale_fill_manual(values = c("gray80", "blue"), guide = "none") -> dodged.barplot.mse.scenario[[scenario]]
+      scale_fill_manual(values = c("gray80", color.bar), guide = "none") -> dodged.barplot.mse.scenario[[scenario]]
     
     plot(dodged.barplot.mse.scenario[[scenario]])
     
@@ -4832,8 +4834,16 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
   dodged.barplot.mse.references[ref.method] <- dodged.barplot.mse.scenario[1]   # save scenario 1 "ALL INSTR"
   
   # scenarios WITHOUT all instruments in arranged plot
+  
+  # make smaller plots
+  base_theme <- theme_few(base_size = 8)
+  for (smallplot in seq_along(dodged.barplot.mse.scenario)) {
+    dodged.barplot.mse.scenario[[smallplot]] <- dodged.barplot.mse.scenario[[smallplot]] +
+      base_theme
+  }
+  
   arrangedplot.mse.scenarios <- 
-    ggarrange(plotlist = dodged.barplot.mse.scenario[-1], labels = c("A", "B", "C", "D", "E", "F"))
+    ggarrange(plotlist = dodged.barplot.mse.scenario[-1], labels = c("Scenario 2", "Scenario 3", "Scenario 4", "Scenario 5"))
   plot(arrangedplot.mse.scenarios)
   if (SAVE.files ==TRUE ){
         ## arranged plots are toooo small 
@@ -4897,22 +4907,28 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
       filter(Scenario == scenarios[scenario]) %>% 
       ## DROP NA (e.g. no sample sizes 50.000)
       drop_na(Mean) %>%  
+      group_by(N) %>% 
+      mutate(smallest_bias = abs(bias) == min(abs(bias))) %>% # add a new column to identify the rows with the smallest bias value
+      ungroup() %>% 
+      # PLOT
       ggplot(aes(x=Method, y=bias)) +
-      geom_bar(stat="identity", position=position_dodge2(reverse=TRUE),
-               #color=ggthemes_data$few$colors$Dark[2,2][[1]],
-               ) +   # reverse dodge
+      geom_bar(
+        aes(fill = smallest_bias), # add fill aesthetics to highlight the bars with the smallest mse value within each group
+        stat="identity", position=position_dodge2(reverse=TRUE),
+        #color=ggthemes_data$few$colors$Dark[2,2][[1]],
+      ) +   # reverse dodge
       geom_hline(yintercept = 0,  col=ggthemes_data$few$colors$Dark[3,2][[1]], alpha=0.6)+
       facet_wrap(~N, nrow = 4) + 
       xlab("Method")+
       ylab(paste0("Bias with nsim=", nsim))+
-      labs(title = paste0("Selected Reference Method: ", 
-                              selected_true_methods[ref.method]),
-           subtitle = paste0("Genetic Architecture: ", scenarios[scenario])
-           )+
+      labs(#title = paste0("Selected Reference Method: ", 
+           #               selected_true_methods[ref.method]),
+           #subtitle = paste0("Genetic Architecture: ", scenarios[scenario])
+      )+
       #ylim(0, 0.5)+
       coord_flip()+
       ggthemes::theme_few()+  # remove legend
-      ggthemes::scale_fill_few() -> dodged.barplot.bias.scenario[[scenario]]
+      scale_fill_manual(values = c("gray80", color.bar), guide = "none") -> dodged.barplot.bias.scenario[[scenario]]
     
     plot(dodged.barplot.bias.scenario[[scenario]])
     
@@ -4931,8 +4947,16 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
   dodged.barplot.bias.references[ref.method] <- dodged.barplot.bias.scenario[1]
   
    # scenarios without all instruments in arranged plot
+  
+  # make smaller plots
+  base_theme <- theme_few(base_size = 8)
+  for (smallplot in seq_along(dodged.barplot.bias.scenario)) {
+    dodged.barplot.bias.scenario[[smallplot]] <- dodged.barplot.bias.scenario[[smallplot]] +
+      base_theme
+  }
+  
   arrangedplot.bias.scenarios <- 
-    ggarrange(plotlist = dodged.barplot.bias.scenario[-1], labels = c("A", "B", "C", "D", "E", "F"))
+    ggarrange(plotlist = dodged.barplot.bias.scenario[-1], labels = c("Scenario 2", "Scenario 3", "Scenario 4", "Scenario 5"))
   
   plot(arrangedplot.bias.scenarios)
   
@@ -5066,6 +5090,9 @@ dodged.barplot.bias.references.update <- map(seq_along(dodged.barplot.bias.refer
   return(dodged.barplot.bias.references[[.x]])
 } )
 
+
+
+## all methods compared 
 arrangedplot.bias.references <- 
     ggarrange(plotlist = dodged.barplot.bias.references.update, labels = c("A", "B", "C", "D", "E", "F"), ncol=3, nrow=2)
 
@@ -5077,6 +5104,28 @@ if (SAVE.files ==TRUE ){
                                           selected_true_methods[ref.method], "_NSIM_", nsim)
     ggsave(filename = paste0(filename.dodged.barplot.bias, ".svg"), plot =  arrangedplot.bias.references, 
              width = 14, height = 14, 
+             units = "in"  # default
+             )
+}
+
+
+# Figure 10/11 MSE and BIAS in Scenario 1 with ref estimate FTO Wald
+names(dodged.barplot.mse.references) <- names(df_metrics_all_scenarios)
+names(dodged.barplot.bias.references) <- names(df_metrics_all_scenarios)
+arranged.msebias.scenario1.fto <- ggarrange(dodged.barplot.mse.references$ref_FTO_Wald, dodged.barplot.bias.references$ref_FTO_Wald, ncol=2, labels = c("A", "B"))
+arranged.msebias.scenario1.mrmix <- ggarrange(dodged.barplot.mse.references$ref_MRMix, dodged.barplot.bias.references$ref_MRMix, ncol=2, labels = c("A", "B"))
+
+if (SAVE.files ==TRUE ){
+    ## arranged plots are toooo small 
+    filename.arranged.msebias.scenario1.fto <- paste0("./output/plots/summary-plots/figure10/", Sys.Date(), "_bias_mse_barplot_REF_METHOD_FTO_WALD_NSIM_", nsim)
+    filename.arranged.msebias.scenario1.mrmix <- paste0("./output/plots/summary-plots/figure10/", Sys.Date(), "_bias_mse_barplot_REF_METHOD_MRMIX_NSIM_", nsim)
+    
+    ggsave(filename = paste0(filename.arranged.msebias.scenario1.fto, ".svg"), plot =  arranged.msebias.scenario1.fto, 
+             width = 8, height = 7, 
+             units = "in"  # default
+             )
+    ggsave(filename = paste0(filename.arranged.msebias.scenario1.mrmix, ".svg"), plot =  arranged.msebias.scenario1.mrmix, 
+             width = 8, height = 7, 
              units = "in"  # default
              )
 }
