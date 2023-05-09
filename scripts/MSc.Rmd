@@ -2098,6 +2098,9 @@ true_estimates <- est.bmi.gsd %>%
 ```
 
 ```{r parallel-performance, warning=FALSE}
+
+arrangedplot.thetas.all <- list()
+
 for (true_method in 1:length(selected_true_methods)) {
   # define reference estimate for ALL 5 chosen methods in loop 
   args.gsd.method <- list(theta = est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == selected_true_methods[true_method]], 
@@ -2405,6 +2408,16 @@ for (true_method in 1:length(selected_true_methods)) {
   ###
   ## PLOT  -------------------------------------------------------------------
   ###
+  
+  if (selected_true_methods[true_method] == "MRMix") {
+    color.dash <- "black"
+  } else if (selected_true_methods[true_method] == "FTO_Wald"){
+    color.dash <- "blue"
+  } else {
+    color.dash <- ggthemes_data$few$colors$Dark[9,2][[1]]
+  }
+  base_size_theta_plot <- 6
+  
   IVW_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
     pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
@@ -2412,11 +2425,11 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(IVW_GSD_performance_metrics, aes(x=N, y=IVW_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
+    # annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+    #        label= expression( paste("ref: ", theta[X] ))  , 
+    #        color= ggthemes_data$few$colors$Dark[9,2][[1]]
+    #          )+
     # geom_errorbar(aes(ymin=IVW_GSD_mean-1.96*IVW_GSD_emp_se, ymax=IVW_GSD_mean+1.96*IVW_GSD_emp_se), 
     #               width=3000, # x-axis dimension
     #               position = "dodge")+
@@ -2444,7 +2457,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #selected_true_methods[true_method], 
                            #" estimate calculated with total sample size")
                            ))+
-    theme_few() -> IVW_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> IVW_GSD_simplot_thetas
   
   ## 2 MODE
   MODE_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2454,11 +2467,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(MODE_GSD_performance_metrics, aes(x=N, y=MODE_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     # geom_errorbar(aes(ymin=MODE_GSD_mean-1.96*MODE_GSD_emp_se, ymax=MODE_GSD_mean+1.96*MODE_GSD_emp_se), 
     #               width=3000, # x-axis dimension
     #               position = "dodge")+
@@ -2487,7 +2496,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> MODE_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> MODE_GSD_simplot_thetas
   
   ## 3 CONMIX
   CONMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2497,11 +2506,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=CONMIX_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     ## ADD rainbow plots
     geom_boxplot(data = CONMIX_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                  col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -2527,7 +2532,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> CONMIX_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> CONMIX_GSD_simplot_thetas
   
   ## 4 MRMIX
   MRMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2537,11 +2542,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=MRMIX_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     ## ADD rainbow plots
     geom_boxplot(data = MRMIX_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                  col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -2567,7 +2568,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> MRMIX_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> MRMIX_GSD_simplot_thetas
   
   ## 5 MEDIAN
   MEDIAN_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2577,11 +2578,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(MEDIAN_GSD_performance_metrics, aes(x=N, y=MEDIAN_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     ## ADD rainbow plots
     geom_boxplot(data = MEDIAN_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                  col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -2607,7 +2604,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> MEDIAN_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> MEDIAN_GSD_simplot_thetas
   
   ## 6 EGGER
   EGGER_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -2617,11 +2614,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(EGGER_GSD_performance_metrics, aes(x=N, y=EGGER_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     ## ADD rainbow plots
     geom_boxplot(data = EGGER_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                  col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -2647,7 +2640,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> EGGER_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> EGGER_GSD_simplot_thetas
   ## 7 ROBUST
   ROBUST_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_ROBUST_theta_sim_BMI_GSD)) %>% 
@@ -2656,11 +2649,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(ROBUST_GSD_performance_metrics, aes(x=N, y=ROBUST_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     ## ADD rainbow plots
     geom_boxplot(data = ROBUST_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                  col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -2686,7 +2675,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> ROBUST_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> ROBUST_GSD_simplot_thetas
   ## 8 PRESSO
   PRESSO_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_PRESSO_theta_sim_BMI_GSD)) %>% 
@@ -2695,11 +2684,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(PRESSO_GSD_performance_metrics, aes(x=N, y=PRESSO_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     ## ADD rainbow plots
     geom_boxplot(data = PRESSO_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                  col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -2725,7 +2710,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> PRESSO_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> PRESSO_GSD_simplot_thetas
   ## 9 RAPS
   RAPS_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_RAPS_theta_sim_BMI_GSD)) %>% 
@@ -2734,11 +2719,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(RAPS_GSD_performance_metrics, aes(x=N, y=RAPS_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     ## ADD rainbow plots
     geom_boxplot(data = RAPS_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                  col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -2764,7 +2745,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> RAPS_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> RAPS_GSD_simplot_thetas
   ## 10 LASSO
   LASSO_BMI_GSD_geom_point_dat <- est_sim %>% 
     select(!!!(colname_LASSO_theta_sim_BMI_GSD)) %>% 
@@ -2773,11 +2754,7 @@ for (true_method in 1:length(selected_true_methods)) {
   
   ggplot(LASSO_GSD_performance_metrics, aes(x=N, y=LASSO_GSD_mean))+ 
     geom_point()+
-    geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-    annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-           label= expression( paste("ref: ", theta[X] ))  , 
-           color= ggthemes_data$few$colors$Dark[9,2][[1]]
-             )+
+    geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
     ## ADD rainbow plots
     geom_boxplot(data = LASSO_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                  col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -2803,7 +2780,7 @@ for (true_method in 1:length(selected_true_methods)) {
                            #" estimate calculated with total sample size")
          )
     ) +
-    theme_few() -> LASSO_GSD_simplot_thetas
+    theme_few(base_size_theta_plot) -> LASSO_GSD_simplot_thetas
 
   IVW_GSD_simplot_thetas$labels$title <- ""
   MODE_GSD_simplot_thetas$labels$title <- ""
@@ -2826,10 +2803,12 @@ for (true_method in 1:length(selected_true_methods)) {
             ncol = 1, nrow = 10) -> GSD_simplot_thetas_arrange
   GSD_simplot_thetas_arrange
   
+  arrangedplot.thetas.all[[true_method]] <- GSD_simplot_thetas_arrange
+  
   if (SAVE.files ==TRUE ){
     filename_GSD_simplot_thetas_arrange <- paste0("./output/plots/theta_sims/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method], "_NSIM_", nsim,".svg")
     ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
-           width = 10, height = 38, device = "svg",
+           width = 4, height = 14, device = "svg",
            units = "in"  # default
            )
   }
@@ -3116,6 +3095,18 @@ for (true_method in 1:length(selected_true_methods)) {
   }
 }
 
+names(arrangedplot.thetas.all) <- selected_true_methods
+
+arrangedthetaplot.fto.mrmix <- ggarrange(arrangedplot.thetas.all$FTO_Wald, arrangedplot.thetas.all$MRMix, ncol=2,
+          labels = c("A", "B"), legend = "none", align = "hv")
+
+if (SAVE.files ==TRUE ){
+    filename_arrangedthetaplot.fto.mrmix <- paste0("./output/plots/theta_sims/", Sys.Date(), "_GSD_arranged_thetas_REF_METHOD_FTO_MRMIX_NSIM_",nsim, ".svg")
+    ggsave(filename = filename_arrangedthetaplot.fto.mrmix, plot = arrangedthetaplot.fto.mrmix, 
+           width = 7, height = 24, 
+           units = "in"  # default
+           )
+  }
 ```
 
 
@@ -3483,6 +3474,16 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     ###
     ## PLOT  -------------------------------------------------------------------
     ###
+    if (selected_true_methods[true_method] == "MRMix") {
+      color.dash <- "black"
+    } else if (selected_true_methods[true_method] == "FTO_Wald"){
+      color.dash <- "blue"
+    } else {
+      color.dash <- ggthemes_data$few$colors$Dark[9,2][[1]]
+    }
+    
+    base_size_theta_plot <- 6
+    
     IVW_BMI_GSD_geom_point_dat <- est_sim %>% 
       select(!!!(colname_IVW_theta_sim_BMI_GSD)) %>% 
       pivot_longer(cols = everything(), names_to = "theta_sim") %>% 
@@ -3491,10 +3492,10 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     ggplot(IVW_GSD_performance_metrics, aes(x=N, y=IVW_GSD_mean))+ 
       geom_point()+
       geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      # annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
+      #        label= expression( paste("ref: ", theta[X] ))  , 
+      #        color= ggthemes_data$few$colors$Dark[9,2][[1]]
+      #          )+
       # geom_errorbar(aes(ymin=IVW_GSD_mean-1.96*IVW_GSD_emp_se, ymax=IVW_GSD_mean+1.96*IVW_GSD_emp_se), 
       #               width=3000, # x-axis dimension
       #               position = "dodge")+
@@ -3520,7 +3521,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("IVW estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> IVW_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> IVW_GSD_simplot_thetas
     
     ## 2 MODE
     MODE_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -3530,11 +3531,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(MODE_GSD_performance_metrics, aes(x=N, y=MODE_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       # geom_errorbar(aes(ymin=MODE_GSD_mean-1.96*MODE_GSD_emp_se, ymax=MODE_GSD_mean+1.96*MODE_GSD_emp_se), 
       #               width=3000, # x-axis dimension
       #               position = "dodge")+
@@ -3560,7 +3557,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("MODE estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> MODE_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> MODE_GSD_simplot_thetas
     
     ## 3 CONMIX
     CONMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -3570,11 +3567,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(CONMIX_GSD_performance_metrics, aes(x=N, y=CONMIX_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       ## ADD rainbow plots
       geom_boxplot(data = CONMIX_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                    col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -3597,7 +3590,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("CONMIX estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> CONMIX_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> CONMIX_GSD_simplot_thetas
     
     ## 4 MRMIX
     MRMIX_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -3607,11 +3600,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(MRMIX_GSD_performance_metrics, aes(x=N, y=MRMIX_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       ## ADD rainbow plots
       geom_boxplot(data = MRMIX_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                    col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -3634,7 +3623,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("MRMIX estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> MRMIX_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> MRMIX_GSD_simplot_thetas
     
     ## 5 MEDIAN
     MEDIAN_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -3644,12 +3633,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(MEDIAN_GSD_performance_metrics, aes(x=N, y=MEDIAN_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
-      ## ADD rainbow plots
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       geom_boxplot(data = MEDIAN_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                    col=ggthemes_data$few$colors$Dark[3,2][[1]],
                    alpha=0.2, size=0.2, outlier.shape = NA)+
@@ -3671,7 +3655,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("MEDIAN estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> MEDIAN_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> MEDIAN_GSD_simplot_thetas
     
     ## 6 EGGER
     EGGER_BMI_GSD_geom_point_dat <- est_sim %>% 
@@ -3681,11 +3665,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(EGGER_GSD_performance_metrics, aes(x=N, y=EGGER_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       ## ADD rainbow plots
       geom_boxplot(data = EGGER_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                    col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -3708,7 +3688,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("EGGER estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> EGGER_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> EGGER_GSD_simplot_thetas
     ## 7 ROBUST
     ROBUST_BMI_GSD_geom_point_dat <- est_sim %>% 
       select(!!!(colname_ROBUST_theta_sim_BMI_GSD)) %>% 
@@ -3717,11 +3697,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(ROBUST_GSD_performance_metrics, aes(x=N, y=ROBUST_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       ## ADD rainbow plots
       geom_boxplot(data = ROBUST_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                    col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -3744,7 +3720,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("ROBUST estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> ROBUST_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> ROBUST_GSD_simplot_thetas
     ## 8 PRESSO
     PRESSO_BMI_GSD_geom_point_dat <- est_sim %>% 
       select(!!!(colname_PRESSO_theta_sim_BMI_GSD)) %>% 
@@ -3753,11 +3729,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(PRESSO_GSD_performance_metrics, aes(x=N, y=PRESSO_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       ## ADD rainbow plots
       geom_boxplot(data = PRESSO_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                    col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -3780,7 +3752,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("PRESSO estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> PRESSO_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> PRESSO_GSD_simplot_thetas
     ## 9 RAPS
     RAPS_BMI_GSD_geom_point_dat <- est_sim %>% 
       select(!!!(colname_RAPS_theta_sim_BMI_GSD)) %>% 
@@ -3789,11 +3761,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(RAPS_GSD_performance_metrics, aes(x=N, y=RAPS_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       ## ADD rainbow plots
       geom_boxplot(data = RAPS_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                    col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -3816,7 +3784,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("RAPS estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> RAPS_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> RAPS_GSD_simplot_thetas
     ## 10 LASSO
     LASSO_BMI_GSD_geom_point_dat <- est_sim %>% 
       select(!!!(colname_LASSO_theta_sim_BMI_GSD)) %>% 
@@ -3825,11 +3793,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
     
     ggplot(LASSO_GSD_performance_metrics, aes(x=N, y=LASSO_GSD_mean))+ 
       geom_point()+
-      geom_hline(yintercept=  args.gsd.method$theta, col=ggthemes_data$few$colors$Dark[9,2][[1]], alpha=0.6, linetype=2, size=0.8)+
-      annotate(geom = "text", x = 50000, y = args.gsd.method$theta+0.05,
-             label= expression( paste("ref: ", theta[X] ))  , 
-             color= ggthemes_data$few$colors$Dark[9,2][[1]]
-               )+
+      geom_hline(yintercept=  args.gsd.method$theta, col=color.dash, alpha=0.6, linetype=2, size=0.8)+
       ## ADD rainbow plots
       geom_boxplot(data = LASSO_BMI_GSD_geom_point_dat, aes(x=theta_sim_numeric, y=value, group=theta_sim_numeric), 
                    col=ggthemes_data$few$colors$Dark[3,2][[1]],
@@ -3852,7 +3816,7 @@ for (my_architecture in 1:length(est_sim_architectures)) {
            subtitle = paste0("LASSO estimate: BMI -> GSD\nSelected Reference Method: ", 
                              selected_true_methods[true_method], 
                              " estimate calculated with total sample size\nGenetic Architecture: ", name_GenArch))+
-      theme_few() -> LASSO_GSD_simplot_thetas
+      theme_few(base_size = base_size_theta_plot) -> LASSO_GSD_simplot_thetas
     
   
     IVW_GSD_simplot_thetas$labels$title <- ""
@@ -3876,11 +3840,12 @@ for (my_architecture in 1:length(est_sim_architectures)) {
               ncol = 1, nrow = 10) -> GSD_simplot_thetas_arrange
     GSD_simplot_thetas_arrange
     
+    
     if (SAVE.files ==TRUE ){
       filename_GSD_simplot_thetas_arrange <- paste0("./output/plots/theta_sims/", Sys.Date(), "_GSD_simplot_thetas_REF_METHOD_", selected_true_methods[true_method],
                                                     "_GenArch_", name_GenArch, "_NSIM_", nsim,".svg")
       ggsave(filename = filename_GSD_simplot_thetas_arrange, plot = GSD_simplot_thetas_arrange, 
-             width = 10, height = 38, 
+             width = 4, height = 14, 
              units = "in"  # default
              )
     }
@@ -4340,16 +4305,33 @@ gt.tables.mean.se <- list()
 gt.tables.performance2 <- list()
 
 
-
 ## TABLE 01: MEAN +- SE -----------------------------------------------------
 # same for all references
+est.wald <- est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "FTO_Wald"]
+est.mrmix <- est.bmi.gsd$estimate[est.bmi.gsd$mr_methods == "MRMix"]
+
 df.temp.long[[1]] %>% 
   select(N, Method, Scenario, Mean, emp_se) %>% 
   # first pivot wider
   pivot_wider(names_from = Scenario, values_from = c(Mean, emp_se),  
-                #names_vary = "slowest",  # naming scheme
-                names_glue = "{.value}_{Scenario}") %>% 
+              #names_vary = "slowest",  # naming scheme
+              names_glue = "{.value}_{Scenario}") %>% 
   mutate(N = paste0("Sample Size = ", format(N, scientific=FALSE))) %>% 
+  group_by(N) %>% 
+  ## add columns for colouring closest to FTO
+  mutate(closest_to_FTO_boolean_all = abs(Mean_ALL_INSTR - est.wald) == min(abs(Mean_ALL_INSTR - est.wald)),
+         closest_to_FTO_boolean_strongcommon = abs(Mean_STRONG_COMMON - est.wald) == min(abs(Mean_STRONG_COMMON - est.wald)),
+         closest_to_FTO_boolean_strongrare = abs(Mean_STRONG_RARE - est.wald) == min(abs(Mean_STRONG_RARE - est.wald)),
+         closest_to_FTO_boolean_weakcommon = abs(Mean_WEAK_COMMON - est.wald) == min(abs(Mean_WEAK_COMMON - est.wald)),
+         closest_to_FTO_boolean_weakrare = abs(Mean_WEAK_RARE - est.wald) == min(abs(Mean_WEAK_RARE - est.wald))
+         ) %>% 
+  ## add columns for colouring closest to MRMix
+  mutate(closest_to_MRMIX_boolean_all = abs(Mean_ALL_INSTR - est.mrmix) == min(abs(Mean_ALL_INSTR - est.mrmix)),
+         closest_to_MRMIX_boolean_strongcommon = abs(Mean_STRONG_COMMON - est.mrmix) == min(abs(Mean_STRONG_COMMON - est.mrmix)),
+         closest_to_MRMIX_boolean_strongrare = abs(Mean_STRONG_RARE - est.mrmix) == min(abs(Mean_STRONG_RARE - est.mrmix)),
+         closest_to_MRMIX_boolean_weakcommon = abs(Mean_WEAK_COMMON - est.mrmix) == min(abs(Mean_WEAK_COMMON - est.mrmix)),
+         closest_to_MRMIX_boolean_weakrare = abs(Mean_WEAK_RARE - est.mrmix) == min(abs(Mean_WEAK_RARE - est.mrmix))
+  ) %>% 
   gt(groupname_col="N") %>% 
   tab_header(
     title = md("**Mean estimate with corresponding empirical standard errors**"),
@@ -4360,12 +4342,86 @@ df.temp.long[[1]] %>%
     columns = 3:7
   ) %>% 
   cols_label(
-    Mean_ALL_INSTR = md("**Scenario 1**"),
-    Mean_STRONG_COMMON = md("**Scenario 2**"),
-    Mean_STRONG_RARE = md("**Scenario 3**"),
-    Mean_WEAK_COMMON = md("**Scenario 4**"),
-    Mean_WEAK_RARE = md("**Scenario 5**"),
+   Mean_ALL_INSTR = md("**Scenario 1**"),
+   Mean_STRONG_COMMON = md("**Scenario 2**"),
+   Mean_STRONG_RARE = md("**Scenario 3**"),
+   Mean_WEAK_COMMON = md("**Scenario 4**"),
+   Mean_WEAK_RARE = md("**Scenario 5**"),
   ) %>% 
+  ## colour closest values ----------------------------------------------
+  # FTO
+  tab_style(
+    style = cell_text(color = "blue", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_ALL_INSTR"),
+      rows = closest_to_FTO_boolean_all
+    )
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "blue", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_STRONG_COMMON"),
+      rows = closest_to_FTO_boolean_strongcommon
+    )
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "blue", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_STRONG_RARE"),
+      rows = closest_to_FTO_boolean_strongrare
+    )
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "blue", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_WEAK_COMMON"),
+      rows = closest_to_FTO_boolean_weakcommon
+    )
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "blue", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_WEAK_RARE"),
+      rows = closest_to_FTO_boolean_weakrare
+    )
+  ) %>% 
+  # MRMix -----
+  tab_style(
+    style = cell_text(color = "black", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_ALL_INSTR"),
+      rows = closest_to_MRMIX_boolean_all
+    )
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "black", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_STRONG_COMMON"),
+      rows = closest_to_MRMIX_boolean_strongcommon
+    )
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "black", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_STRONG_RARE"),
+      rows = closest_to_MRMIX_boolean_strongrare
+    )
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "black", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_WEAK_COMMON"),
+      rows = closest_to_MRMIX_boolean_weakcommon
+    )
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "black", weight = "bold"),
+    locations = cells_body(
+      columns = contains("Mean_WEAK_RARE"),
+      rows = closest_to_MRMIX_boolean_weakrare
+    )
+  ) %>% 
+  #--------
   cols_merge(
     columns = c(Mean_ALL_INSTR, emp_se_ALL_INSTR),
     pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
@@ -4387,6 +4443,8 @@ df.temp.long[[1]] %>%
     pattern = "{1} [\u00b1 {2}]"  # +- sign : "\u00b1"
   ) %>% 
   fmt_number(columns = 3:12,decimals = 3, use_seps=TRUE) %>% 
+  cols_hide(columns = c(closest_to_FTO_boolean_all, closest_to_FTO_boolean_strongcommon, closest_to_FTO_boolean_strongrare, closest_to_FTO_boolean_weakcommon, closest_to_FTO_boolean_weakrare,
+                        closest_to_MRMIX_boolean_all, closest_to_MRMIX_boolean_strongcommon, closest_to_MRMIX_boolean_strongrare, closest_to_MRMIX_boolean_weakcommon, closest_to_MRMIX_boolean_weakrare)) %>% 
   tab_source_note(
     source_note = md("*Scenario 1* corresponds to all genetic instruments being used; 
                      *Scenario 2* uses relatively strong and common variants;
@@ -4415,13 +4473,47 @@ if (SAVE.files ==TRUE ){
 for (ref.method in seq_along(selected_true_methods)) {
 
   # TABLE 02: BIAS, MSE, COVERAGE, TYPE1ERROR ---------------------------------
+  if(selected_true_methods[ref.method] == "FTO_Wald") {
+    highlightcol <- "blue"
+  } else if (selected_true_methods[ref.method] == "MRMix") {
+    highlightcol <- "black"
+  } else {highlightcol <- ggthemes_data$few$colors$Dark[9,2][[1]]}
+  
   df.temp.long[[ref.method]] %>%
     select(N, Method, Scenario, bias, mse, coverage, type1error) %>% 
     # first pivot wider
     pivot_wider(names_from = Scenario, values_from = c(bias, mse, coverage, type1error),  
-                  #names_vary = "slowest",  # naming scheme
-                  names_glue = "{.value}_{Scenario}") %>% 
+                #names_vary = "slowest",  # naming scheme
+                names_glue = "{.value}_{Scenario}") %>% 
     mutate(N = paste0("Sample Size = ", format(N, scientific=FALSE))) %>% 
+    group_by(N) %>% 
+    ## add columns for colouring bias
+    mutate(minbias_all = abs(bias_ALL_INSTR) ==  min(abs(bias_ALL_INSTR)),
+           minbias_strongcommon = abs(bias_STRONG_COMMON) == min(abs(bias_STRONG_COMMON)),
+           minbias_strongrare = abs(bias_STRONG_RARE) == min(abs(bias_STRONG_RARE)),
+           minbias_weakcommon = abs(bias_WEAK_COMMON) == min(abs(bias_WEAK_COMMON)),
+           minbias_weakrare = abs(bias_WEAK_RARE) == min(abs(bias_WEAK_RARE)),
+           # cols for mse
+           minmse_all = abs(mse_ALL_INSTR) == min(abs(mse_ALL_INSTR)),
+           minmse_strongcommon = abs(mse_STRONG_COMMON) == min(abs(mse_STRONG_COMMON)),
+           minmse_strongrare = abs(mse_STRONG_RARE) == min(abs(mse_STRONG_RARE)),
+           minmse_weakcommon = abs(mse_WEAK_COMMON) == min(abs(mse_WEAK_COMMON)),
+           minmse_weakrare = abs(mse_WEAK_RARE) == min(abs(mse_WEAK_RARE)),
+           # cols for coverage
+           mincoverage_all = coverage_ALL_INSTR == max(coverage_ALL_INSTR),
+           mincoverage_strongcommon = coverage_STRONG_COMMON == max(coverage_STRONG_COMMON),
+           mincoverage_strongrare = coverage_STRONG_RARE == max(coverage_STRONG_RARE),
+           mincoverage_weakcommon = coverage_WEAK_COMMON == max(coverage_WEAK_COMMON),
+           mincoverage_weakrare = coverage_WEAK_RARE == max(coverage_WEAK_RARE),
+           # cols for type1error
+           mintype1error_all = type1error_ALL_INSTR == max(type1error_ALL_INSTR),
+           mintype1error_strongcommon = type1error_STRONG_COMMON == max(type1error_STRONG_COMMON),
+           mintype1error_strongrare = type1error_STRONG_RARE == max(type1error_STRONG_RARE),
+           mintype1error_weakcommon = type1error_WEAK_COMMON == max(type1error_WEAK_COMMON),
+           mintype1error_weakrare = type1error_WEAK_RARE == max(type1error_WEAK_RARE),
+    ) -> gtperf.dat
+    # make {gt} table
+  gtperf.dat %>% 
     gt(groupname_col="N") %>% 
     tab_header(
       title = md("**Performance measures**"),
@@ -4471,16 +4563,162 @@ for (ref.method in seq_along(selected_true_methods)) {
       type1error_WEAK_COMMON = md("**Scenario 4**"),
       type1error_WEAK_RARE = md("**Scenario 5**"),
     ) %>% 
+    ## colour best values ----------------------------------------------
+    # bias
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("bias_ALL_INSTR"),
+        rows = minbias_all
+      )
+    ) %>% 
+      tab_style(
+        style = cell_text(color = highlightcol, weight = "bold"),
+        locations = cells_body(
+          columns = contains("bias_STRONG_COMMON"),
+          rows = minbias_strongcommon
+        )
+      ) %>% 
+      tab_style(
+        style = cell_text(color = highlightcol, weight = "bold"),
+        locations = cells_body(
+          columns = contains("bias_STRONG_RARE"),
+          rows = minbias_strongrare
+        )
+      ) %>% 
+      tab_style(
+        style = cell_text(color = highlightcol, weight = "bold"),
+        locations = cells_body(
+          columns = contains("bias_WEAK_COMMON"),
+          rows = minbias_weakcommon
+        )
+      ) %>% 
+      tab_style(
+        style = cell_text(color = highlightcol, weight = "bold"),
+        locations = cells_body(
+          columns = contains("bias_WEAK_RARE"),
+          rows = minbias_weakrare
+        )
+      ) %>% 
+    # mse
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("mse_ALL_INSTR"),
+        rows = minmse_all
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("mse_STRONG_COMMON"),
+        rows = minmse_strongcommon
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("mse_STRONG_RARE"),
+        rows = minmse_strongrare
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("mse_WEAK_COMMON"),
+        rows = minmse_weakcommon
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("mse_WEAK_RARE"),
+        rows = minmse_weakrare
+      )
+    ) %>% 
+    # coverage
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("coverage_ALL_INSTR"),
+        rows = mincoverage_all
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("coverage_STRONG_COMMON"),
+        rows = mincoverage_strongcommon
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("coverage_STRONG_RARE"),
+        rows = mincoverage_strongrare
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("coverage_WEAK_COMMON"),
+        rows = mincoverage_weakcommon
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("coverage_WEAK_RARE"),
+        rows = mincoverage_weakrare
+      )
+    ) %>% 
+    # type1error
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("type1error_ALL_INSTR"),
+        rows = mintype1error_all
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("type1error_STRONG_COMMON"),
+        rows = mintype1error_strongcommon
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("type1error_STRONG_RARE"),
+        rows = mintype1error_strongrare
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("type1error_WEAK_COMMON"),
+        rows = mintype1error_weakcommon
+      )
+    ) %>% 
+    tab_style(
+      style = cell_text(color = highlightcol, weight = "bold"),
+      locations = cells_body(
+        columns = contains("type1error_WEAK_RARE"),
+        rows = mintype1error_weakrare
+      )
+    ) %>% 
+    # --------------------------------------------------------------------------
+    cols_hide(columns = colnames(gtperf.dat)[23:42]) %>% 
     fmt_number(columns = 3:22,decimals = 3, use_seps=TRUE) %>% 
     tab_source_note(
       source_note = md("*Scenario 1* corresponds to all genetic instruments being used; 
-                       *Scenario 2* uses relatively strong and common variants;
-                       *Scenario 3* uses relatively strong and rare variants; 
-                       *Scenario 4* uses relatively weak and common variants;
-                       *Scenario 5* uses relatively weak and rare variants")
+                         *Scenario 2* uses relatively strong and common variants;
+                         *Scenario 3* uses relatively strong and rare variants; 
+                         *Scenario 4* uses relatively weak and common variants;
+                         *Scenario 5* uses relatively weak and rare variants")
     ) %>% 
     opt_stylize(style=1, color="gray") -> gt.tables.performance2[[ref.method]]
-  
   
   print(gt.tables.performance2[[ref.method]])
   
@@ -4523,6 +4761,14 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
   # CREATE PLOTS -------------------------------------------------------------
   ## --
   
+  if (names(df_metrics_all_scenarios)[ref.method] == "ref_MRMix") {
+    color.bar <- "black"
+  } else if (names(df_metrics_all_scenarios)[ref.method] == "ref_FTO_Wald"){
+    color.bar <- "blue"
+  } else {
+    color.bar <- ggthemes_data$few$colors$Dark[9,2][[1]]
+  }
+  
   ## MSE PLOT FACET WRAP ------------------------------------------------------
   
   # plot per scenario
@@ -4537,14 +4783,20 @@ for(ref.method in seq_along(df_metrics_all_scenarios)) {
     
     df.temp.long[[ref.method]] %>%
       mutate(N=paste0("Sample Size: ", format(N, scientific=FALSE))) %>% 
-      mutate(label.too.large = ifelse(mse>my.y.lim, paste0("MSE \u2265 ", my.y.lim) , NA)) %>% 
+      mutate(label.too.large = ifelse(mse>my.y.lim, paste0("MSE \u2265 ", my.y.lim) , NA)) %>%
       filter(Scenario == scenarios[scenario]) %>% 
       ## DROP NA (e.g. no sample sizes 50.000)
       drop_na(Mean) %>%  
+      group_by(N) %>% 
+      mutate(smallest_mse = mse == min(mse)) %>% # add a new column to identify the rows with the smallest mse value within each group
+      ungroup() %>% 
+      # PLOT
       ggplot(aes(x=Method, y=mse)) +
-      geom_bar(stat="identity", position=position_dodge2(reverse=TRUE),
-               #color=ggthemes_data$few$colors$Dark[2,2][[1]],
-               ) +   # reverse dodge
+      geom_bar(
+        aes(fill = smallest_mse), # add fill aesthetics to highlight the bars with the smallest mse value within each group
+        stat="identity", position=position_dodge2(reverse=TRUE),
+        #color=ggthemes_data$few$colors$Dark[2,2][[1]],
+        ) +   # reverse dodge
       geom_text(aes(x= Method, y= my.y.lim, label = label.too.large,
                     colour=label.too.large), #position = position_dodge(),
                 nudge_y = -0.1, #size = 2.25, angle = 90
